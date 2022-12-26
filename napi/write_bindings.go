@@ -124,10 +124,12 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 			sb.WriteString(") {\n")
 			obj_name := ""
 			obj_type := ""
+			namespace := ""
 			for i, arg := range *m.Overloads[0] {
 				if isClass(*arg.Type, classes) {
 					obj_name = *arg.Ident
 					obj_type = *arg.Type
+					namespace = classes[*arg.Type].Namespace
 					g.writeIndent(sb, 2)
 					sb.WriteString(fmt.Sprintf("%s* %s = Napi::ObjectWrap<%s>::Unwrap(%s_obj);\n", *arg.Type, *arg.Ident, *arg.Type, *arg.Ident))
 				} else if strings.Contains(*arg.Type, "std::vector") {
@@ -136,6 +138,31 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 					sb.WriteString(fmt.Sprintf("auto axes = jsArrayArg<%s>(info[%d].As<Napi::Array>(), g_row_major, %s->_%s->ndim(), env);\n", tmpType[strings.Index(*arg.Type, "<")+1:strings.Index(*arg.Type, ">")], i, obj_name, lower_caser.String(obj_type)))
 				}
 			}
+			g.writeIndent(sb, 2)
+			sb.WriteString(fmt.Sprintf("%s::%s res;\n", namespace, obj_type))
+			g.writeIndent(sb, 2)
+			sb.WriteString(fmt.Sprintf("res = %s::%s(", namespace, *m.Ident))
+			for i, arg := range *m.Overloads[0] {
+				if i > 0 {
+					sb.WriteString(", ")
+				}
+				if isClass(*arg.Type, classes) {
+					sb.WriteString(fmt.Sprintf("*(%s->_%s)", *arg.Ident, lower_caser.String(*arg.Type)))
+				} else {
+					sb.WriteString(*arg.Ident)
+				}
+			}
+			sb.WriteString(");\n")
+			g.writeIndent(sb, 2)
+			sb.WriteString("g_bytes_used += res.bytes();\n")
+			g.writeIndent(sb, 2)
+			sb.WriteString(fmt.Sprintf("auto* tensor = new %s::%s(res);\n", namespace, obj_type))
+			g.writeIndent(sb, 2)
+			sb.WriteString(fmt.Sprintf("auto wrapped = Napi::External<%s::%s>::New(env, tensor);\n", namespace, obj_type))
+			g.writeIndent(sb, 2)
+			sb.WriteString(fmt.Sprintf("Napi::Value wrapped_out = %s::constructor->New({wrapped});\n", obj_type, obj_type))
+			g.writeIndent(sb, 2)
+			sb.WriteString("return wrapped_out;\n")
 			g.writeIndent(sb, 1)
 			sb.WriteString("}\n")
 			g.writeIndent(sb, 1)
