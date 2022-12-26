@@ -160,7 +160,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 			g.writeIndent(sb, 2)
 			sb.WriteString(fmt.Sprintf("auto wrapped = Napi::External<%s::%s>::New(env, tensor);\n", namespace, obj_type))
 			g.writeIndent(sb, 2)
-			sb.WriteString(fmt.Sprintf("Napi::Value wrapped_out = %s::constructor->New({wrapped});\n", obj_type, obj_type))
+			sb.WriteString(fmt.Sprintf("Napi::Value wrapped_out = %s::constructor->New({wrapped});\n", obj_type))
 			g.writeIndent(sb, 2)
 			sb.WriteString("return wrapped_out;\n")
 			g.writeIndent(sb, 1)
