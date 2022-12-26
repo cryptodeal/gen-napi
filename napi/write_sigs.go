@@ -2,7 +2,6 @@ package napi
 
 import (
 	"fmt"
-	"go/ast"
 	"path/filepath"
 	"strings"
 )
@@ -21,13 +20,9 @@ func (g *PackageGenerator) writeFileFrontmatter(w *strings.Builder) {
 	}
 }
 
-func (g *PackageGenerator) writeFileSourceHeader(w *strings.Builder, path string, file *ast.File) {
+func (g *PackageGenerator) writeFileSourceHeader(w *strings.Builder, path string) {
 	w.WriteString("\n//////////\n// source: ")
 	w.WriteString(fmt.Sprintf("%s\n", filepath.Base(path)))
-
-	if file.Doc != nil {
-		w.WriteString(fmt.Sprintf("/*\n%s*/\n", file.Doc.Text()))
-	}
 	w.WriteByte('\n')
 }
 
