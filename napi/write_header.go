@@ -26,7 +26,7 @@ func (g *PackageGenerator) writeHeader(sb *strings.Builder, classes map[string]*
 			sb.WriteString(fmt.Sprintf("%s::%s* _%s;\n\n", *cf.NameSpace, class, lower_caser.String(class)[0:1]+class[1:]))
 
 			for _, f := range methods {
-				if g.conf.IsMethodWrapped(class, *f.Ident) {
+				if g.conf.IsMethodWrapped(class, *f.Ident) && strings.EqualFold(class, *f.Returns) {
 					g.writeIndent(sb, 2)
 					sb.WriteString(fmt.Sprintf("\t\tNapi::Value %s(const Napi::CallbackInfo&);\n", *f.Ident))
 				}
