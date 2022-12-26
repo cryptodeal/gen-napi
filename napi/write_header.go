@@ -31,7 +31,9 @@ func (g *PackageGenerator) writeHeader(sb *strings.Builder, classes map[string]*
 					sb.WriteString(fmt.Sprintf("\t\tNapi::Value %s(const Napi::CallbackInfo&);\n", *f.Ident))
 				}
 			}
-			g.writeIndent(sb, 2)
+			g.writeIndent(sb, 1)
+			sb.WriteString("private:")
+			sb.WriteString("};")
 		}
 	}
 }
