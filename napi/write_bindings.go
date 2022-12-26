@@ -11,9 +11,9 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod) {
 	g.writeIndent(sb, 1)
 	sb.WriteString("Napi::Env env = info.Env();\n")
 	if len(m.Overloads) == 1 {
+		expected_count := len(*m.Overloads[0])
 		// single overload, parse args
 		g.writeIndent(sb, 1)
-		expected_count := len(*m.Overloads[0])
 		sb.WriteString(fmt.Sprintf("if (info.Length() != %d) {\n", expected_count))
 		g.writeIndent(sb, 2)
 		sb.WriteString(fmt.Sprintf("Napi::TypeError::New(info.Env(), %q).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects exactly %d args", *m.Ident, expected_count)))
@@ -21,15 +21,35 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod) {
 		sb.WriteString("return env.Null();\n")
 		g.writeIndent(sb, 1)
 		sb.WriteString("}\n")
+		if expected_count > 0 {
+			for i, arg := range *m.Overloads[0] {
+				if arg.IsPrimitive {
+					napiTypeHandler := ""
+					jsTypeEquivalent := ""
+					switch *arg.Type {
+					case "float", "double", "int", "unsigned int", "char", "unsigned char", "long long", "unsigned long long", "short", "unsigned short", "int8_t", "uint8_t", "int16_t", "uint16_t", "int32_t", "uint32_t", "int64_t", "uint64_t", "size_t":
+						napiTypeHandler = "IsNumber"
+						jsTypeEquivalent = "number"
+					}
+					g.writeIndent(sb, 1)
+					sb.WriteString(fmt.Sprintf("if (!info[%d].%s()) {", i, napiTypeHandler))
+					g.writeIndent(sb, 2)
+					sb.WriteString(fmt.Sprintf("Napi::TypeError::New(info.Env(), %q).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects args[%d] to be typeof `%s`", *m.Ident, i, jsTypeEquivalent)))
+					g.writeIndent(sb, 2)
+					sb.WriteString("return env.Null();\n")
+					g.writeIndent(sb, 1)
+					sb.WriteString("}\n")
+				}
+			}
+		}
 	}
+	// TODO: handle cases w multiple overloads
 	g.writeIndent(sb, 1)
 	sb.WriteString("return env.Null();\n")
 	sb.WriteString("}\n\n")
 }
 
 func (g *PackageGenerator) writeBindings(sb *strings.Builder, classes map[string]*CPPClass, methods map[string]*CPPMethod) {
-	// lower_caser := cases.Lower(language.AmericanEnglish)
-
 	sb.WriteString(fmt.Sprintf("#include %q\n", filepath.Base(g.conf.ResolvedHeaderOutPath(filepath.Dir(*g.Path)))))
 	g.writeBindingsFrontmatter(sb)
 	sb.WriteString("using namespace Napi;\n")
