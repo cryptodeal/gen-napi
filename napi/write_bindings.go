@@ -129,8 +129,9 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 				}
 				*/
 			}
-
+			g.writeIndent(sb, 1)
 			sb.WriteString("}\n")
+			g.writeIndent(sb, 1)
 			sb.WriteString("return env.Null();\n")
 		}
 	}
