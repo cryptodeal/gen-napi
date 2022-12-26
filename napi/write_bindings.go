@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"path/filepath"
 	"strings"
+
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 func isClass(argType string, classes map[string]*CPPClass) bool {
@@ -12,6 +15,7 @@ func isClass(argType string, classes map[string]*CPPClass) bool {
 }
 
 func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classes map[string]*CPPClass) {
+	lower_caser := cases.Lower(language.AmericanEnglish)
 	sb.WriteString(fmt.Sprintf("static Napi::Value %s(const Napi::CallbackInfo& info) {\n", *m.Ident))
 	g.writeIndent(sb, 1)
 	sb.WriteString("Napi::Env env = info.Env();\n")
@@ -118,16 +122,19 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 				}
 			}
 			sb.WriteString(") {\n")
-			for _, arg := range *m.Overloads[0] {
+			obj_name := ""
+			obj_type := ""
+			for i, arg := range *m.Overloads[0] {
 				if isClass(*arg.Type, classes) {
+					obj_name = *arg.Ident
+					obj_type = *arg.Type
 					g.writeIndent(sb, 2)
 					sb.WriteString(fmt.Sprintf("%s* %s = Napi::ObjectWrap<%s>::Unwrap(%s_obj);\n", *arg.Type, *arg.Ident, *arg.Type, *arg.Ident))
+				} else if strings.Contains(*arg.Type, "std::vector") {
+					g.writeIndent(sb, 2)
+					tmpType := *arg.Type
+					sb.WriteString(fmt.Sprintf("auto axes = jsArrayArg<%s>(info[%d].As<Napi::Array>(), g_row_major, %s->_%s->ndim(), env);\n", tmpType[strings.Index(*arg.Type, "<"):strings.Index(*arg.Type, ">")], i, obj_name, lower_caser.String(obj_type)))
 				}
-				/* TODO: handle other cases
-				else if strings.Contains(*arg.Type, "std::vector") {
-
-				}
-				*/
 			}
 			g.writeIndent(sb, 1)
 			sb.WriteString("}\n")
@@ -136,8 +143,6 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 		}
 	}
 	// TODO: handle cases w multiple overloads
-	g.writeIndent(sb, 1)
-	sb.WriteString("return env.Null();\n")
 	sb.WriteString("}\n\n")
 }
 
