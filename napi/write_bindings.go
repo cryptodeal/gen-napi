@@ -7,7 +7,7 @@ import (
 )
 
 func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod) {
-	sb.WriteString(fmt.Sprintf("static Napi::Value %s(const Napi::CallbackInfo& info) {\n", *f.Ident))
+	sb.WriteString(fmt.Sprintf("static Napi::Value %s(const Napi::CallbackInfo& info) {\n", *m.Ident))
 	g.writeIndent(sb, 1)
 	sb.WriteString("Napi::Env env = info.Env();\n")
 	if len(m.Overloads) == 1 {
