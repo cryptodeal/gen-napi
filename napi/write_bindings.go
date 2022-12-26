@@ -31,10 +31,33 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 				if arg.IsPrimitive {
 					napiTypeHandler := ""
 					jsTypeEquivalent := ""
+					valGetter := "Value"
+					var needsCast *string
 					switch *arg.Type {
-					case "float", "double", "int", "unsigned int", "char", "unsigned char", "long long", "unsigned long long", "short", "unsigned short", "int8_t", "uint8_t", "int16_t", "uint16_t", "int32_t", "uint32_t", "int64_t", "uint64_t", "size_t":
+					case "float":
 						napiTypeHandler = "IsNumber"
 						jsTypeEquivalent = "number"
+						valGetter = "FloatValue"
+
+					case "double":
+						napiTypeHandler = "IsNumber"
+						jsTypeEquivalent = "number"
+						valGetter = "DoubleValue"
+
+					case "int32_t":
+						napiTypeHandler = "IsNumber"
+						jsTypeEquivalent = "number"
+						valGetter = "Int32Value"
+
+					case "int64_t":
+						napiTypeHandler = "IsNumber"
+						jsTypeEquivalent = "number"
+						valGetter = "Int64Value"
+
+					case "int", "unsigned int", "char", "unsigned char", "long long", "unsigned long long", "short", "unsigned short", "int8_t", "uint8_t", "int16_t", "uint16_t", "uint32_t", "uint64_t", "size_t":
+						napiTypeHandler = "IsNumber"
+						jsTypeEquivalent = "number"
+						needsCast = arg.Type
 					case "bool":
 						napiTypeHandler = "IsBoolean"
 						jsTypeEquivalent = "boolean"
@@ -47,6 +70,15 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 					sb.WriteString("return env.Null();\n")
 					g.writeIndent(sb, 1)
 					sb.WriteString("}\n")
+					g.writeIndent(sb, 1)
+					if needsCast != nil {
+						sb.WriteString(fmt.Sprintf("static_cast<%s>(", *needsCast))
+					}
+					sb.WriteString(fmt.Sprintf("%s %s = info[%d].As<Napi::%s>().%s()", *arg.Type, *arg.Ident, i, strings.ReplaceAll(napiTypeHandler, "Is", ""), valGetter))
+					if needsCast != nil {
+						sb.WriteByte(')')
+					}
+					sb.WriteString(";\n")
 				} else if isClass(*arg.Type, classes) {
 					g.writeIndent(sb, 1)
 					sb.WriteString(fmt.Sprintf("if (!info[%d].IsObject()) {\n", i))
@@ -56,6 +88,8 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 					sb.WriteString("return env.Null();\n")
 					g.writeIndent(sb, 1)
 					sb.WriteString("}\n")
+					g.writeIndent(sb, 1)
+					sb.WriteString(fmt.Sprintf("Napi::Object %s = info[0].As<Napi::Object>();\n", (*arg.Ident + "_obj")))
 				} else if strings.Contains(*arg.Type, "std::vector") {
 					g.writeIndent(sb, 1)
 					sb.WriteString(fmt.Sprintf("if (!info[%d].IsArray()) {\n", i))
