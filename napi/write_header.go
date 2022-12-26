@@ -13,7 +13,7 @@ func (g *PackageGenerator) writeHeader(sb *strings.Builder, classes map[string]*
 
 	sb.WriteString("#pragma once\n")
 	sb.WriteString("#include <napi.h>\n")
-	g.writeFileFrontmatter(sb)
+	g.writeHeaderFrontmatter(sb)
 	g.writeFileSourceHeader(sb, *g.Path)
 
 	for class, cf := range classes {
@@ -29,9 +29,8 @@ func (g *PackageGenerator) writeHeader(sb *strings.Builder, classes map[string]*
 			sb.WriteString(fmt.Sprintf("%s::%s* _%s;\n", *cf.NameSpace, class, lower_caser.String(class)[0:1]+class[1:]))
 			g.writeIndent(sb, 2)
 			sb.WriteString("static Napi::Function GetClass(Napi::Env);\n\n")
-
 			g.writeIndent(sb, 2)
-
+			sb.WriteString("// standalone methods defined in src, wrapped as class methods")
 			for _, f := range methods {
 				if g.conf.IsMethodWrapped(class, *f.Ident) && strings.EqualFold(class, *f.Returns) {
 					g.writeIndent(sb, 2)

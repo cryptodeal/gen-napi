@@ -29,7 +29,8 @@ type PackageConfig struct {
 
 	// This content will be put at the top of the output Typescript file.
 	// You would generally use this to import custom types.
-	Frontmatter string `yaml:"frontmatter"`
+	HeaderFrontmatter   string `yaml:"header_frontmatter"`
+	BindingsFrontmatter string `yaml:"bindings_frontmatter"`
 
 	// If true, will also generate Bun FFI Bindings for the package
 	FFIBindings bool `yaml:"ffi_bindings"`

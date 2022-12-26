@@ -17,6 +17,7 @@ func (g *PackageGenerator) Generate() (string, string, error) {
 
 	// write headers
 	g.writeHeader(headers, classes, methods)
+	g.writeBindings(bindings, classes, methods)
 
 	return bindings.String(), headers.String(), nil
 }

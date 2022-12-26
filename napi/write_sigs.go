@@ -14,9 +14,15 @@ func (g *PackageGenerator) writeESLintIgnore(w *strings.Builder) {
 	w.WriteString("/* eslint-disable */\n")
 }
 
-func (g *PackageGenerator) writeFileFrontmatter(w *strings.Builder) {
-	if g.conf.Frontmatter != "" {
-		w.WriteString(g.conf.Frontmatter)
+func (g *PackageGenerator) writeHeaderFrontmatter(w *strings.Builder) {
+	if g.conf.HeaderFrontmatter != "" {
+		w.WriteString(g.conf.HeaderFrontmatter)
+	}
+}
+
+func (g *PackageGenerator) writeBindingsFrontmatter(w *strings.Builder) {
+	if g.conf.BindingsFrontmatter != "" {
+		w.WriteString(g.conf.BindingsFrontmatter)
 	}
 }
 
