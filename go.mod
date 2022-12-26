@@ -1,4 +1,4 @@
-module example.com/cryptodeal/gen-napi
+module github.com/cryptodeal/gen-napi
 
 go 1.19
 
