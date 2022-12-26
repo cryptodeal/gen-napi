@@ -38,7 +38,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 					jsTypeEquivalent := ""
 					valGetter := "Value"
 					var needsCast *string
-					switch *arg.Type {
+					switch strings.ReplaceAll(*arg.Type, "const ", "") {
 					case "float":
 						napiTypeHandler = "IsNumber"
 						jsTypeEquivalent = "number"
