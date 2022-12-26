@@ -47,7 +47,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 					sb.WriteString("return env.Null();\n")
 					g.writeIndent(sb, 1)
 					sb.WriteString("}\n")
-				} else if isClass(*m.Ident, classes) {
+				} else if isClass(*arg.Type, classes) {
 					g.writeIndent(sb, 1)
 					sb.WriteString(fmt.Sprintf("if (!info[%d].IsObject()) {\n", i))
 					g.writeIndent(sb, 2)
