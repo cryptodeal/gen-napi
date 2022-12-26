@@ -6,7 +6,12 @@ import (
 	"strings"
 )
 
-func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod) {
+func isClass(argType string, classes map[string]*CPPClass) bool {
+	_, ok := classes[argType]
+	return ok
+}
+
+func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classes map[string]*CPPClass) {
 	sb.WriteString(fmt.Sprintf("static Napi::Value %s(const Napi::CallbackInfo& info) {\n", *m.Ident))
 	g.writeIndent(sb, 1)
 	sb.WriteString("Napi::Env env = info.Env();\n")
@@ -42,6 +47,15 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod) {
 					sb.WriteString("return env.Null();\n")
 					g.writeIndent(sb, 1)
 					sb.WriteString("}\n")
+				} else if isClass(*m.Ident, classes) {
+					g.writeIndent(sb, 1)
+					sb.WriteString(fmt.Sprintf("if (!info[%d].IsObject()) {\n", i))
+					g.writeIndent(sb, 2)
+					sb.WriteString(fmt.Sprintf("Napi::TypeError::New(info.Env(), %q).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects args[%d] to be instanceof `%s`", *m.Ident, i, *arg.Type)))
+					g.writeIndent(sb, 2)
+					sb.WriteString("return env.Null();\n")
+					g.writeIndent(sb, 1)
+					sb.WriteString("}\n")
 				}
 			}
 		}
@@ -62,7 +76,7 @@ func (g *PackageGenerator) writeBindings(sb *strings.Builder, classes map[string
 
 	sb.WriteString("// exported functions\n")
 	for _, f := range methods {
-		g.writeMethod(sb, f)
+		g.writeMethod(sb, f, classes)
 	}
 
 	sb.WriteString("// NAPI exports\n")
