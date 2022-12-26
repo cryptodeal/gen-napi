@@ -30,6 +30,9 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod) {
 					case "float", "double", "int", "unsigned int", "char", "unsigned char", "long long", "unsigned long long", "short", "unsigned short", "int8_t", "uint8_t", "int16_t", "uint16_t", "int32_t", "uint32_t", "int64_t", "uint64_t", "size_t":
 						napiTypeHandler = "IsNumber"
 						jsTypeEquivalent = "number"
+					case "bool":
+						napiTypeHandler = "IsBoolean"
+						jsTypeEquivalent = "boolean"
 					}
 					g.writeIndent(sb, 1)
 					sb.WriteString(fmt.Sprintf("if (!info[%d].%s()) {\n", i, napiTypeHandler))
