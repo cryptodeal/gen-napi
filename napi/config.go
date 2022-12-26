@@ -25,6 +25,8 @@ type PackageConfig struct {
 	// Be default unrecognized types will be output as `any /* name */`.
 	TypeMappings map[string]string `yaml:"type_mappings"`
 
+	ClassMethods map[string][]string `yaml:"class_methods"`
+
 	// This content will be put at the top of the output Typescript file.
 	// You would generally use this to import custom types.
 	Frontmatter string `yaml:"frontmatter"`
@@ -57,6 +59,17 @@ func (c Config) PackageConfig(packagePath string) *PackageConfig {
 	}
 	log.Fatalf("Config not found for package %s", packagePath)
 	return nil
+}
+
+func (c PackageConfig) IsMethodWrapped(className string, fnName string) bool {
+	if v, ok := c.ClassMethods[className]; ok {
+		for _, name := range v {
+			if strings.EqualFold(name, fnName) {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 func (c PackageConfig) ResolvedBindingsOutPath(packageDir string) string {

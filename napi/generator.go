@@ -34,76 +34,18 @@ type ResHelpers struct {
 	ASTType     *ast.Expr
 }
 
-type FFIFunc struct {
-	args           []*ArgHelpers
-	returns        []*ResHelpers
-	isHandleFn     bool
-	isStarExpr     bool
-	name           *string
-	fieldAccessors []*StructAccessor
-	disposeHandle  *DisposeStructFunc
-}
-
-type DisposeStructFunc struct {
-	args   []*ArgHelpers
-	fnName string
-	name   string
-}
-
-type StructAccessor struct {
-	args           []*ArgHelpers
-	returns        []*ResHelpers
-	isHandleFn     *string
-	isStarExpr     bool
-	isOptional     bool
-	name           *string
-	fnName         *string
-	arrayType      *string
-	structType     *string
-	fieldAccessors []*StructAccessor
-	disposeHandle  *DisposeStructFunc
-}
-
-type ClassWrapper struct {
-	args    []*ArgHelpers
-	returns []*ResHelpers
-	// TODO: might be useful in future?
-	// isHandleFn     *string
-	// isStarExpr     bool
-	// isOptional     bool
-	structType     *string
-	name           *string
-	fieldAccessors []*StructAccessor
-	disposeHandle  *DisposeStructFunc
-}
-
-type FFIState struct {
-	GoImports        map[string]bool
-	CImports         map[string]bool
-	FFIHelpers       map[string]bool
-	CHelpers         map[string]bool
-	FFIFuncs         map[string]*FFIFunc
-	StructHelpers    map[string][]*StructAccessor
-	ParsedStructs    map[string]bool
-	TypeHelpers      map[string]string
-	GoWrappedStructs map[string]bool
-}
-
 // Responsible for generating the code for an input package
 type PackageGenerator struct {
 	conf     *PackageConfig
 	Name     *string
 	Path     *string
 	RootNode *sitter.Node
+	Input    *[]byte
 }
 
 type EnumField struct {
 	Name string
 	Val  string
-}
-
-type TSHelpers struct {
-	EnumStructs map[string][]*EnumField
 }
 
 func New(config *Config) *TSGo {
@@ -150,6 +92,7 @@ func (g *TSGo) Generate() error {
 			Name:     &name,
 			RootNode: n,
 			Path:     &path,
+			Input:    &input,
 		}
 		g.packageGenerators[*napiGen.Path] = napiGen
 		bindings, header, err := napiGen.Generate()

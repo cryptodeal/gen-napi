@@ -12,7 +12,7 @@ import (
 
 func Execute() {
 	var rootCmd = &cobra.Command{
-		Use:   "gen_napi",
+		Use:   "gen-napi",
 		Short: "Tool for generating Node_API wrappers from C++ Header Defs",
 		Long:  `Gen-Napi generates Node_API by parsing C++ Header files.`,
 	}
