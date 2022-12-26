@@ -121,7 +121,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 			for _, arg := range *m.Overloads[0] {
 				if isClass(*arg.Type, classes) {
 					g.writeIndent(sb, 2)
-					sb.WriteString(fmt.Sprintf("%s* %s = Napi::ObjectWrap<%s>::Unwrap(%s_obj);", *arg.Type, *arg.Ident, *arg.Type, *arg.Ident))
+					sb.WriteString(fmt.Sprintf("%s* %s = Napi::ObjectWrap<%s>::Unwrap(%s_obj);\n", *arg.Type, *arg.Ident, *arg.Type, *arg.Ident))
 				}
 				/* TODO: handle other cases
 				else if strings.Contains(*arg.Type, "std::vector") {
