@@ -13,9 +13,10 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod) {
 	if len(m.Overloads) == 1 {
 		// single overload, parse args
 		g.writeIndent(sb, 1)
-		sb.WriteString(fmt.Sprintf("if (info.Length() != %d) {\n", len(*m.Overloads[0])))
+		expected_count := len(*m.Overloads[0])
+		sb.WriteString(fmt.Sprintf("if (info.Length() != %d) {\n", expected_count))
 		g.writeIndent(sb, 2)
-		sb.WriteString(fmt.Sprintf("Napi::TypeError::New(info.Env(), %q).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects exactly 2 args", *m.Ident)))
+		sb.WriteString(fmt.Sprintf("Napi::TypeError::New(info.Env(), %q).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects exactly %d args", *m.Ident, expected_count)))
 		g.writeIndent(sb, 2)
 		sb.WriteString("return env.Null();\n")
 		g.writeIndent(sb, 1)
