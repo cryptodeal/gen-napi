@@ -32,7 +32,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod) {
 						jsTypeEquivalent = "number"
 					}
 					g.writeIndent(sb, 1)
-					sb.WriteString(fmt.Sprintf("if (!info[%d].%s()) {", i, napiTypeHandler))
+					sb.WriteString(fmt.Sprintf("if (!info[%d].%s()) {\n", i, napiTypeHandler))
 					g.writeIndent(sb, 2)
 					sb.WriteString(fmt.Sprintf("Napi::TypeError::New(info.Env(), %q).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects args[%d] to be typeof `%s`", *m.Ident, i, jsTypeEquivalent)))
 					g.writeIndent(sb, 2)
