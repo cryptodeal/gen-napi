@@ -172,7 +172,7 @@ func parseCPPArg(content []byte, arg_list *sitter.Node) *[]*CPPArg {
 		argType := type_node.Content(content)
 		typeQualifier := getTypeQualifier(scoped_arg, content)
 		isPrimitive := false
-		if type_node.Type() == "primitive_type" {
+		if type_node.Type() == "primitive_type" || type_node.Type() == "sized_type_specifier" {
 			isPrimitive = true
 		}
 		parsed_arg := &CPPArg{
