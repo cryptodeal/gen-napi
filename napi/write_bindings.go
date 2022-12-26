@@ -15,6 +15,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 	sb.WriteString(fmt.Sprintf("static Napi::Value %s(const Napi::CallbackInfo& info) {\n", *m.Ident))
 	g.writeIndent(sb, 1)
 	sb.WriteString("Napi::Env env = info.Env();\n")
+	hasObject := false
 	if len(m.Overloads) == 1 {
 		expected_count := len(*m.Overloads[0])
 		// single overload, parse args
@@ -80,6 +81,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 					}
 					sb.WriteString(";\n")
 				} else if isClass(*arg.Type, classes) {
+					hasObject = true
 					g.writeIndent(sb, 1)
 					sb.WriteString(fmt.Sprintf("if (!info[%d].IsObject()) {\n", i))
 					g.writeIndent(sb, 2)
@@ -89,7 +91,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 					g.writeIndent(sb, 1)
 					sb.WriteString("}\n")
 					g.writeIndent(sb, 1)
-					sb.WriteString(fmt.Sprintf("Napi::Object %s = info[0].As<Napi::Object>();\n", (*arg.Ident + "_obj")))
+					sb.WriteString(fmt.Sprintf("Napi::Object %s_obj = info[0].As<Napi::Object>();\n", *arg.Ident))
 				} else if strings.Contains(*arg.Type, "std::vector") {
 					g.writeIndent(sb, 1)
 					sb.WriteString(fmt.Sprintf("if (!info[%d].IsArray()) {\n", i))
@@ -101,6 +103,35 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 					sb.WriteString("}\n")
 				}
 			}
+		}
+
+		// handle casting objects to `Napi::ObjectWrap<Class>`
+		if hasObject {
+			g.writeIndent(sb, 1)
+			sb.WriteString("if (")
+			for i, arg := range *m.Overloads[0] {
+				if isClass(*arg.Type, classes) {
+					if i > 0 {
+						sb.WriteString(" && ")
+					}
+					sb.WriteString(fmt.Sprintf("%s_obj.InstanceOf(%s::constructor->Value())", *arg.Ident, *arg.Type))
+				}
+			}
+			sb.WriteString(") {\n")
+			for _, arg := range *m.Overloads[0] {
+				if isClass(*arg.Type, classes) {
+					g.writeIndent(sb, 2)
+					sb.WriteString(fmt.Sprintf("%s* %s = Napi::ObjectWrap<%s>::Unwrap(%s_obj);", *arg.Type, *arg.Ident, *arg.Type, *arg.Ident))
+				}
+				/* TODO: handle other cases
+				else if strings.Contains(*arg.Type, "std::vector") {
+
+				}
+				*/
+			}
+
+			sb.WriteString("}\n")
+			sb.WriteString("return env.Null();\n")
 		}
 	}
 	// TODO: handle cases w multiple overloads
