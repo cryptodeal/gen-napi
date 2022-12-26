@@ -59,7 +59,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 						jsTypeEquivalent = "number"
 						valGetter = "Int64Value"
 
-					case "int", "unsigned int", "char", "unsigned char", "long long", "unsigned long long", "short", "unsigned short", "int8_t", "uint8_t", "int16_t", "uint16_t", "uint32_t", "uint64_t", "size_t":
+					case "int", "signed", "unsigned", "unsigned int", "char", "unsigned char", "long long", "unsigned long long", "short", "unsigned short", "int8_t", "uint8_t", "int16_t", "uint16_t", "uint32_t", "uint64_t", "size_t":
 						napiTypeHandler = "IsNumber"
 						jsTypeEquivalent = "number"
 						needsCast = arg.Type
