@@ -26,6 +26,24 @@ func (g *PackageGenerator) writeBindingsFrontmatter(w *strings.Builder) {
 	}
 }
 
+func (g *PackageGenerator) writeGlobalVars(w *strings.Builder) {
+	if g.conf.GlobalVars != "" {
+		w.WriteString("// globally scoped variables\n")
+		w.WriteString(g.conf.GlobalVars)
+		w.WriteByte('\n')
+	}
+}
+
+func (g *PackageGenerator) writeHelpers(w *strings.Builder) {
+	if len(g.conf.HelperFuncs) > 0 {
+		w.WriteString("// non-exported helpers\n")
+		for _, helper := range g.conf.HelperFuncs {
+			w.WriteString(helper)
+			w.WriteByte('\n')
+		}
+	}
+}
+
 func (g *PackageGenerator) writeFileSourceHeader(w *strings.Builder, path string) {
 	w.WriteString("\n//////////\n// source: ")
 	w.WriteString(fmt.Sprintf("%s\n", filepath.Base(path)))

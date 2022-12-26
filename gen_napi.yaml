@@ -21,6 +21,113 @@ packages:
       #include <atomic>
       #include <iostream>
       #include <string>
+    global_vars: |
+      static std::atomic<size_t> g_bytes_used = 0;
+      static std::atomic<bool> g_row_major = true;
+    helper_funcs:
+      arrayArg: |
+        template <typename T>
+        std::vector<T> arrayArg(const void* ptr, int len, bool reverse, int invert) {
+          std::vector<T> out;
+          out.reserve(len);
+          for (auto i = 0; i < len; ++i) {
+            const auto idx = reverse ? len - i - 1 : i;
+            auto v = reinterpret_cast<const int64_t*>(ptr)[idx];
+            if (invert && v < 0) {
+              v = -v - 1;
+            } else if (invert) {
+              v = invert - v - 1;
+            }
+            out.emplace_back(v);
+          }
+          return out;
+        }
+      jsArrayArg: |
+        template <typename T>
+        std::vector<T> jsArrayArg(Napi::Array arr, bool reverse, int invert, Napi::Env env) {
+          std::vector<T> out;
+          const size_t len = static_cast<size_t>(arr.Length());
+          out.reserve(len);
+          for (size_t i = 0; i < len; ++i) {
+            const auto idx = reverse ? len - i - 1 : i;
+            Napi::Value val = arr[idx];
+            if (!val.IsNumber()) {
+              Napi::TypeError::New(env, "jsArrayArg requires `number[]`")
+                  .ThrowAsJavaScriptException();
+              return out;
+            } else {
+              int64_t v = val.As<Napi::Number>().Int64Value();
+              if (invert && v < 0) {
+                v = -v - 1;
+              } else if (invert) {
+                v = invert - v - 1;
+              }
+              out.emplace_back(v);
+            }
+          }
+          return out;
+        }
+      jsTensorArrayArg: |
+        template <typename T>
+        std::vector<T> jsTensorArrayArg(Napi::Array arr, Napi::Env env) {
+          std::vector<T> out;
+          const size_t len = static_cast<size_t>(arr.Length());
+          out.reserve(len);
+          for (size_t i = 0; i < len; ++i) {
+            Napi::Value temp = arr[i];
+            if (temp.IsObject()) {
+              Napi::Object tensor_obj = temp.As<Napi::Object>();
+              if (tensor_obj.InstanceOf(Tensor::constructor->Value())) {
+                Tensor* tensor = Napi::ObjectWrap<Tensor>::Unwrap(tensor_obj);
+                out.emplace_back(*(tensor->_tensor));
+              } else {
+                Napi::TypeError::New(env, "jsTensorArrayArg requires `Tensor[]`")
+                    .ThrowAsJavaScriptException();
+                return out;
+              }
+            } else {
+              Napi::TypeError::New(env, "jsTensorArrayArg requires `Tensor[]`")
+                  .ThrowAsJavaScriptException();
+              return out;
+            }
+          }
+          return out;
+        }
+      axisArg: |
+        uint32_t axisArg(int32_t axis, bool reverse, int ndim) {
+          if (!reverse) {
+            return static_cast<uint32_t>(axis);
+          }
+          if (axis >= 0) {
+            return static_cast<uint32_t>(ndim - axis - 1);
+          } else {
+            return static_cast<uint32_t>(-axis - 1);
+          }
+        }
+      ptrArrayArg: |
+        template <typename T>
+        std::vector<T> ptrArrayArg(const void* ptr, int len) {
+          std::vector<T> out;
+          out.reserve(len);
+          for (auto i = 0; i < len; ++i) {
+            auto ptrAsInt = reinterpret_cast<const int64_t*>(ptr)[i];
+            auto ptr = reinterpret_cast<T*>(ptrAsInt);
+            out.emplace_back(*ptr);
+          }
+          return out;
+        }
+      load: |
+        fl::Tensor* load(std::string filename, Napi::Env env) {
+          try {
+            fl::Tensor tensor;
+            fl::load(filename, tensor);
+            auto* t = new fl::Tensor(tensor);
+            g_bytes_used += t->bytes();
+            return t;
+          } catch (std::exception const& e) {
+            Napi::TypeError::New(env, e.what()).ThrowAsJavaScriptException();
+          }
+        }
     class_methods:
       Tensor:
         - "reshape"

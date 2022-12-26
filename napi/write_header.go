@@ -30,7 +30,7 @@ func (g *PackageGenerator) writeHeader(sb *strings.Builder, classes map[string]*
 			g.writeIndent(sb, 2)
 			sb.WriteString("static Napi::Function GetClass(Napi::Env);\n\n")
 			g.writeIndent(sb, 2)
-			sb.WriteString("// standalone methods defined in src, wrapped as class methods")
+			sb.WriteString("// methods defined in src, wrapped as class methods\n")
 			for _, f := range methods {
 				if g.conf.IsMethodWrapped(class, *f.Ident) && strings.EqualFold(class, *f.Returns) {
 					g.writeIndent(sb, 2)
