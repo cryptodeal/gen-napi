@@ -76,9 +76,11 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 					g.writeIndent(sb, 1)
 					sb.WriteString("}\n")
 					g.writeIndent(sb, 1)
+					sb.WriteString(fmt.Sprintf("%s %s = ", *arg.Type, *arg.Ident))
 					if needsCast != nil {
 						sb.WriteString(fmt.Sprintf("static_cast<%s>(", *needsCast))
 					}
+					sb.WriteString(fmt.Sprintf("info[%d].As<Napi::%s>().%s()", i, strings.ReplaceAll(napiTypeHandler, "Is", ""), valGetter))
 					sb.WriteString(fmt.Sprintf("%s %s = info[%d].As<Napi::%s>().%s()", *arg.Type, *arg.Ident, i, strings.ReplaceAll(napiTypeHandler, "Is", ""), valGetter))
 					if needsCast != nil {
 						sb.WriteByte(')')
