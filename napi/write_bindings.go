@@ -56,6 +56,15 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 					sb.WriteString("return env.Null();\n")
 					g.writeIndent(sb, 1)
 					sb.WriteString("}\n")
+				} else if strings.Contains(*arg.Type, "std::vector") {
+					g.writeIndent(sb, 1)
+					sb.WriteString(fmt.Sprintf("if (!info[%d].IsArray()) {\n", i))
+					g.writeIndent(sb, 2)
+					sb.WriteString(fmt.Sprintf("Napi::TypeError::New(info.Env(), %q).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects args[%d] to be typeof `number[]`", *m.Ident, i)))
+					g.writeIndent(sb, 2)
+					sb.WriteString("return env.Null();\n")
+					g.writeIndent(sb, 1)
+					sb.WriteString("}\n")
 				}
 			}
 		}
