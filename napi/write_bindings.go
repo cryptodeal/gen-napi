@@ -156,7 +156,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 					sb.WriteString(fmt.Sprintf("auto axes = jsArrayArg<%s>(info[%d].As<Napi::Array>(), g_row_major, %s->_%s->ndim(), env);\n", tmpType[strings.Index(*arg.Type, "<")+1:strings.Index(*arg.Type, ">")], i, obj_name, lower_caser.String(obj_type)))
 				} else if v, ok := g.conf.MethodArgTransforms[*m.Ident][i]; ok {
 					g.writeIndent(sb, 2)
-					sb.WriteString(strings.ReplaceAll(v, "/arg/", "info[i]"))
+					sb.WriteString(strings.ReplaceAll(v, "/arg/", fmt.Sprintf("info[%d]", i)))
 				}
 			}
 			g.writeIndent(sb, 2)
