@@ -38,8 +38,6 @@ packages:
           /return/ = fl::matmul(/arg_0/, /arg_1/);
         }
         g_bytes_used += /return/.bytes();
-      transpose: |
-        /return/ = fl::transpose(*(/arg_0/->_tensor), ))
 
     method_arg_transforms:
       transpose:
