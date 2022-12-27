@@ -37,8 +37,8 @@ packages:
 
     method_arg_transforms:
       reshape:
-        shape: |
-          auto shape = jsArrayArg<long long>(/arg_1/, g_row_major, false, env);
+        1: |
+          auto shape = jsArrayArg<long long>(/arg/.As<Napi::Array>(), g_row_major, false, env);
 
     helper_funcs:
       arrayArg: |
