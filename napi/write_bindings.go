@@ -16,7 +16,8 @@ func isClass(argType string, classes map[string]*CPPClass) bool {
 
 func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classes map[string]*CPPClass) {
 	lower_caser := cases.Lower(language.AmericanEnglish)
-	sb.WriteString(fmt.Sprintf("static Napi::Value %s(const Napi::CallbackInfo& info) {\n", *m.Ident))
+	parsedName := "_" + *m.Ident
+	sb.WriteString(fmt.Sprintf("static Napi::Value %s(const Napi::CallbackInfo& info) {\n", parsedName))
 	g.writeIndent(sb, 1)
 	sb.WriteString("Napi::Env env = info.Env();\n")
 	hasObject := false
@@ -287,7 +288,8 @@ func (g *PackageGenerator) writeBindings(sb *strings.Builder, classes map[string
 	sb.WriteString("Napi::Object Init(Napi::Env env, Napi::Object exports) {\n")
 	for _, f := range methods {
 		g.writeIndent(sb, 1)
-		sb.WriteString(fmt.Sprintf("exports.Set(Napi::String::New(env, %q), Napi::Function::New(env, %s));\n", ("_" + *f.Ident), *f.Ident))
+		parsedName := ("_" + *f.Ident)
+		sb.WriteString(fmt.Sprintf("exports.Set(Napi::String::New(env, %q), Napi::Function::New(env, %s));\n", parsedName, parsedName))
 	}
 	sb.WriteString("}\n\n")
 	sb.WriteString("NODE_API_MODULE(addon, Init)\n")
