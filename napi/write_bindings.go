@@ -141,7 +141,6 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 			}
 			g.writeIndent(sb, 2)
 			sb.WriteString(fmt.Sprintf("%s::%s res;\n", namespace, obj_type))
-			g.writeIndent(sb, 2)
 			if v, ok := g.conf.ReturnTransforms[*m.Ident]; ok {
 				parsed_transform := strings.ReplaceAll(v, "/return/", "res")
 				for i, arg := range *m.Overloads[0] {
@@ -153,8 +152,13 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 					}
 					parsed_transform = strings.ReplaceAll(parsed_transform, fmt.Sprintf("/arg_%d/", i), fmtd_arg)
 				}
-				sb.WriteString(parsed_transform)
+				transformed_lines := strings.Split(parsed_transform, "\n")
+				for _, line := range transformed_lines {
+					g.writeIndent(sb, 2)
+					sb.WriteString(fmt.Sprintf("%s\n", line))
+				}
 			} else {
+				g.writeIndent(sb, 2)
 				sb.WriteString(fmt.Sprintf("res = %s::%s(", namespace, *m.Ident))
 				for i, arg := range *m.Overloads[0] {
 					if i > 0 {

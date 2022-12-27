@@ -21,12 +21,13 @@ packages:
       #include <atomic>
       #include <iostream>
       #include <string>
-    return_transforms: |
-      if (g_row_major) {
-        /return/ = fl::matmul(/arg_1/, /arg_0/);
-      } else {
-        /return/ = fl::matmul(/arg_0/, /arg_1/);
-      }
+    return_transforms:
+      matmul: |
+        if (g_row_major) {
+          /return/ = fl::matmul(/arg_1/, /arg_0/);
+        } else {
+          /return/ = fl::matmul(/arg_0/, /arg_1/);
+        }
     global_vars: |
       static std::atomic<size_t> g_bytes_used = 0;
       static std::atomic<bool> g_row_major = true;
