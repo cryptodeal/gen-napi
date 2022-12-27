@@ -115,8 +115,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 					sb.WriteString("return env.Null();\n")
 					g.writeIndent(sb, 1)
 					sb.WriteString("}\n")
-				} else if g.conf.TypescriptMapped(*arg.Type) != nil {
-					v := *g.conf.TypescriptMapped(*arg.Type)
+				} else if v, ok := g.conf.TypeMappings[*arg.Type]; ok {
 					g.writeIndent(sb, 1)
 					if strings.Contains(v, "Array") || strings.Contains(v, "[]") {
 						sb.WriteString(fmt.Sprintf("if (!info[%d].IsArray()) {\n", i))
@@ -199,9 +198,8 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 					if i > 0 {
 						sb.WriteString(", ")
 					}
-					if g.conf.CPPMapped(*arg.Type) != nil {
-						cpp_type := *g.conf.CPPMapped(*arg.Type)
-						sb.WriteString(fmt.Sprintf("%s(%s)", cpp_type, *arg.Ident))
+					if _, ok := g.conf.TypeMappings[*arg.Type]; ok {
+						sb.WriteString(fmt.Sprintf("%s::%s(%s)", namespace, *arg.Type, *arg.Ident))
 					} else if isClass(*arg.Type, classes) {
 						sb.WriteString(fmt.Sprintf("*(%s->_%s)", *arg.Ident, lower_caser.String(*arg.Type)))
 					} else {
