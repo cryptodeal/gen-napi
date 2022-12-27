@@ -260,7 +260,8 @@ func parseClasses(n *sitter.Node, input []byte) map[string]*CPPClass {
 						}
 						temp_decl := parseClassTemplateMethod(temp_child, input)
 						if temp_decl.Ident == nil {
-							fmt.Println(temp_child.Content(input))
+							// TODO: handle
+							// fmt.Println(temp_child.Content(input))
 						}
 						*classes[class_name].TemplateDecl = append(*classes[class_name].TemplateDecl, temp_decl)
 					}
@@ -281,14 +282,14 @@ func parseClasses(n *sitter.Node, input []byte) map[string]*CPPClass {
 						matched++
 						parsed := parseFieldDecl(temp_child, input)
 						if parsed.Ident == nil {
-							fmt.Println(temp_child.Content(input))
-							fmt.Println(temp_child.Content(input))
+							// TODO: handle
+							// fmt.Println(temp_child.Content(input))
 						}
 						*classes[class_name].FieldDecl = append(*classes[class_name].FieldDecl, parsed)
 					}
 				}
 			}
-			fmt.Println("Matched: ", matched)
+			// fmt.Println("Matched: ", matched)
 			classes[class_name].FriendDecl = class_friends
 		}
 	}
