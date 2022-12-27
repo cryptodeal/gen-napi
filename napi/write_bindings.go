@@ -219,6 +219,30 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 	sb.WriteString("}\n\n")
 }
 
+func (g *PackageGenerator) writeClass(sb *strings.Builder, class *CPPClass, name string, methods map[string]*CPPMethod) {
+	// TODO: write all class methods, fields, etc
+
+	sb.WriteString(fmt.Sprintf("Napi::FunctionReference* %s::constructor;\n", name))
+	sb.WriteString(fmt.Sprintf("Napi::Function %s::GetClass(Napi::Env env) {\n", name))
+	g.writeIndent(sb, 1)
+	sb.WriteString(fmt.Sprintf("Napi::Function func = DefineClass(env, %q, {\n", name))
+	for _, f := range methods {
+		if g.conf.IsMethodWrapped(name, *f.Ident) {
+			g.writeIndent(sb, 2)
+			sb.WriteString(fmt.Sprintf("%s::InstanceMethod(%q, &%s::%s),\n", name, *f.Ident, name, *f.Ident))
+		}
+	}
+	g.writeIndent(sb, 1)
+	sb.WriteString("});\n")
+	g.writeIndent(sb, 1)
+	sb.WriteString("constructor = new Napi::FunctionReference();\n")
+	g.writeIndent(sb, 1)
+	sb.WriteString("*constructor = Napi::Persistent(func);\n")
+	g.writeIndent(sb, 1)
+	sb.WriteString("return func;\n")
+	sb.WriteString("}\n\n")
+}
+
 func (g *PackageGenerator) writeBindings(sb *strings.Builder, classes map[string]*CPPClass, methods map[string]*CPPMethod) {
 	sb.WriteString(fmt.Sprintf("#include %q\n", filepath.Base(g.conf.ResolvedHeaderOutPath(filepath.Dir(*g.Path)))))
 	g.writeBindingsFrontmatter(sb)
@@ -230,6 +254,12 @@ func (g *PackageGenerator) writeBindings(sb *strings.Builder, classes map[string
 	sb.WriteString("// exported functions\n")
 	for _, f := range methods {
 		g.writeMethod(sb, f, classes)
+	}
+
+	for name, c := range classes {
+		if c.Decl != nil {
+			g.writeClass(sb, c, name, methods)
+		}
 	}
 
 	sb.WriteString("// NAPI exports\n")
