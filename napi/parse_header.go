@@ -108,7 +108,7 @@ type ParsedMethod struct {
 	Returns *string
 }
 
-func parseMethods(n *sitter.Node, input []byte) map[string]*CPPMethod {
+func (g *PackageGenerator) parseMethods(n *sitter.Node, input []byte) map[string]*CPPMethod {
 	methods := map[string]*CPPMethod{}
 	q, err := sitter.NewQuery([]byte("(declaration type: (type_identifier) @type declarator: (function_declarator) @func)"), cpp.GetLanguage())
 	if err != nil {
@@ -136,7 +136,9 @@ func parseMethods(n *sitter.Node, input []byte) map[string]*CPPMethod {
 				Overloads: []*[]*CPPArg{parsed.Args},
 				Returns:   parsed.Returns,
 			}
-			methods[*parsed.Ident] = new_method
+			if !g.conf.IsMethodIgnored(*parsed.Ident) {
+				methods[*parsed.Ident] = new_method
+			}
 		}
 	}
 	return methods

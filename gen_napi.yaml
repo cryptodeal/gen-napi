@@ -8,6 +8,8 @@ packages:
     indent: "\t"
     type_mappings:
       Shape: 'number[]'
+    ignored_methods:
+      - 'scalar'
     header_frontmatter: |
       #include "flashlight/fl/autograd/Functions.h"
       #include "flashlight/fl/autograd/tensor/AutogradExtension.h"

@@ -32,6 +32,8 @@ type PackageConfig struct {
 	HeaderFrontmatter   string `yaml:"header_frontmatter"`
 	BindingsFrontmatter string `yaml:"bindings_frontmatter"`
 
+	IgnoredMethods []string `yaml:"ignored_methods"`
+
 	MethodReturnTransforms map[string]string            `yaml:"method_return_transforms"`
 	MethodArgTransforms    map[string]map[string]string `yaml:"method_arg_transforms"`
 
@@ -74,6 +76,15 @@ func (c PackageConfig) IsMethodWrapped(className string, fnName string) bool {
 			if strings.EqualFold(name, fnName) {
 				return true
 			}
+		}
+	}
+	return false
+}
+
+func (c PackageConfig) IsMethodIgnored(name string) bool {
+	for _, n := range c.IgnoredMethods {
+		if strings.EqualFold(n, name) {
+			return true
 		}
 	}
 	return false
