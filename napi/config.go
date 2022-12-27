@@ -32,7 +32,8 @@ type PackageConfig struct {
 	HeaderFrontmatter   string `yaml:"header_frontmatter"`
 	BindingsFrontmatter string `yaml:"bindings_frontmatter"`
 
-	MethodReturnTransforms map[string]string `yaml:"method_return_transforms"`
+	MethodReturnTransforms map[string]string            `yaml:"method_return_transforms"`
+	MethodArgTransforms    map[string]map[string]string `yaml:"method_return_transforms"`
 
 	GlobalVars  string            `yaml:"global_vars"`
 	HelperFuncs map[string]string `yaml:"helper_funcs"`

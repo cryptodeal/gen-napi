@@ -23,6 +23,9 @@ packages:
       #include <atomic>
       #include <iostream>
       #include <string>
+    global_vars: |
+      static std::atomic<size_t> g_bytes_used = 0;
+      static std::atomic<bool> g_row_major = true;
     method_return_transforms:
       matmul: |
         if (g_row_major) {
@@ -31,9 +34,12 @@ packages:
           /return/ = fl::matmul(/arg_0/, /arg_1/);
         }
         g_bytes_used += /return/.bytes();
-    global_vars: |
-      static std::atomic<size_t> g_bytes_used = 0;
-      static std::atomic<bool> g_row_major = true;
+
+    method_arg_transforms:
+      reshape:
+        shape: |
+          auto shape = jsArrayArg<long long>(/arg_1/, g_row_major, false, env);
+
     helper_funcs:
       arrayArg: |
         template <typename T>
