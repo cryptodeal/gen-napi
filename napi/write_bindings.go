@@ -106,6 +106,23 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 					sb.WriteString("return env.Null();\n")
 					g.writeIndent(sb, 1)
 					sb.WriteString("}\n")
+				} else if v, ok := g.conf.TypeMappings[*arg.Type]; ok {
+					g.writeIndent(sb, 1)
+					if strings.Contains(v, "Array") || strings.Contains(v, "[]") {
+						sb.WriteString(fmt.Sprintf("if (!info[%d].IsArray()) {\n", i))
+					} else if strings.Contains(v, "any") || strings.Contains(v, "object") || strings.Contains(v, "Record<") || strings.Contains(v, "Map<") {
+						sb.WriteString(fmt.Sprintf("if (!info[%d].IsObject()) {\n", i))
+					} else if strings.Contains(v, "string") {
+						sb.WriteString(fmt.Sprintf("if (!info[%d].IsString()) {\n", i))
+					} else if strings.Contains(v, "number") {
+						sb.WriteString(fmt.Sprintf("if (!info[%d].IsNumber()) {\n", i))
+					}
+					g.writeIndent(sb, 2)
+					sb.WriteString(fmt.Sprintf("Napi::TypeError::New(info.Env(), %q).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects args[%d] to be typeof `%s`", *m.Ident, i, v)))
+					g.writeIndent(sb, 2)
+					sb.WriteString("return env.Null();\n")
+					g.writeIndent(sb, 1)
+					sb.WriteString("}\n")
 				}
 			}
 		}
@@ -141,7 +158,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 			}
 			g.writeIndent(sb, 2)
 			sb.WriteString(fmt.Sprintf("%s::%s res;\n", namespace, obj_type))
-			if v, ok := g.conf.ReturnTransforms[*m.Ident]; ok {
+			if v, ok := g.conf.MethodReturnTransforms[*m.Ident]; ok {
 				parsed_transform := strings.ReplaceAll(v, "/return/", "res")
 				for i, arg := range *m.Overloads[0] {
 					fmtd_arg := ""
@@ -173,11 +190,9 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 				sb.WriteString(");\n")
 			}
 			g.writeIndent(sb, 2)
-			sb.WriteString("g_bytes_used += res.bytes();\n")
+			sb.WriteString(fmt.Sprintf("auto* out = new %s::%s(res);\n", namespace, obj_type))
 			g.writeIndent(sb, 2)
-			sb.WriteString(fmt.Sprintf("auto* tensor = new %s::%s(res);\n", namespace, obj_type))
-			g.writeIndent(sb, 2)
-			sb.WriteString(fmt.Sprintf("auto wrapped = Napi::External<%s::%s>::New(env, tensor);\n", namespace, obj_type))
+			sb.WriteString(fmt.Sprintf("auto wrapped = Napi::External<%s::%s>::New(env, out);\n", namespace, obj_type))
 			g.writeIndent(sb, 2)
 			sb.WriteString(fmt.Sprintf("Napi::Value wrapped_out = %s::constructor->New({wrapped});\n", obj_type))
 			g.writeIndent(sb, 2)

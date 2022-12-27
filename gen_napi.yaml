@@ -4,6 +4,8 @@
 packages:
   - path: "test/TensorBase.h"
     indent: "\t"
+    type_mappings:
+      Shape: "number[]"
     header_frontmatter: |
       #include "flashlight/fl/autograd/Functions.h"
       #include "flashlight/fl/autograd/tensor/AutogradExtension.h"
@@ -21,13 +23,14 @@ packages:
       #include <atomic>
       #include <iostream>
       #include <string>
-    return_transforms:
+    method_return_transforms:
       matmul: |
         if (g_row_major) {
           /return/ = fl::matmul(/arg_1/, /arg_0/);
         } else {
           /return/ = fl::matmul(/arg_0/, /arg_1/);
         }
+        g_bytes_used += /return/.bytes();
     global_vars: |
       static std::atomic<size_t> g_bytes_used = 0;
       static std::atomic<bool> g_row_major = true;
