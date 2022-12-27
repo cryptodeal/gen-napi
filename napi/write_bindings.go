@@ -117,13 +117,13 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 					sb.WriteString("}\n")
 				} else if v, ok := g.conf.TypeMappings[*arg.Type]; ok {
 					g.writeIndent(sb, 1)
-					if strings.Contains(v, "Array") || strings.Contains(v, "[]") {
+					if strings.Contains(v.typescript, "Array") || strings.Contains(v.typescript, "[]") {
 						sb.WriteString(fmt.Sprintf("if (!info[%d].IsArray()) {\n", i))
-					} else if strings.Contains(v, "any") || strings.Contains(v, "object") || strings.Contains(v, "Record<") || strings.Contains(v, "Map<") {
+					} else if strings.Contains(v.typescript, "any") || strings.Contains(v.typescript, "object") || strings.Contains(v.typescript, "Record<") || strings.Contains(v.typescript, "Map<") {
 						sb.WriteString(fmt.Sprintf("if (!info[%d].IsObject()) {\n", i))
-					} else if strings.Contains(v, "string") {
+					} else if strings.Contains(v.typescript, "string") {
 						sb.WriteString(fmt.Sprintf("if (!info[%d].IsString()) {\n", i))
-					} else if strings.Contains(v, "number") {
+					} else if strings.Contains(v.typescript, "number") {
 						sb.WriteString(fmt.Sprintf("if (!info[%d].IsNumber()) {\n", i))
 					}
 					g.writeIndent(sb, 2)
@@ -198,7 +198,9 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 					if i > 0 {
 						sb.WriteString(", ")
 					}
-					if isClass(*arg.Type, classes) {
+					if v, ok := g.conf.TypeMappings[*arg.Type]; ok {
+						sb.WriteString(fmt.Sprintf("%s(%s)", v.cpp, *arg.Ident))
+					} else if isClass(*arg.Type, classes) {
 						sb.WriteString(fmt.Sprintf("*(%s->_%s)", *arg.Ident, lower_caser.String(*arg.Type)))
 					} else {
 						sb.WriteString(*arg.Ident)

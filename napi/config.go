@@ -9,6 +9,11 @@ import (
 const defaultOutBindingsFileName = "bindings.cc"
 const defaultOutHeaderFileName = "bindings.h"
 
+type TypeMapping struct {
+	typescript string
+	cpp        string
+}
+
 type PackageConfig struct {
 	// The package path just like you would import it in Go
 	Path string `yaml:"path"`
@@ -23,7 +28,7 @@ type PackageConfig struct {
 
 	// Specify your own custom type translations, useful for custom types, `time.Time` and `null.String`.
 	// Be default unrecognized types will be output as `any /* name */`.
-	TypeMappings map[string]string `yaml:"type_mappings"`
+	TypeMappings map[string]TypeMapping `yaml:"type_mappings"`
 
 	ClassMethods map[string][]string `yaml:"class_methods"`
 

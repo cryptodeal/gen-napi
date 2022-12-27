@@ -55,12 +55,6 @@ func New(config *Config) *TSGo {
 	}
 }
 
-func (g *TSGo) SetTypeMapping(goType string, tsType string) {
-	for _, p := range g.conf.Packages {
-		p.TypeMappings[goType] = tsType
-	}
-}
-
 func (g *TSGo) Generate() error {
 	hdr_paths := g.conf.PackageNames()
 

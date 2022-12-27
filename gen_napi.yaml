@@ -7,7 +7,9 @@ packages:
     header_out_path: 'test/out'
     indent: "\t"
     type_mappings:
-      Shape: 'number[]'
+      Shape:
+        typescript: 'number[]'
+        cpp: 'fl::Shape'
     ignored_methods:
       - 'scalar'
     header_frontmatter: |
@@ -38,11 +40,13 @@ packages:
           /return/ = fl::matmul(/arg_0/, /arg_1/);
         }
         g_bytes_used += /return/.bytes();
+      transpose: |
+        /return/ = fl::transpose(*(/arg_0/->_tensor), ))
 
     method_arg_transforms:
       transpose:
         axes: |
-          auto axes = jsArrayArg<long long>(info[1].As<Napi::Array>(), g_row_major, /arg_0/->_tensor->ndim(), env);
+          auto axes = jsArrayArg<long long>(/arg/.As<Napi::Array>(), g_row_major, /arg_0/->_tensor->ndim(), env);
       reshape:
         shape: |
           auto shape = jsArrayArg<long long>(/arg/.As<Napi::Array>(), g_row_major, false, env);
