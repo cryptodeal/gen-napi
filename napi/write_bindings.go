@@ -115,19 +115,20 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 					sb.WriteString("return env.Null();\n")
 					g.writeIndent(sb, 1)
 					sb.WriteString("}\n")
-				} else if v, ok := g.conf.TypeMappings[*arg.Type]; ok {
+				} else if g.conf.TypescriptMapped(*arg.Type) != nil {
+					v := *g.conf.TypescriptMapped(*arg.Type)
 					g.writeIndent(sb, 1)
-					if strings.Contains(v.typescript, "Array") || strings.Contains(v.typescript, "[]") {
+					if strings.Contains(v, "Array") || strings.Contains(v, "[]") {
 						sb.WriteString(fmt.Sprintf("if (!info[%d].IsArray()) {\n", i))
-					} else if strings.Contains(v.typescript, "any") || strings.Contains(v.typescript, "object") || strings.Contains(v.typescript, "Record<") || strings.Contains(v.typescript, "Map<") {
+					} else if strings.Contains(v, "any") || strings.Contains(v, "object") || strings.Contains(v, "Record<") || strings.Contains(v, "Map<") {
 						sb.WriteString(fmt.Sprintf("if (!info[%d].IsObject()) {\n", i))
-					} else if strings.Contains(v.typescript, "string") {
+					} else if strings.Contains(v, "string") {
 						sb.WriteString(fmt.Sprintf("if (!info[%d].IsString()) {\n", i))
-					} else if strings.Contains(v.typescript, "number") {
+					} else if strings.Contains(v, "number") {
 						sb.WriteString(fmt.Sprintf("if (!info[%d].IsNumber()) {\n", i))
 					}
 					g.writeIndent(sb, 2)
-					sb.WriteString(fmt.Sprintf("Napi::TypeError::New(info.Env(), %q).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects args[%d] to be typeof `%s`", *m.Ident, i, v.typescript)))
+					sb.WriteString(fmt.Sprintf("Napi::TypeError::New(info.Env(), %q).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects args[%d] to be typeof `%s`", *m.Ident, i, v)))
 					g.writeIndent(sb, 2)
 					sb.WriteString("return env.Null();\n")
 					g.writeIndent(sb, 1)
@@ -198,8 +199,9 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 					if i > 0 {
 						sb.WriteString(", ")
 					}
-					if v, ok := g.conf.TypeMappings[*arg.Type]; ok {
-						sb.WriteString(fmt.Sprintf("%s(%s)", v.cpp, *arg.Ident))
+					if g.conf.CPPMapped(*arg.Type) != nil {
+						cpp_type := *g.conf.CPPMapped(*arg.Type)
+						sb.WriteString(fmt.Sprintf("%s(%s)", cpp_type, *arg.Ident))
 					} else if isClass(*arg.Type, classes) {
 						sb.WriteString(fmt.Sprintf("*(%s->_%s)", *arg.Ident, lower_caser.String(*arg.Type)))
 					} else {

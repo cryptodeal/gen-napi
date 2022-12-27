@@ -7,9 +7,9 @@ packages:
     header_out_path: 'test/out'
     indent: "\t"
     type_mappings:
-      shape:
-        typescript: 'number[]'
-        cpp: 'fl::Shape'
+      Shape:
+        - 'number'
+        - 'fl::Shape'
     ignored_methods:
       - 'scalar'
     header_frontmatter: |
