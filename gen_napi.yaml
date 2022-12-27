@@ -2,10 +2,12 @@
 # and some other packages.
 
 packages:
-  - path: "test/TensorBase.h"
+  - path: 'test/TensorBase.h'
+    bindings_out_path: 'test/out'
+    header_out_path: 'test/out'
     indent: "\t"
     type_mappings:
-      Shape: "number[]"
+      Shape: 'number[]'
     header_frontmatter: |
       #include "flashlight/fl/autograd/Functions.h"
       #include "flashlight/fl/autograd/tensor/AutogradExtension.h"
@@ -37,7 +39,7 @@ packages:
 
     method_arg_transforms:
       reshape:
-        1: |
+        shape: |
           auto shape = jsArrayArg<long long>(/arg/.As<Napi::Array>(), g_row_major, false, env);
 
     helper_funcs:
@@ -146,69 +148,69 @@ packages:
         }
     class_methods:
       Tensor:
-        - "reshape"
-        - "astype"
-        - "transpose"
-        - "tile"
-        - "nonzero"
-        - "negative"
-        - "logicalNot"
-        - "exp"
-        - "log"
-        - "log1p"
-        - "sin"
-        - "cos"
-        - "sqrt"
-        - "tanh"
-        - "floor"
-        - "ceil"
-        - "rint"
-        - "absolute"
-        - "sigmoid"
-        - "erf"
-        - "flip"
-        - "clip"
-        - "roll"
-        - "isnan"
-        - "isinf"
-        - "sign"
-        - "tril"
-        - "triu"
-        - "where"
-        - "sort"
-        - "add"
-        - "sub"
-        - "mul"
-        - "div"
-        - "eq"
-        - "neq"
-        - "lessThan"
-        - "lessThanEqual"
-        - "greaterThan"
-        - "greaterThanEqual"
-        - "logicalOr"
-        - "logicalAnd"
-        - "mod"
-        - "bitwiseAnd"
-        - "bitwiseOr"
-        - "bitwiseXor"
-        - "lShift"
-        - "rShift"
-        - "minimium"
-        - "maximum"
-        - "power"
-        - "matmul"
-        - "conv2d"
-        - "amin"
-        - "amax"
-        - "argmin"
-        - "sum"
-        - "cumsum"
-        - "mean"
-        - "median"
-        - "var"
-        - "std"
-        - "norm"
-        - "countNonzero"
-        - "any"
-        - "all"
+        - 'reshape'
+        - 'astype'
+        - 'transpose'
+        - 'tile'
+        - 'nonzero'
+        - 'negative'
+        - 'logicalNot'
+        - 'exp'
+        - 'log'
+        - 'log1p'
+        - 'sin'
+        - 'cos'
+        - 'sqrt'
+        - 'tanh'
+        - 'floor'
+        - 'ceil'
+        - 'rint'
+        - 'absolute'
+        - 'sigmoid'
+        - 'erf'
+        - 'flip'
+        - 'clip'
+        - 'roll'
+        - 'isnan'
+        - 'isinf'
+        - 'sign'
+        - 'tril'
+        - 'triu'
+        - 'where'
+        - 'sort'
+        - 'add'
+        - 'sub'
+        - 'mul'
+        - 'div'
+        - 'eq'
+        - 'neq'
+        - 'lessThan'
+        - 'lessThanEqual'
+        - 'greaterThan'
+        - 'greaterThanEqual'
+        - 'logicalOr'
+        - 'logicalAnd'
+        - 'mod'
+        - 'bitwiseAnd'
+        - 'bitwiseOr'
+        - 'bitwiseXor'
+        - 'lShift'
+        - 'rShift'
+        - 'minimium'
+        - 'maximum'
+        - 'power'
+        - 'matmul'
+        - 'conv2d'
+        - 'amin'
+        - 'amax'
+        - 'argmin'
+        - 'sum'
+        - 'cumsum'
+        - 'mean'
+        - 'median'
+        - 'var'
+        - 'std'
+        - 'norm'
+        - 'countNonzero'
+        - 'any'
+        - 'all'

@@ -49,19 +49,28 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 						jsTypeEquivalent = "number"
 						valGetter = "DoubleValue"
 
-					case "int32_t":
+					case "long long", "char", "signed", "int8_t", "int32_t", "int16_t", "short":
 						napiTypeHandler = "IsNumber"
 						jsTypeEquivalent = "number"
 						valGetter = "Int32Value"
+						needsCast = arg.Type
 
-					case "int64_t":
+					case "int", "int64_t":
 						napiTypeHandler = "IsNumber"
 						jsTypeEquivalent = "number"
 						valGetter = "Int64Value"
+						needsCast = arg.Type
 
-					case "int", "signed", "unsigned", "unsigned int", "char", "unsigned char", "long long", "unsigned long long", "short", "unsigned short", "int8_t", "uint8_t", "int16_t", "uint16_t", "uint32_t", "uint64_t", "size_t":
+					case "unsigned long long", "unsigned char", "unsigned", "uint8_t", "uint16_t", "unsigned short", "uint32_t":
 						napiTypeHandler = "IsNumber"
 						jsTypeEquivalent = "number"
+						valGetter = "Uint32Value"
+						needsCast = arg.Type
+
+					case "unsigned int", "uint64_t", "size_t", "uintptr_t":
+						napiTypeHandler = "IsNumber"
+						jsTypeEquivalent = "number"
+						valGetter = "Uint64Value"
 						needsCast = arg.Type
 					case "bool":
 						napiTypeHandler = "IsBoolean"
@@ -144,7 +153,10 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 			obj_type := ""
 			namespace := ""
 			for i, arg := range *m.Overloads[0] {
-				if isClass(*arg.Type, classes) {
+				if v, ok := g.conf.MethodArgTransforms[*m.Ident][*arg.Ident]; ok {
+					g.writeIndent(sb, 2)
+					sb.WriteString(strings.ReplaceAll(v, "/arg/", fmt.Sprintf("info[%d]", i)))
+				} else if isClass(*arg.Type, classes) {
 					obj_name = *arg.Ident
 					obj_type = *arg.Type
 					namespace = *classes[*arg.Type].NameSpace
@@ -154,9 +166,6 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 					g.writeIndent(sb, 2)
 					tmpType := *arg.Type
 					sb.WriteString(fmt.Sprintf("auto axes = jsArrayArg<%s>(info[%d].As<Napi::Array>(), g_row_major, %s->_%s->ndim(), env);\n", tmpType[strings.Index(*arg.Type, "<")+1:strings.Index(*arg.Type, ">")], i, obj_name, lower_caser.String(obj_type)))
-				} else if v, ok := g.conf.MethodArgTransforms[*m.Ident][i]; ok {
-					g.writeIndent(sb, 2)
-					sb.WriteString(strings.ReplaceAll(v, "/arg/", fmt.Sprintf("info[%d]", i)))
 				}
 			}
 			g.writeIndent(sb, 2)
