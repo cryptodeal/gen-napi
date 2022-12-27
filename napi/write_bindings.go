@@ -172,6 +172,8 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 					g.writeIndent(sb, 2)
 					tmpType := *arg.Type
 					sb.WriteString(fmt.Sprintf("auto axes = jsArrayArg<%s>(info[%d].As<Napi::Array>(), g_row_major, %s->_%s->ndim(), env);\n", tmpType[strings.Index(*arg.Type, "<")+1:strings.Index(*arg.Type, ">")], i, obj_name, lower_caser.String(obj_type)))
+				} else {
+					fmt.Println("TODO: handle type ", *arg.Type)
 				}
 			}
 			g.writeIndent(sb, 2)

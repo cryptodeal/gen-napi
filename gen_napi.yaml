@@ -8,8 +8,14 @@ packages:
     indent: "\t"
     type_mappings:
       Shape: 'number[]'
+      Dim: 'number'
     ignored_methods:
       - 'scalar'
+      - 'pad'
+      - 'argsort'
+      - 'fromScalar'
+      # TODO: following op should not be ignored (ignored for compilation errors)
+      - 'concatenate'
     header_frontmatter: |
       #include "flashlight/fl/autograd/Functions.h"
       #include "flashlight/fl/autograd/tensor/AutogradExtension.h"
@@ -31,6 +37,8 @@ packages:
       static std::atomic<size_t> g_bytes_used = 0;
       static std::atomic<bool> g_row_major = true;
     method_return_transforms:
+      sort: |
+        /return/ = fl::sort(/arg_0/, /arg_1/);
       matmul: |
         if (g_row_major) {
           /return/ = fl::matmul(/arg_1/, /arg_0/);
@@ -40,6 +48,12 @@ packages:
         g_bytes_used += /return/.bytes();
 
     method_arg_transforms:
+      sort:
+        axis: |
+          auto axis = /arg/.As<Napi::Number>().Uint32Value();
+      tile:
+        shape: |
+          auto shape = jsArrayArg<long long>(/arg/.As<Napi::Array>(), g_row_major, false, env);
       transpose:
         axes: |
           auto axes = jsArrayArg<long long>(/arg/.As<Napi::Array>(), g_row_major, /arg_0/->_tensor->ndim(), env);
