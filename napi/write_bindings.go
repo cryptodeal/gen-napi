@@ -214,13 +214,27 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 			g.writeIndent(sb, 1)
 			sb.WriteString("return env.Null();\n")
 		}
+	} else {
+		// TODO: handle cases w multiple overloads
+		g.writeIndent(sb, 1)
+		sb.WriteString("return env.Null();\n")
 	}
-	// TODO: handle cases w multiple overloads
 	sb.WriteString("}\n\n")
 }
 
 func (g *PackageGenerator) writeClass(sb *strings.Builder, class *CPPClass, name string, methods map[string]*CPPMethod) {
 	// TODO: write all class methods, fields, etc
+
+	for _, f := range methods {
+		if g.conf.IsMethodWrapped(name, *f.Ident) {
+			sb.WriteString(fmt.Sprintf("Napi::Value %s::%s(const Napi::CallbackInfo& info) {\n", name, *f.Ident))
+			g.writeIndent(sb, 1)
+			sb.WriteString("Napi::Env env = info.Env();\n")
+			g.writeIndent(sb, 1)
+			sb.WriteString("return env.Null();\n")
+			sb.WriteString("}\n\n")
+		}
+	}
 
 	sb.WriteString(fmt.Sprintf("Napi::FunctionReference* %s::constructor;\n", name))
 	sb.WriteString(fmt.Sprintf("Napi::Function %s::GetClass(Napi::Env env) {\n", name))
