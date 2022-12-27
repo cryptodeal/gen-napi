@@ -155,6 +155,11 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 			for i, arg := range *m.Overloads[0] {
 				if v, ok := g.conf.MethodArgTransforms[*m.Ident][*arg.Ident]; ok {
 					g.writeIndent(sb, 2)
+					if strings.Contains(v, "/arg_") {
+						for j := range *m.Overloads[0] {
+							v = strings.ReplaceAll(v, fmt.Sprintf("/arg_%d/", j), fmt.Sprintf("info[%d]", j))
+						}
+					}
 					sb.WriteString(strings.ReplaceAll(v, "/arg/", fmt.Sprintf("info[%d]", i)))
 				} else if isClass(*arg.Type, classes) {
 					obj_name = *arg.Ident

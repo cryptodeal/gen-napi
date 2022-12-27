@@ -40,6 +40,9 @@ packages:
         g_bytes_used += /return/.bytes();
 
     method_arg_transforms:
+      transpose:
+        axes: |
+          auto axes = jsArrayArg<long long>(info[1].As<Napi::Array>(), g_row_major, /arg_0/->_tensor->ndim(), env);
       reshape:
         shape: |
           auto shape = jsArrayArg<long long>(/arg/.As<Napi::Array>(), g_row_major, false, env);
