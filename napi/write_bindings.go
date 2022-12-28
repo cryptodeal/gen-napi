@@ -170,6 +170,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 					sb.WriteString("}\n")
 				}
 				if v, ok := g.conf.MethodArgTransforms[*m.Ident][*arg.Ident]; ok && !strings.Contains(v, "/arg_") {
+					g.writeIndent(sb, 1)
 					sb.WriteString(strings.ReplaceAll(v, "/arg/", fmt.Sprintf("info[%d]", i)))
 				}
 			}
@@ -215,9 +216,9 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 				}
 			}
 			g.writeIndent(sb, 2)
-			sb.WriteString(fmt.Sprintf("%s::%s res;\n", namespace, obj_type))
+			sb.WriteString(fmt.Sprintf("%s::%s _res;\n", namespace, obj_type))
 			if v, ok := g.conf.MethodReturnTransforms[*m.Ident]; ok {
-				parsed_transform := strings.ReplaceAll(v, "/return/", "res")
+				parsed_transform := strings.ReplaceAll(v, "/return/", "_res")
 				for i, arg := range *m.Overloads[0] {
 					fmtd_arg := ""
 					if isClass(*arg.Type, classes) {
@@ -234,7 +235,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 				}
 			} else {
 				g.writeIndent(sb, 2)
-				sb.WriteString(fmt.Sprintf("res = %s::%s(", namespace, *m.Ident))
+				sb.WriteString(fmt.Sprintf("_res = %s::%s(", namespace, *m.Ident))
 				for i, arg := range *m.Overloads[0] {
 					if i > 0 {
 						sb.WriteString(", ")
@@ -249,8 +250,12 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 				}
 				sb.WriteString(");\n")
 			}
+			if v, ok := g.conf.GlobalTypeOutTransforms[*m.Returns]; ok {
+				g.writeIndent(sb, 2)
+				sb.WriteString(strings.ReplaceAll(v, "/return/", "_res"))
+			}
 			g.writeIndent(sb, 2)
-			sb.WriteString(fmt.Sprintf("auto* out = new %s::%s(res);\n", namespace, obj_type))
+			sb.WriteString(fmt.Sprintf("auto* out = new %s::%s(_res);\n", namespace, obj_type))
 			g.writeIndent(sb, 2)
 			sb.WriteString(fmt.Sprintf("auto wrapped = Napi::External<%s::%s>::New(env, out);\n", namespace, obj_type))
 			g.writeIndent(sb, 2)

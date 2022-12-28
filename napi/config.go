@@ -34,6 +34,8 @@ type PackageConfig struct {
 
 	IgnoredMethods []string `yaml:"ignored_methods"`
 
+	GlobalTypeOutTransforms map[string]string `yaml:"global_type_out_transforms"`
+
 	MethodReturnTransforms map[string]string            `yaml:"method_return_transforms"`
 	MethodArgTransforms    map[string]map[string]string `yaml:"method_arg_transforms"`
 

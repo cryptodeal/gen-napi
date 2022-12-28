@@ -35,7 +35,22 @@ packages:
     global_vars: |
       static std::atomic<size_t> g_bytes_used = 0;
       static std::atomic<bool> g_row_major = true;
+    global_type_out_transforms:
+      Tensor: |
+        g_bytes_used += /return/.bytes();
     method_return_transforms:
+      tril: |
+        if (g_row_major) {
+          /return/ = fl::triu(/arg_0/);
+        } else {
+          /return/ = fl::tril(/arg_0/);
+        }
+      triu: |
+        if (g_row_major) {
+          /return/ = fl::tril(/arg_0/);
+        } else {
+          /return/ = fl::triu(/arg_0/);
+        }
       sort: |
         /return/ = fl::sort(/arg_0/, /arg_1/);
       matmul: |
@@ -44,8 +59,6 @@ packages:
         } else {
           /return/ = fl::matmul(/arg_0/, /arg_1/);
         }
-        g_bytes_used += /return/.bytes();
-
     method_arg_transforms:
       concatenate:
         tensors: |
