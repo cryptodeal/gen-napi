@@ -47,6 +47,9 @@ packages:
         g_bytes_used += /return/.bytes();
 
     method_arg_transforms:
+      concatenate:
+        tensors: |
+          auto tensors = jsTensorArrayArg<fl::Tensor>(/arg/.As<Napi::Array>(), env);
       sort:
         axis: |
           auto axis = /arg/.As<Napi::Number>().Uint32Value();

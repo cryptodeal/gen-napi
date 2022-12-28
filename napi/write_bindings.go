@@ -151,6 +151,9 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 					sb.WriteString("}\n")
 					g.writeIndent(sb, 1)
 					sb.WriteString("}\n")
+					if v, ok := g.conf.MethodArgTransforms[*m.Ident][*arg.Ident]; ok && !strings.Contains(v, "/arg_") {
+						sb.WriteString(strings.ReplaceAll(v, "/arg/", fmt.Sprintf("info[%d]", i)))
+					}
 				} else if v, ok := g.conf.TypeMappings[*arg.Type]; ok {
 					g.writeIndent(sb, 1)
 					if strings.Contains(v, "Array") || strings.Contains(v, "[]") {
@@ -189,7 +192,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 			obj_type := ""
 			namespace := ""
 			for i, arg := range *m.Overloads[0] {
-				if v, ok := g.conf.MethodArgTransforms[*m.Ident][*arg.Ident]; ok {
+				if v, ok := g.conf.MethodArgTransforms[*m.Ident][*arg.Ident]; ok && strings.Contains(v, "/arg_") {
 					g.writeIndent(sb, 2)
 					if strings.Contains(v, "/arg_") {
 						for j, val := range *m.Overloads[0] {
