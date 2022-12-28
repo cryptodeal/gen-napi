@@ -229,9 +229,14 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 					parsed_transform = strings.ReplaceAll(parsed_transform, fmt.Sprintf("/arg_%d/", i), fmtd_arg)
 				}
 				transformed_lines := strings.Split(parsed_transform, "\n")
-				for _, line := range transformed_lines {
+				length := len(transformed_lines)
+				for i, line := range transformed_lines {
 					g.writeIndent(sb, 2)
-					sb.WriteString(fmt.Sprintf("%s\n", line))
+					if i == length-1 {
+						sb.WriteString(line)
+					} else {
+						sb.WriteString(fmt.Sprintf("%s\n", line))
+					}
 				}
 			} else {
 				g.writeIndent(sb, 2)
