@@ -14,8 +14,22 @@ func isClass(argType string, classes map[string]*CPPClass) bool {
 	return ok
 }
 
+func CPPTypeToTS(t string) (string, bool) {
+	switch t {
+	case "int", "int8_t", "uint8_t", "signed", "unsigned", "short", "long", "long int", "size_t", "signed long", "signed long int", "unsigned long", "unsigned long int", "long long", "long long int", "signed long long", "signed long long int", "unsigned long long", "unsigned long long int", "long double", "signed char", "unsigned char", "short int", "signed short", "unsigned_short", "signed int", "unsigned int", "unsigned short int", "signed short int", "uint16_t", "uint32_t", "uint64_t", "int16_t", "int32_t", "int64_t", "float", "double":
+		return "number", false
+	case "string", "std::string", "char":
+		return "string", false
+	case "bool":
+		return "boolean", false
+	default:
+		return t, true
+	}
+}
+
 func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classes map[string]*CPPClass) {
 	lower_caser := cases.Lower(language.AmericanEnglish)
+	upper_caser := cases.Upper(language.AmericanEnglish)
 	parsedName := "_" + *m.Ident
 	sb.WriteString(fmt.Sprintf("static Napi::Value %s(const Napi::CallbackInfo& info) {\n", parsedName))
 	g.writeIndent(sb, 1)
@@ -108,12 +122,33 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 					g.writeIndent(sb, 1)
 					sb.WriteString(fmt.Sprintf("Napi::Object %s_obj = info[0].As<Napi::Object>();\n", *arg.Ident))
 				} else if strings.Contains(*arg.Type, "std::vector") {
+					argType := *arg.Type
+					type_test := argType[strings.Index(argType, "<")+1 : strings.Index(argType, ">")]
 					g.writeIndent(sb, 1)
 					sb.WriteString(fmt.Sprintf("if (!info[%d].IsArray()) {\n", i))
 					g.writeIndent(sb, 2)
-					sb.WriteString(fmt.Sprintf("Napi::TypeError::New(info.Env(), %q).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects args[%d] to be typeof `number[]`", *m.Ident, i)))
+					tsType, isObject := CPPTypeToTS(type_test)
+					sb.WriteString(fmt.Sprintf("Napi::TypeError::New(info.Env(), %q).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects args[%d] to be typeof `%s`", *m.Ident, i, tsType)))
 					g.writeIndent(sb, 2)
 					sb.WriteString("return env.Null();\n")
+					g.writeIndent(sb, 1)
+					sb.WriteString("}\n")
+					g.writeIndent(sb, 1)
+					sb.WriteString(fmt.Sprintf("auto len_%s = info[%d].As<Napi::Array>().Length();\n", *arg.Ident, i))
+					g.writeIndent(sb, 1)
+					sb.WriteString(fmt.Sprintf("for (auto i = 0; i < len_%s; ++i) {\n", *arg.Ident))
+					g.writeIndent(sb, 2)
+					if isObject {
+						sb.WriteString(fmt.Sprintf("if (!info[%d].As<Napi::Array>().Get(i).IsObject()) {\n", i))
+					} else {
+						sb.WriteString(fmt.Sprintf("if (!info[%d].As<Napi::Array>().Get(i).Is%s()) {\n", i, upper_caser.String(tsType[0:1])+tsType[1:]))
+					}
+					g.writeIndent(sb, 3)
+					sb.WriteString(fmt.Sprintf("Napi::TypeError::New(info.Env(), %q).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects args[%d][i] to be typeof `%s`", *m.Ident, i, tsType)))
+					g.writeIndent(sb, 3)
+					sb.WriteString("return env.Null();\n")
+					g.writeIndent(sb, 2)
+					sb.WriteString("}\n")
 					g.writeIndent(sb, 1)
 					sb.WriteString("}\n")
 				} else if v, ok := g.conf.TypeMappings[*arg.Type]; ok {

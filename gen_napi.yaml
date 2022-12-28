@@ -15,7 +15,6 @@ packages:
       - 'argsort'
       - 'fromScalar'
       # TODO: following op should not be ignored (ignored for compilation errors)
-      - 'concatenate'
     header_frontmatter: |
       #include "flashlight/fl/autograd/Functions.h"
       #include "flashlight/fl/autograd/tensor/AutogradExtension.h"
