@@ -134,7 +134,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 					g.writeIndent(sb, 1)
 					sb.WriteString("}\n")
 					g.writeIndent(sb, 1)
-					sb.WriteString(fmt.Sprintf("auto len_%s = info[%d].As<Napi::Array>().Length();\n", *arg.Ident, i))
+					sb.WriteString(fmt.Sprintf("int len_%s = info[%d].As<Napi::Array>().Length();\n", *arg.Ident, i))
 					g.writeIndent(sb, 1)
 					sb.WriteString(fmt.Sprintf("for (auto i = 0; i < len_%s; ++i) {\n", *arg.Ident))
 					g.writeIndent(sb, 2)
