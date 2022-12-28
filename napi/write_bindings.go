@@ -144,7 +144,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 						sb.WriteString(fmt.Sprintf("if (!info[%d].As<Napi::Array>().Get(i).Is%s()) {\n", i, upper_caser.String(tsType[0:1])+tsType[1:]))
 					}
 					g.writeIndent(sb, 3)
-					sb.WriteString(fmt.Sprintf("Napi::TypeError::New(info.Env(), %q).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects args[%d][i] to be typeof `%s`", *m.Ident, i, tsType)))
+					sb.WriteString(fmt.Sprintf("Napi::TypeError::New(info.Env(), (%q + to_string(i) + %q)).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects args[%d][", *m.Ident, i), fmt.Sprintf("] to be typeof `%s`", tsType)))
 					g.writeIndent(sb, 3)
 					sb.WriteString("return env.Null();\n")
 					g.writeIndent(sb, 2)
