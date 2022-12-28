@@ -128,7 +128,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 					sb.WriteString(fmt.Sprintf("if (!info[%d].IsArray()) {\n", i))
 					g.writeIndent(sb, 2)
 					tsType, isObject := CPPTypeToTS(type_test)
-					sb.WriteString(fmt.Sprintf("Napi::TypeError::New(info.Env(), %q).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects args[%d] to be typeof `%s`", *m.Ident, i, tsType)))
+					sb.WriteString(fmt.Sprintf("Napi::TypeError::New(info.Env(), %q).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects args[%d] to be typeof `%s[]`", *m.Ident, i, tsType)))
 					g.writeIndent(sb, 2)
 					sb.WriteString("return env.Null();\n")
 					g.writeIndent(sb, 1)
