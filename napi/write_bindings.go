@@ -280,7 +280,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 			g.writeIndent(sb, 1)
 			sb.WriteString("return env.Null();\n")
 		} else {
-			g.writeIndent(sb, 2)
+			g.writeIndent(sb, 1)
 			sb.WriteString(fmt.Sprintf("%s::%s _res;\n", namespace, *m.Returns))
 			if v, ok := g.conf.MethodReturnTransforms[*m.Ident]; ok {
 				parsed_transform := strings.ReplaceAll(v, "/return/", "_res")
@@ -296,7 +296,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 				transformed_lines := strings.Split(parsed_transform, "\n")
 				length := len(transformed_lines)
 				for i, line := range transformed_lines {
-					g.writeIndent(sb, 2)
+					g.writeIndent(sb, 1)
 					if i == length-1 {
 						sb.WriteString(line)
 					} else {
@@ -304,7 +304,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 					}
 				}
 			} else {
-				g.writeIndent(sb, 2)
+				g.writeIndent(sb, 1)
 				sb.WriteString(fmt.Sprintf("_res = %s::%s(", namespace, *m.Ident))
 				for i, arg := range *m.Overloads[0] {
 					if i > 0 {
@@ -321,18 +321,17 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 				sb.WriteString(");\n")
 			}
 			if v, ok := g.conf.GlobalTypeOutTransforms[*m.Returns]; ok {
-				g.writeIndent(sb, 2)
+				g.writeIndent(sb, 1)
 				sb.WriteString(strings.ReplaceAll(v, "/return/", "_res"))
 			}
-			g.writeIndent(sb, 2)
+			g.writeIndent(sb, 1)
 			sb.WriteString(fmt.Sprintf("auto* out = new %s::%s(_res);\n", namespace, *m.Returns))
-			g.writeIndent(sb, 2)
+			g.writeIndent(sb, 1)
 			sb.WriteString(fmt.Sprintf("auto wrapped = Napi::External<%s::%s>::New(env, out);\n", namespace, *m.Returns))
-			g.writeIndent(sb, 2)
+			g.writeIndent(sb, 1)
 			sb.WriteString(fmt.Sprintf("Napi::Value wrapped_out = %s::constructor->New({wrapped});\n", *m.Returns))
-			g.writeIndent(sb, 2)
+			g.writeIndent(sb, 1)
 			sb.WriteString("return wrapped_out;\n")
-
 		}
 	} else {
 		// TODO: handle cases w multiple overloads
