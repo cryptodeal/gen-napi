@@ -38,6 +38,27 @@ packages:
     global_type_out_transforms:
       Tensor: |
         g_bytes_used += /return/.bytes();
+
+    method_arg_check_transforms:
+      arange: |
+        if (!info[0].IsNumber()) {
+           Napi::TypeError::New(
+               info.Env(), "`arange` expects args[0] to be typeof `number`")
+               .ThrowAsJavaScriptException();
+           return env.Null();
+         }
+         if (!info[1].IsNumber()) {
+           Napi::TypeError::New(info.Env(),
+                               "`arange` expects args[1] to be typeof `number`")
+               .ThrowAsJavaScriptException();
+           return env.Null();
+         }
+         if (!info[2].IsNumber()) {
+           Napi::TypeError::New(
+               info.Env(), "`arange` expects args[2] to be typeof `number`")
+               .ThrowAsJavaScriptException();
+           return env.Null();
+         }
     method_return_transforms:
       arange: |
         /return/ = fl::arange(/arg_0/, /arg_1/, /arg_2/);
