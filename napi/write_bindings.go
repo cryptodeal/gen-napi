@@ -53,7 +53,17 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 	sb.WriteString("}\n")
 	if expected_count > 0 {
 		if v, ok := g.conf.MethodArgCheckTransforms[*m.Ident]; ok {
+			g.writeIndent(sb, 1)
 			sb.WriteString(v)
+			for i, arg := range *m.Overloads[0] {
+				if i > expected_count {
+					break
+				}
+				if v, ok := g.conf.MethodArgTransforms[*m.Ident][*arg.Ident]; ok && !strings.Contains(v, "/arg_") {
+					g.writeIndent(sb, 1)
+					sb.WriteString(strings.ReplaceAll(v, "/arg/", fmt.Sprintf("info[%d]", i)))
+				}
+			}
 		} else {
 			for i, arg := range *m.Overloads[0] {
 				if i > expected_count {
