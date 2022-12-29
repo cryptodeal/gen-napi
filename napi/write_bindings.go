@@ -398,6 +398,8 @@ func (g *PackageGenerator) writeBindings(sb *strings.Builder, classes map[string
 		parsedName := ("_" + *f.Ident)
 		sb.WriteString(fmt.Sprintf("exports.Set(Napi::String::New(env, %q), Napi::Function::New(env, %s));\n", parsedName, parsedName))
 	}
+	g.writeIndent(sb, 1)
+	sb.WriteString("return exports;\n")
 	sb.WriteString("}\n\n")
 	sb.WriteString("NODE_API_MODULE(addon, Init)\n")
 }
