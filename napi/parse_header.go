@@ -144,7 +144,7 @@ func (g *PackageGenerator) parseMethods(n *sitter.Node, input []byte) map[string
 	return methods
 }
 
-func (g *PackageGenerator) parseNamespace(n *sitter.Node, input []byte) string {
+func parseNamespace(n *sitter.Node, input []byte) string {
 	var out string
 	q, err := sitter.NewQuery([]byte("(namespace_definition) @namespace"), cpp.GetLanguage())
 	if err != nil {

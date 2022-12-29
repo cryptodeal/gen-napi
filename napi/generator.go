@@ -78,14 +78,14 @@ func (g *TSGo) Generate() error {
 		n := tree.RootNode()
 
 		napiConfig := g.conf.PackageConfig(path)
-		namespace := getNameSpace(n, input)
+		namespace := parseNamespace(n, input)
 
 		split_path := strings.Split(path, "/")
 		name := strings.Replace(split_path[len(split_path)-1], ".h", "", 1)
 
 		napiGen := &PackageGenerator{
 			conf:      napiConfig,
-			NameSpace: namespace,
+			NameSpace: &namespace,
 			Name:      &name,
 			RootNode:  n,
 			Path:      &path,
