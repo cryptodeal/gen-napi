@@ -54,7 +54,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 	sb.WriteString("}\n")
 	if expected_count > 0 {
 		for i, arg := range *m.Overloads[0] {
-			if i >= expected_count {
+			if i > expected_count {
 				break
 			}
 			if arg.IsPrimitive {
@@ -205,7 +205,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 		obj_name := ""
 		obj_type := ""
 		for i, arg := range *m.Overloads[0] {
-			if i >= expected_count {
+			if i > expected_count {
 				break
 			}
 			if v, ok := g.conf.MethodArgTransforms[*m.Ident][*arg.Ident]; ok && strings.Contains(v, "/arg_") {
