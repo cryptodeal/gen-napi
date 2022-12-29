@@ -60,6 +60,22 @@ packages:
            return env.Null();
          }
     method_return_transforms:
+      countNonzero: |
+        t = fl::countNonzero(*(parsed_tensor->_tensor), /arg_1/, keep_dims);
+        auto axes_set = std::unordered_set<int>(/arg_1/.begin(), /arg_1/.end());
+        auto base_shape = /arg_0/->_tensor->shape().get();
+        std::vector<fl::Dim> new_shape;
+        for (size_t idx = 0; idx < base_shape.size(); ++idx) {
+          if (axes_set.count(idx) || (axes_set.size() == 0)) {
+            if (keep_dims) {
+              new_shape.emplace_back(1);
+            }
+            continue;
+          }
+          new_shape.emplace_back(base_shape[idx]);
+        }
+        const auto& shape = fl::Shape(new_shape);
+        /return/ = fl::reshape(/return/, shape);
       arange: |
         /return/ = fl::arange(/arg_0/, /arg_1/, /arg_2/);
       full: |

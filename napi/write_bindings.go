@@ -38,7 +38,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 	// if len(m.Overloads) == 1 {
 	var expected_count int
 	if v, ok := g.conf.MethodReturnTransforms[*m.Ident]; ok {
-		expected_count = (strings.Count(v, ",") + 1)
+		expected_count = (strings.Count(strings.Split(v, "\n")[0], ",") + 1)
 	} else {
 		expected_count = len(*m.Overloads[0])
 	}
