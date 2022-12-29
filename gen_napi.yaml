@@ -39,6 +39,12 @@ packages:
       Tensor: |
         g_bytes_used += /return/.bytes();
     method_return_transforms:
+      full: |
+        /return/ = fl::full(fl::Shape(/arg_0/), /arg_1/);
+      identity: |
+        /return/ = fl::identity(/arg_0/);
+      iota: |
+        /return/ = fl::iota(fl::Shape(/arg_0/), fl::Shape(/arg_1/));
       tril: |
         if (g_row_major) {
           /return/ = fl::triu(/arg_0/);
@@ -60,6 +66,19 @@ packages:
           /return/ = fl::matmul(/arg_0/, /arg_1/);
         }
     method_arg_transforms:
+      full:
+        dims: |
+          std::vector<long long> dims = jsArrayArg<long long>(/arg/.As<Napi::Array>(), g_row_major, false, env);
+        val: |
+          float val = /arg/.As<Napi::Number>().FloatValue();
+      identity:
+        dim: |
+          int64_t dim = /arg/.As<Napi::Number>().Int64Value();
+      iota:
+        dims: |
+          auto dims = jsArrayArg<long long>(/arg/.As<Napi::Array>(), g_row_major, false, env);
+        tileDims: |
+          auto tileDims = jsArrayArg<long long>(/arg/.As<Napi::Array>(), g_row_major, false, env);
       concatenate:
         axis: |
           auto axis = axisArg(/arg/.As<Napi::Number>().Int32Value(), g_row_major, (&tensors[0])->ndim());
