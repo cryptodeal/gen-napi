@@ -53,7 +53,11 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 	sb.WriteString("}\n")
 	if expected_count > 0 {
 		if v, ok := g.conf.MethodArgCheckTransforms[*m.Ident]; ok {
-			g.writeIndent(sb, 1)
+			lines := strings.Split(v, "\n")
+			for _, line := range lines {
+				g.writeIndent(sb, 1)
+				sb.WriteString(fmt.Sprintf("%s\n", line))
+			}
 			sb.WriteString(v)
 			for i, arg := range *m.Overloads[0] {
 				if i > expected_count {
