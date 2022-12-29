@@ -36,7 +36,13 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 	sb.WriteString("Napi::Env env = info.Env();\n")
 	hasObject := false
 	// if len(m.Overloads) == 1 {
-	expected_count := len(*m.Overloads[0])
+	var expected_count int
+	if v, ok := g.conf.MethodReturnTransforms[*m.Ident]; ok {
+		val := v[strings.Index(v, "("):strings.Index(v, ")")]
+		expected_count = strings.Count(val, ",") + 1
+	} else {
+		expected_count = len(*m.Overloads[0])
+	}
 	// single overload, parse args
 	g.writeIndent(sb, 1)
 	sb.WriteString(fmt.Sprintf("if (info.Length() != %d) {\n", expected_count))
@@ -48,6 +54,9 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 	sb.WriteString("}\n")
 	if expected_count > 0 {
 		for i, arg := range *m.Overloads[0] {
+			if i >= expected_count {
+				break
+			}
 			if arg.IsPrimitive {
 				napiTypeHandler := ""
 				jsTypeEquivalent := ""
@@ -196,6 +205,9 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 		obj_name := ""
 		obj_type := ""
 		for i, arg := range *m.Overloads[0] {
+			if i >= expected_count {
+				break
+			}
 			if v, ok := g.conf.MethodArgTransforms[*m.Ident][*arg.Ident]; ok && strings.Contains(v, "/arg_") {
 				g.writeIndent(sb, 2)
 				if strings.Contains(v, "/arg_") {
