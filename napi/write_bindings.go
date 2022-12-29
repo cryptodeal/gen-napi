@@ -58,7 +58,6 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 				g.writeIndent(sb, 1)
 				sb.WriteString(fmt.Sprintf("%s\n", line))
 			}
-			sb.WriteString(v)
 			for i, arg := range *m.Overloads[0] {
 				if i > expected_count {
 					break
