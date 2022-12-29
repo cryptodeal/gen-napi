@@ -36,11 +36,12 @@ type ResHelpers struct {
 
 // Responsible for generating the code for an input package
 type PackageGenerator struct {
-	conf     *PackageConfig
-	Name     *string
-	Path     *string
-	RootNode *sitter.Node
-	Input    *[]byte
+	conf      *PackageConfig
+	NameSpace *string
+	Name      *string
+	Path      *string
+	RootNode  *sitter.Node
+	Input     *[]byte
 }
 
 type EnumField struct {
@@ -77,16 +78,18 @@ func (g *TSGo) Generate() error {
 		n := tree.RootNode()
 
 		napiConfig := g.conf.PackageConfig(path)
+		namespace := getNameSpace(n, input)
 
 		split_path := strings.Split(path, "/")
 		name := strings.Replace(split_path[len(split_path)-1], ".h", "", 1)
 
 		napiGen := &PackageGenerator{
-			conf:     napiConfig,
-			Name:     &name,
-			RootNode: n,
-			Path:     &path,
-			Input:    &input,
+			conf:      napiConfig,
+			NameSpace: namespace,
+			Name:      &name,
+			RootNode:  n,
+			Path:      &path,
+			Input:     &input,
 		}
 		g.packageGenerators[*napiGen.Path] = napiGen
 		bindings, header, err := napiGen.Generate()

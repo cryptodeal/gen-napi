@@ -144,6 +144,31 @@ func (g *PackageGenerator) parseMethods(n *sitter.Node, input []byte) map[string
 	return methods
 }
 
+func (g *PackageGenerator) parseNamespace(n *sitter.Node, input []byte) string {
+	var out string
+	q, err := sitter.NewQuery([]byte("(namespace_definition) @namespace"), cpp.GetLanguage())
+	if err != nil {
+		fmt.Println(err)
+		panic(err)
+	}
+
+	qc := sitter.NewQueryCursor()
+	qc.Exec(q, n)
+	count := 0
+	for count < 1 {
+		m, ok := qc.NextMatch()
+		if !ok {
+			break
+		}
+		ns := m.Captures[0].Node.ChildByFieldName("name")
+		if ns != nil {
+			out = ns.Content(input)
+			count++
+		}
+	}
+	return out
+}
+
 func parseCPPMethod(r *sitter.Node, b *sitter.Node, content []byte) *ParsedMethod {
 	args := parseCPPArg(content, b.ChildByFieldName("parameters"))
 	name := b.ChildByFieldName("declarator").Content(content)
