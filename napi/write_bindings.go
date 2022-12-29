@@ -145,8 +145,8 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 					sb.WriteString(fmt.Sprintf("for (auto i = 0; i < len_%s; ++i) {\n", *arg.Ident))
 					g.writeIndent(sb, 2)
 					if isObject {
-						if isClass(*arg.Type, classes) {
-							namespace = *classes[*arg.Type].NameSpace
+						if isClass(tsType, classes) {
+							namespace = *classes[tsType].NameSpace
 						}
 						sb.WriteString(fmt.Sprintf("if (!info[%d].As<Napi::Array>().Get(i).IsObject()) {\n", i))
 					} else {
