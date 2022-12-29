@@ -61,6 +61,8 @@ packages:
         }
     method_arg_transforms:
       concatenate:
+        axis: |
+          auto axis = axisArg(/arg/.As<Napi::Number>().Int32Value(), g_row_major, (&tensors[0])->ndim());
         tensors: |
           auto tensors = jsTensorArrayArg<fl::Tensor>(/arg/.As<Napi::Array>(), env);
       sort:

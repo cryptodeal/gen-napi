@@ -99,16 +99,18 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 					sb.WriteString("return env.Null();\n")
 					g.writeIndent(sb, 1)
 					sb.WriteString("}\n")
-					g.writeIndent(sb, 1)
-					sb.WriteString(fmt.Sprintf("%s %s = ", *arg.Type, *arg.Ident))
-					if needsCast != nil {
-						sb.WriteString(fmt.Sprintf("static_cast<%s>(", *needsCast))
+					if _, ok := g.conf.MethodArgTransforms[*m.Ident][*arg.Ident]; !ok {
+						g.writeIndent(sb, 1)
+						sb.WriteString(fmt.Sprintf("%s %s = ", *arg.Type, *arg.Ident))
+						if needsCast != nil {
+							sb.WriteString(fmt.Sprintf("static_cast<%s>(", *needsCast))
+						}
+						sb.WriteString(fmt.Sprintf("info[%d].As<Napi::%s>().%s()", i, strings.ReplaceAll(napiTypeHandler, "Is", ""), valGetter))
+						if needsCast != nil {
+							sb.WriteByte(')')
+						}
+						sb.WriteString(";\n")
 					}
-					sb.WriteString(fmt.Sprintf("info[%d].As<Napi::%s>().%s()", i, strings.ReplaceAll(napiTypeHandler, "Is", ""), valGetter))
-					if needsCast != nil {
-						sb.WriteByte(')')
-					}
-					sb.WriteString(";\n")
 				} else if isClass(*arg.Type, classes) {
 					hasObject = true
 					g.writeIndent(sb, 1)
@@ -119,8 +121,10 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 					sb.WriteString("return env.Null();\n")
 					g.writeIndent(sb, 1)
 					sb.WriteString("}\n")
-					g.writeIndent(sb, 1)
-					sb.WriteString(fmt.Sprintf("Napi::Object %s_obj = info[0].As<Napi::Object>();\n", *arg.Ident))
+					if _, ok := g.conf.MethodArgTransforms[*m.Ident][*arg.Ident]; !ok {
+						g.writeIndent(sb, 1)
+						sb.WriteString(fmt.Sprintf("Napi::Object %s_obj = info[0].As<Napi::Object>();\n", *arg.Ident))
+					}
 				} else if strings.Contains(*arg.Type, "std::vector") {
 					argType := *arg.Type
 					type_test := argType[strings.Index(argType, "<")+1 : strings.Index(argType, ">")]
@@ -271,6 +275,8 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 			sb.WriteString("}\n")
 			g.writeIndent(sb, 1)
 			sb.WriteString("return env.Null();\n")
+		} else {
+
 		}
 	} else {
 		// TODO: handle cases w multiple overloads
