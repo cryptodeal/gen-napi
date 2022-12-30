@@ -465,7 +465,7 @@ func (g *PackageGenerator) writeClassField(sb *strings.Builder, f *CPPFieldDecl,
 		sb.WriteString("auto _res = ")
 		returnType = *f.Returns.FullType
 	}
-	sb.WriteString(fmt.Sprintf("this->_%s::%s(", lower_caser.String(className), *f.Ident))
+	sb.WriteString(fmt.Sprintf("this->_%s->%s(", lower_caser.String(className), *f.Ident))
 	if f.Args != nil {
 		for i, arg := range *f.Args {
 			if i > 0 {
