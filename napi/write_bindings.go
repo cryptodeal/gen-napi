@@ -429,6 +429,12 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 }
 
 func (g *PackageGenerator) writeClass(sb *strings.Builder, class *CPPClass, classes map[string]*CPPClass, name string, methods map[string]*CPPMethod, processedMethods map[string]*CPPMethod) {
+
+	if class.FieldDecl != nil {
+		for _, f := range *class.FieldDecl {
+			fmt.Println(f.Ident)
+		}
+	}
 	// write class constructor (passed in as config option)
 	sb.WriteString(fmt.Sprintf("// %q class constructor\n", name))
 	sb.WriteString(g.conf.ClassConstructors[name])

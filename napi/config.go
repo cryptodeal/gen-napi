@@ -9,13 +9,6 @@ import (
 const defaultOutBindingsFileName = "bindings.cc"
 const defaultOutHeaderFileName = "bindings.h"
 
-type MethodTransforms struct {
-	Methods []string
-	Op      string
-	PostOp  string
-	Args    map[string]string
-}
-
 type PackageConfig struct {
 	// The package path just like you would import it in Go
 	Path string `yaml:"path"`
@@ -43,8 +36,6 @@ type PackageConfig struct {
 	IgnoredMethods []string `yaml:"ignored_methods"`
 
 	GlobalTypeOutTransforms map[string]string `yaml:"global_type_out_transforms"`
-
-	GroupedFnTransforms []MethodTransforms
 
 	MethodArgCheckTransforms map[string]string `yaml:"method_arg_check_transforms"`
 
