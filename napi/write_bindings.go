@@ -494,7 +494,7 @@ func (g *PackageGenerator) writeClassField(sb *strings.Builder, f *CPPFieldDecl,
 			g.writeIndent(sb, 1)
 			sb.WriteString(fmt.Sprintf("auto _wrapped = Napi::External<%s::%s>::New(env, _res);\n", *g.NameSpace, returnType))
 			g.writeIndent(sb, 1)
-			sb.WriteString(fmt.Sprintf("Napi::Value wrapped_out = %s::constructor->New({wrapped});\n", *m.Returns))
+			sb.WriteString(fmt.Sprintf("Napi::Value wrapped_out = %s::constructor->New({wrapped});\n", returnType))
 			g.writeIndent(sb, 1)
 			sb.WriteString("return wrapped_out;\n")
 		} else {
