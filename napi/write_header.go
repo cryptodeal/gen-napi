@@ -8,7 +8,7 @@ import (
 	"golang.org/x/text/language"
 )
 
-func (g *PackageGenerator) writeHeader(sb *strings.Builder, classes map[string]*CPPClass, methods map[string]*CPPMethod) {
+func (g *PackageGenerator) writeHeader(sb *strings.Builder, classes map[string]*CPPClass, methods map[string]*CPPMethod, prepocessedMethods map[string]*CPPMethod) {
 	lower_caser := cases.Lower(language.AmericanEnglish)
 
 	sb.WriteString("#pragma once\n")
@@ -32,6 +32,12 @@ func (g *PackageGenerator) writeHeader(sb *strings.Builder, classes map[string]*
 			g.writeIndent(sb, 2)
 			sb.WriteString("// methods defined in src, wrapped as class methods\n")
 			for _, f := range methods {
+				if g.conf.IsMethodWrapped(class, *f.Ident) && strings.EqualFold(class, *f.Returns) {
+					g.writeIndent(sb, 2)
+					sb.WriteString(fmt.Sprintf("Napi::Value %s(const Napi::CallbackInfo&);\n", *f.Ident))
+				}
+			}
+			for _, f := range prepocessedMethods {
 				if g.conf.IsMethodWrapped(class, *f.Ident) && strings.EqualFold(class, *f.Returns) {
 					g.writeIndent(sb, 2)
 					sb.WriteString(fmt.Sprintf("Napi::Value %s(const Napi::CallbackInfo&);\n", *f.Ident))
