@@ -611,7 +611,7 @@ packages:
           }
         }
     type_handlers:
-      - name: 'Shape'
+      Shape:
         out_type: 'Napi::TypedArrayOf<int64_t>'
         out_var: '_out'
         handler: |
