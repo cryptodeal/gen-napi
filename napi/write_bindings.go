@@ -435,7 +435,6 @@ func (g *PackageGenerator) writeClassField(sb *strings.Builder, f *CPPFieldDecl,
 	var returnType string
 	isVoid := false
 	if f.Returns != nil && *f.Returns.FullType != "void" {
-		sb.WriteString("auto _res = ")
 		returnType = *f.Returns.FullType
 	} else {
 		isVoid = true
