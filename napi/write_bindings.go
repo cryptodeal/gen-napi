@@ -430,9 +430,22 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 
 func (g *PackageGenerator) writeClassField(sb *strings.Builder, f *CPPFieldDecl, className string, classes map[string]*CPPClass) {
 	lower_caser := cases.Lower(language.AmericanEnglish)
-	upper_caser := cases.Lower(language.AmericanEnglish)
+	upper_caser := cases.Upper(language.AmericanEnglish)
 
-	sb.WriteString(fmt.Sprintf("Napi::Value %s::%s(const Napi::CallbackInfo& info) {\n", className, *f.Ident))
+	var returnType string
+	isVoid := false
+	if f.Returns != nil && *f.Returns.FullType != "void" {
+		sb.WriteString("auto _res = ")
+		returnType = *f.Returns.FullType
+	} else {
+		isVoid = true
+	}
+	if isVoid {
+		sb.WriteString("void ")
+	} else {
+		sb.WriteString("Napi::Value ")
+	}
+	sb.WriteString(fmt.Sprintf("%s::%s(const Napi::CallbackInfo& info) {\n", className, *f.Ident))
 	g.writeIndent(sb, 1)
 	sb.WriteString("Napi::Env env = info.Env();\n")
 	if f.Args != nil {
@@ -448,7 +461,6 @@ func (g *PackageGenerator) writeClassField(sb *strings.Builder, f *CPPFieldDecl,
 			sb.WriteString("}\n")
 		}
 	}
-	var returnType string
 	g.writeIndent(sb, 1)
 	if f.Returns != nil && *f.Returns.FullType != "void" {
 		sb.WriteString("auto _res = ")
@@ -471,12 +483,26 @@ func (g *PackageGenerator) writeClassField(sb *strings.Builder, f *CPPFieldDecl,
 	}
 	sb.WriteString(");\n")
 	if f.Returns != nil && *f.Returns.FullType != "void" {
-		g.writeIndent(sb, 1)
-		jsType, _ := CPPTypeToTS(returnType)
-		napiHandler := upper_caser.String(jsType[0:1]) + jsType[1:]
-		sb.WriteString(fmt.Sprintf("return Napi::%s::New(env, %s);\n", napiHandler, "_res"))
+		jsType, isObject := CPPTypeToTS(returnType)
+		if isObject {
+			if v, ok := g.conf.GlobalTypeOutTransforms[returnType]; ok {
+				g.writeIndent(sb, 1)
+				sb.WriteString(strings.ReplaceAll(v, "/return/", "_res"))
+			}
+			g.writeIndent(sb, 1)
+			sb.WriteString(fmt.Sprintf("auto* out = new %s::%s(_res);\n", *g.NameSpace, returnType))
+			g.writeIndent(sb, 1)
+			sb.WriteString(fmt.Sprintf("auto _wrapped = Napi::External<%s::%s>::New(env, _res);\n", *g.NameSpace, returnType))
+			g.writeIndent(sb, 1)
+			sb.WriteString(fmt.Sprintf("Napi::Value wrapped_out = %s::constructor->New({wrapped});\n", *m.Returns))
+			g.writeIndent(sb, 1)
+			sb.WriteString("return wrapped_out;\n")
+		} else {
+			napiHandler := upper_caser.String(jsType[0:1]) + jsType[1:]
+			sb.WriteString(fmt.Sprintf("return Napi::%s::New(env, %s);\n", napiHandler, "_res"))
+		}
 	}
-	sb.WriteString("}\n")
+	sb.WriteString("}\n\n")
 }
 
 func (g *PackageGenerator) writeClass(sb *strings.Builder, class *CPPClass, classes map[string]*CPPClass, name string, methods map[string]*CPPMethod, processedMethods map[string]*CPPMethod) {
