@@ -34,7 +34,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 	if wrappedClass == nil {
 		sb.WriteString(fmt.Sprintf("static Napi::Value %s(const Napi::CallbackInfo& info) {\n", parsedName))
 	} else {
-		sb.WriteString(fmt.Sprintf("Napi::Value %s::%s(const Napi::CallbackInfo& info) {\n", *wrappedClass, parsedName))
+		sb.WriteString(fmt.Sprintf("Napi::Value %s::%s(const Napi::CallbackInfo& info) {\n", *wrappedClass, *m.Ident))
 	}
 	g.writeIndent(sb, 1)
 	sb.WriteString("Napi::Env env = info.Env();\n")
@@ -55,7 +55,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 	if argCount > 0 {
 		sb.WriteString(fmt.Sprintf("if (info.Length() != %d) {\n", argCount))
 		g.writeIndent(sb, 2)
-		sb.WriteString(fmt.Sprintf("Napi::TypeError::New(info.Env(), %q).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects exactly %d args", *m.Ident, expected_count)))
+		sb.WriteString(fmt.Sprintf("Napi::TypeError::New(info.Env(), %q).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects exactly %d args", *m.Ident, argCount)))
 		g.writeIndent(sb, 2)
 		sb.WriteString("return env.Null();\n")
 		g.writeIndent(sb, 1)
@@ -374,7 +374,11 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 				if _, ok := g.conf.TypeMappings[*arg.Type]; ok {
 					sb.WriteString(fmt.Sprintf("%s::%s(%s)", *g.NameSpace, *arg.Type, *arg.Ident))
 				} else if isClass(*arg.Type, classes) {
-					sb.WriteString(fmt.Sprintf("*(%s->_%s)", *arg.Ident, lower_caser.String(*arg.Type)))
+					if wrappedClass != nil && i == 0 {
+						sb.WriteString(fmt.Sprintf("*(this->_%s)", lower_caser.String(*arg.Type)))
+					} else {
+						sb.WriteString(fmt.Sprintf("*(%s->_%s)", *arg.Ident, lower_caser.String(*arg.Type)))
+					}
 				} else {
 					sb.WriteString(*arg.Ident)
 				}
