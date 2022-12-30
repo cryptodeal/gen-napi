@@ -27,11 +27,15 @@ func CPPTypeToTS(t string) (string, bool) {
 	}
 }
 
-func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classes map[string]*CPPClass) {
+func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classes map[string]*CPPClass, wrappedClass *string) {
 	lower_caser := cases.Lower(language.AmericanEnglish)
 	upper_caser := cases.Upper(language.AmericanEnglish)
 	parsedName := "_" + *m.Ident
-	sb.WriteString(fmt.Sprintf("static Napi::Value %s(const Napi::CallbackInfo& info) {\n", parsedName))
+	if wrappedClass == nil {
+		sb.WriteString(fmt.Sprintf("static Napi::Value %s(const Napi::CallbackInfo& info) {\n", parsedName))
+	} else {
+		sb.WriteString(fmt.Sprintf("Napi::Value %s::%s(const Napi::CallbackInfo& info) {\n", *wrappedClass, parsedName))
+	}
 	g.writeIndent(sb, 1)
 	sb.WriteString("Napi::Env env = info.Env();\n")
 	hasObject := false
@@ -44,13 +48,19 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 	}
 	// single overload, parse args
 	g.writeIndent(sb, 1)
-	sb.WriteString(fmt.Sprintf("if (info.Length() != %d) {\n", expected_count))
-	g.writeIndent(sb, 2)
-	sb.WriteString(fmt.Sprintf("Napi::TypeError::New(info.Env(), %q).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects exactly %d args", *m.Ident, expected_count)))
-	g.writeIndent(sb, 2)
-	sb.WriteString("return env.Null();\n")
-	g.writeIndent(sb, 1)
-	sb.WriteString("}\n")
+	argCount := expected_count
+	if wrappedClass != nil {
+		argCount--
+	}
+	if argCount > 0 {
+		sb.WriteString(fmt.Sprintf("if (info.Length() != %d) {\n", argCount))
+		g.writeIndent(sb, 2)
+		sb.WriteString(fmt.Sprintf("Napi::TypeError::New(info.Env(), %q).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects exactly %d args", *m.Ident, expected_count)))
+		g.writeIndent(sb, 2)
+		sb.WriteString("return env.Null();\n")
+		g.writeIndent(sb, 1)
+		sb.WriteString("}\n")
+	}
 	if expected_count > 0 {
 		if v, ok := g.conf.MethodArgCheckTransforms[*m.Ident]; ok {
 			lines := strings.Split(v, "\n")
@@ -59,6 +69,9 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 				sb.WriteString(fmt.Sprintf("%s\n", line))
 			}
 			for i, arg := range *m.Overloads[0] {
+				if wrappedClass != nil && i == 0 {
+					continue
+				}
 				if i > expected_count {
 					break
 				}
@@ -69,8 +82,15 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 			}
 		} else {
 			for i, arg := range *m.Overloads[0] {
+				if wrappedClass != nil && i == 0 {
+					continue
+				}
 				if i > expected_count {
 					break
+				}
+				argIdx := i
+				if wrappedClass != nil {
+					argIdx--
 				}
 				if arg.IsPrimitive {
 					napiTypeHandler := ""
@@ -116,9 +136,9 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 						jsTypeEquivalent = "boolean"
 					}
 					g.writeIndent(sb, 1)
-					sb.WriteString(fmt.Sprintf("if (!info[%d].%s()) {\n", i, napiTypeHandler))
+					sb.WriteString(fmt.Sprintf("if (!info[%d].%s()) {\n", argIdx, napiTypeHandler))
 					g.writeIndent(sb, 2)
-					sb.WriteString(fmt.Sprintf("Napi::TypeError::New(info.Env(), %q).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects args[%d] to be typeof `%s`", *m.Ident, i, jsTypeEquivalent)))
+					sb.WriteString(fmt.Sprintf("Napi::TypeError::New(info.Env(), %q).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects args[%d] to be typeof `%s`", *m.Ident, argIdx, jsTypeEquivalent)))
 					g.writeIndent(sb, 2)
 					sb.WriteString("return env.Null();\n")
 					g.writeIndent(sb, 1)
@@ -129,7 +149,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 						if needsCast != nil {
 							sb.WriteString(fmt.Sprintf("static_cast<%s>(", *needsCast))
 						}
-						sb.WriteString(fmt.Sprintf("info[%d].As<Napi::%s>().%s()", i, strings.ReplaceAll(napiTypeHandler, "Is", ""), valGetter))
+						sb.WriteString(fmt.Sprintf("info[%d].As<Napi::%s>().%s()", argIdx, strings.ReplaceAll(napiTypeHandler, "Is", ""), valGetter))
 						if needsCast != nil {
 							sb.WriteByte(')')
 						}
@@ -138,41 +158,41 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 				} else if isClass(*arg.Type, classes) {
 					hasObject = true
 					g.writeIndent(sb, 1)
-					sb.WriteString(fmt.Sprintf("if (!info[%d].IsObject()) {\n", i))
+					sb.WriteString(fmt.Sprintf("if (!info[%d].IsObject()) {\n", argIdx))
 					g.writeIndent(sb, 2)
-					sb.WriteString(fmt.Sprintf("Napi::TypeError::New(info.Env(), %q).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects args[%d] to be instanceof `%s`", *m.Ident, i, *arg.Type)))
+					sb.WriteString(fmt.Sprintf("Napi::TypeError::New(info.Env(), %q).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects args[%d] to be instanceof `%s`", *m.Ident, argIdx, *arg.Type)))
 					g.writeIndent(sb, 2)
 					sb.WriteString("return env.Null();\n")
 					g.writeIndent(sb, 1)
 					sb.WriteString("}\n")
 					if _, ok := g.conf.MethodArgTransforms[*m.Ident][*arg.Ident]; !ok {
 						g.writeIndent(sb, 1)
-						sb.WriteString(fmt.Sprintf("Napi::Object %s_obj = info[0].As<Napi::Object>();\n", *arg.Ident))
+						sb.WriteString(fmt.Sprintf("Napi::Object %s_obj = info[%d].As<Napi::Object>();\n", *arg.Ident, argIdx))
 					}
 				} else if strings.Contains(*arg.Type, "std::vector") {
 					argType := *arg.Type
 					type_test := argType[strings.Index(argType, "<")+1 : strings.Index(argType, ">")]
 					g.writeIndent(sb, 1)
-					sb.WriteString(fmt.Sprintf("if (!info[%d].IsArray()) {\n", i))
+					sb.WriteString(fmt.Sprintf("if (!info[%d].IsArray()) {\n", argIdx))
 					g.writeIndent(sb, 2)
 					tsType, isObject := CPPTypeToTS(type_test)
-					sb.WriteString(fmt.Sprintf("Napi::TypeError::New(info.Env(), %q).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects args[%d] to be typeof `%s[]`", *m.Ident, i, tsType)))
+					sb.WriteString(fmt.Sprintf("Napi::TypeError::New(info.Env(), %q).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects args[%d] to be typeof `%s[]`", *m.Ident, argIdx, tsType)))
 					g.writeIndent(sb, 2)
 					sb.WriteString("return env.Null();\n")
 					g.writeIndent(sb, 1)
 					sb.WriteString("}\n")
 					g.writeIndent(sb, 1)
-					sb.WriteString(fmt.Sprintf("int len_%s = info[%d].As<Napi::Array>().Length();\n", *arg.Ident, i))
+					sb.WriteString(fmt.Sprintf("int len_%s = info[%d].As<Napi::Array>().Length();\n", *arg.Ident, argIdx))
 					g.writeIndent(sb, 1)
 					sb.WriteString(fmt.Sprintf("for (auto i = 0; i < len_%s; ++i) {\n", *arg.Ident))
 					g.writeIndent(sb, 2)
 					if isObject {
-						sb.WriteString(fmt.Sprintf("if (!info[%d].As<Napi::Array>().Get(i).IsObject()) {\n", i))
+						sb.WriteString(fmt.Sprintf("if (!info[%d].As<Napi::Array>().Get(i).IsObject()) {\n", argIdx))
 					} else {
-						sb.WriteString(fmt.Sprintf("if (!info[%d].As<Napi::Array>().Get(i).Is%s()) {\n", i, upper_caser.String(tsType[0:1])+tsType[1:]))
+						sb.WriteString(fmt.Sprintf("if (!info[%d].As<Napi::Array>().Get(i).Is%s()) {\n", argIdx, upper_caser.String(tsType[0:1])+tsType[1:]))
 					}
 					g.writeIndent(sb, 3)
-					sb.WriteString(fmt.Sprintf("Napi::TypeError::New(info.Env(), (%q + std::to_string(i) + %q)).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects args[%d][", *m.Ident, i), fmt.Sprintf("] to be typeof `%s`", tsType)))
+					sb.WriteString(fmt.Sprintf("Napi::TypeError::New(info.Env(), (%q + std::to_string(i) + %q)).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects args[%d][", *m.Ident, argIdx), fmt.Sprintf("] to be typeof `%s`", tsType)))
 					g.writeIndent(sb, 3)
 					sb.WriteString("return env.Null();\n")
 					g.writeIndent(sb, 2)
@@ -182,16 +202,16 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 				} else if v, ok := g.conf.TypeMappings[*arg.Type]; ok {
 					g.writeIndent(sb, 1)
 					if strings.Contains(v, "Array") || strings.Contains(v, "[]") {
-						sb.WriteString(fmt.Sprintf("if (!info[%d].IsArray()) {\n", i))
+						sb.WriteString(fmt.Sprintf("if (!info[%d].IsArray()) {\n", argIdx))
 					} else if strings.Contains(v, "any") || strings.Contains(v, "object") || strings.Contains(v, "Record<") || strings.Contains(v, "Map<") {
-						sb.WriteString(fmt.Sprintf("if (!info[%d].IsObject()) {\n", i))
+						sb.WriteString(fmt.Sprintf("if (!info[%d].IsObject()) {\n", argIdx))
 					} else if strings.Contains(v, "string") {
-						sb.WriteString(fmt.Sprintf("if (!info[%d].IsString()) {\n", i))
+						sb.WriteString(fmt.Sprintf("if (!info[%d].IsString()) {\n", argIdx))
 					} else if strings.Contains(v, "number") {
-						sb.WriteString(fmt.Sprintf("if (!info[%d].IsNumber()) {\n", i))
+						sb.WriteString(fmt.Sprintf("if (!info[%d].IsNumber()) {\n", argIdx))
 					}
 					g.writeIndent(sb, 2)
-					sb.WriteString(fmt.Sprintf("Napi::TypeError::New(info.Env(), %q).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects args[%d] to be typeof `%s`", *m.Ident, i, v)))
+					sb.WriteString(fmt.Sprintf("Napi::TypeError::New(info.Env(), %q).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects args[%d] to be typeof `%s`", *m.Ident, argIdx, v)))
 					g.writeIndent(sb, 2)
 					sb.WriteString("return env.Null();\n")
 					g.writeIndent(sb, 1)
@@ -199,7 +219,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 				}
 				if v, ok := g.conf.MethodArgTransforms[*m.Ident][*arg.Ident]; ok && !strings.Contains(v, "/arg_") {
 					g.writeIndent(sb, 1)
-					sb.WriteString(strings.ReplaceAll(v, "/arg/", fmt.Sprintf("info[%d]", i)))
+					sb.WriteString(strings.ReplaceAll(v, "/arg/", fmt.Sprintf("info[%d]", argIdx)))
 				}
 			}
 		}
@@ -210,8 +230,11 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 		g.writeIndent(sb, 1)
 		sb.WriteString("if (")
 		for i, arg := range *m.Overloads[0] {
+			if wrappedClass != nil && i == 0 {
+				continue
+			}
 			if isClass(*arg.Type, classes) {
-				if i > 0 {
+				if (wrappedClass == nil && i > 0) || i > 1 {
 					sb.WriteString(" && ")
 				}
 				sb.WriteString(fmt.Sprintf("%s_obj.InstanceOf(%s::constructor->Value())", *arg.Ident, *arg.Type))
@@ -221,6 +244,10 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 		obj_name := ""
 		obj_type := ""
 		for i, arg := range *m.Overloads[0] {
+			argIdx := i
+			if wrappedClass != nil {
+				argIdx--
+			}
 			if i > expected_count {
 				break
 			}
@@ -228,11 +255,19 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 				g.writeIndent(sb, 2)
 				if strings.Contains(v, "/arg_") {
 					for j, val := range *m.Overloads[0] {
-						v = strings.ReplaceAll(v, fmt.Sprintf("/arg_%d/", j), *val.Ident)
+						if wrappedClass != nil && j == 0 {
+							v = strings.ReplaceAll(v, "/arg_%d/", "this")
+						} else {
+							v = strings.ReplaceAll(v, fmt.Sprintf("/arg_%d/", j), *val.Ident)
+						}
 					}
 				}
-				sb.WriteString(strings.ReplaceAll(v, "/arg/", fmt.Sprintf("info[%d]", i)))
+				// TODO: this might need better handling for class wrappers
+				sb.WriteString(strings.ReplaceAll(v, "/arg/", fmt.Sprintf("info[%d]", argIdx)))
 			} else if isClass(*arg.Type, classes) {
+				if wrappedClass != nil && i == 0 {
+					continue
+				}
 				obj_name = *arg.Ident
 				obj_type = *arg.Type
 				g.writeIndent(sb, 2)
@@ -252,7 +287,11 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 			for i, arg := range *m.Overloads[0] {
 				fmtd_arg := ""
 				if isClass(*arg.Type, classes) {
-					fmtd_arg = fmt.Sprintf("*(%s->_%s)", *arg.Ident, lower_caser.String(*arg.Type))
+					if wrappedClass != nil && i == 0 {
+						fmtd_arg = fmt.Sprintf("*(this->_%s)", lower_caser.String(*arg.Type))
+					} else {
+						fmtd_arg = fmt.Sprintf("*(%s->_%s)", *arg.Ident, lower_caser.String(*arg.Type))
+					}
 				} else {
 					fmtd_arg = *arg.Ident
 				}
@@ -365,29 +404,19 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 	sb.WriteString("}\n\n")
 }
 
-func (g *PackageGenerator) writeClass(sb *strings.Builder, class *CPPClass, name string, methods map[string]*CPPMethod, processedMethods map[string]*CPPMethod) {
+func (g *PackageGenerator) writeClass(sb *strings.Builder, class *CPPClass, classes map[string]*CPPClass, name string, methods map[string]*CPPMethod, processedMethods map[string]*CPPMethod) {
 	// write class constructor (passed in as config option)
 	sb.WriteString(fmt.Sprintf("// %q class constructor\n", name))
 	sb.WriteString(g.conf.ClassConstructors[name])
 	sb.WriteString(fmt.Sprintf("// exported %q class methods\n", name))
 	for _, f := range methods {
 		if g.conf.IsMethodWrapped(name, *f.Ident) {
-			sb.WriteString(fmt.Sprintf("Napi::Value %s::%s(const Napi::CallbackInfo& info) {\n", name, *f.Ident))
-			g.writeIndent(sb, 1)
-			sb.WriteString("Napi::Env env = info.Env();\n")
-			g.writeIndent(sb, 1)
-			sb.WriteString("return env.Null();\n")
-			sb.WriteString("}\n\n")
+			g.writeMethod(sb, f, classes, &name)
 		}
 	}
 	for _, f := range processedMethods {
 		if g.conf.IsMethodWrapped(name, *f.Ident) {
-			sb.WriteString(fmt.Sprintf("Napi::Value %s::%s(const Napi::CallbackInfo& info) {\n", name, *f.Ident))
-			g.writeIndent(sb, 1)
-			sb.WriteString("Napi::Env env = info.Env();\n")
-			g.writeIndent(sb, 1)
-			sb.WriteString("return env.Null();\n")
-			sb.WriteString("}\n\n")
+			g.writeMethod(sb, f, classes, &name)
 		}
 	}
 
@@ -429,16 +458,16 @@ func (g *PackageGenerator) writeBindings(sb *strings.Builder, classes map[string
 
 	sb.WriteString("// exported functions\n")
 	for _, f := range methods {
-		g.writeMethod(sb, f, classes)
+		g.writeMethod(sb, f, classes, nil)
 	}
 
 	for _, f := range processedMethods {
-		g.writeMethod(sb, f, classes)
+		g.writeMethod(sb, f, classes, nil)
 	}
 
 	for name, c := range classes {
 		if c.Decl != nil {
-			g.writeClass(sb, c, name, methods, processedMethods)
+			g.writeClass(sb, c, classes, name, methods, processedMethods)
 		}
 	}
 
