@@ -1,6 +1,7 @@
 package napi
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
@@ -618,4 +619,149 @@ func findChildNodeByType(n *sitter.Node, node_type string) *sitter.Node {
 
 func splitMatches(matched []sitter.QueryCapture) (sitter.QueryCapture, sitter.QueryCapture) {
 	return matched[0], matched[1]
+}
+
+type PreprocessBlock struct {
+	Node    *sitter.Node
+	RawArgs *string
+	RawRes  *string
+	Expr    bool
+}
+
+func (g *PackageGenerator) parseLiterals(n *sitter.Node, input []byte) map[string]*CPPMethod {
+	preprocess_funcs := map[string]*PreprocessBlock{}
+	linked_expr := map[string]*[]*string{}
+
+	processed_expr := map[string]*CPPMethod{}
+	q, err := sitter.NewQuery([]byte("(preproc_function_def) @function_literal"), cpp.GetLanguage())
+	if err != nil {
+		fmt.Println(err)
+		panic(err)
+	}
+
+	qc := sitter.NewQueryCursor()
+	qc.Exec(q, n)
+
+	for {
+		m, ok := qc.NextMatch()
+		if !ok {
+			break
+		}
+
+		// fmt.Println(len(m.Captures))
+		for _, c := range m.Captures {
+			node := c.Node
+			name_node := node.ChildByFieldName("name")
+			name := name_node.Content(input)
+			preprocess_funcs[name] = &PreprocessBlock{Node: node, Expr: false}
+			value_node := node.ChildByFieldName("value")
+			if value_node != nil {
+				value := value_node.Content(input)
+				val_split := strings.Split(value, "\n")
+				for _, val := range val_split {
+					if strings.Contains(val, "FUNC") && !strings.Contains(val, "OP") && !strings.Contains(val, "operator") {
+						end_idx := strings.Index(val, ";")
+						used_portion := strings.TrimSpace(val[:end_idx])
+						used_split := strings.Split(used_portion, "FUNC")
+						res_type := strings.TrimSpace(used_split[0])
+						raw_args := strings.TrimSpace(used_split[1][1 : len(used_split[1])-1])
+						preprocess_funcs[name].RawRes = &res_type
+						preprocess_funcs[name].RawArgs = &raw_args
+						break
+					}
+				}
+			}
+		}
+	}
+
+	q, err = sitter.NewQuery([]byte("(expression_statement) @expr"), cpp.GetLanguage())
+	if err != nil {
+		fmt.Println(err)
+		panic(err)
+	}
+
+	qc = sitter.NewQueryCursor()
+	qc.Exec(q, n)
+
+	for {
+		m, ok := qc.NextMatch()
+		if !ok {
+			break
+		}
+
+		for _, c := range m.Captures {
+			node := c.Node
+			preprocess_name := findChildNodeByType(node, "call_expression")
+			preprocess_alt := findChildNodeByType(node, "binary_expression")
+			if preprocess_name != nil {
+				scope_node := preprocess_name.ChildByFieldName("function")
+				if scope_node != nil {
+					scope_name := strings.Replace(scope_node.Content(input), "(", "", -1)
+					if _, ok := preprocess_funcs[scope_name]; ok {
+						preprocess_funcs[scope_name].Expr = true
+						if linked_expr[scope_name] == nil {
+							linked_expr[scope_name] = &[]*string{}
+						}
+
+						args_node := preprocess_name.ChildByFieldName("arguments")
+						unary_expr := findChildNodeByType(args_node, "unary_expression")
+						ptr_expr := findChildNodeByType(args_node, "pointer_expression")
+
+						if unary_expr != nil {
+							name := strings.TrimSpace(strings.Split(unary_expr.Content(input), ",")[1])
+							*linked_expr[scope_name] = append(*linked_expr[scope_name], &name)
+						} else if ptr_expr != nil {
+							name := strings.TrimSpace(strings.Split(ptr_expr.Content(input), ",")[1])
+							*linked_expr[scope_name] = append(*linked_expr[scope_name], &name)
+						} else {
+							name := strings.Replace(strings.TrimSpace(strings.Split(args_node.Content(input), ",")[1]), ")", "", -1)
+							*linked_expr[scope_name] = append(*linked_expr[scope_name], &name)
+						}
+					}
+				}
+			} else if preprocess_alt != nil {
+				scope_node := preprocess_alt.ChildByFieldName("left")
+				if scope_node != nil {
+					scope_name := strings.Replace(scope_node.Content(input), "(", "", -1)
+					if _, ok := preprocess_funcs[scope_name]; ok {
+						preprocess_funcs[scope_name].Expr = true
+						if linked_expr[scope_name] == nil {
+							linked_expr[scope_name] = &[]*string{}
+						}
+						name_node := preprocess_alt.ChildByFieldName("right")
+						if name_node != nil {
+							name := strings.TrimSpace(name_node.Content(input))
+							*linked_expr[scope_name] = append(*linked_expr[scope_name], &name)
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// now parse/link data for generating output for preprocess def/expr pairs
+	for name, block := range preprocess_funcs {
+		if !block.Expr {
+			continue
+		}
+		sb := strings.Builder{}
+		for _, fn := range *linked_expr[name] {
+			sb.WriteString(fmt.Sprintf("%s %s(%s);\n", *block.RawRes, *fn, *block.RawArgs))
+		}
+		parser := sitter.NewParser()
+		parser.SetLanguage(cpp.GetLanguage())
+		temp_input := []byte(sb.String())
+		tree, err := parser.ParseCtx(context.Background(), nil, temp_input)
+		if err != nil {
+			fmt.Println(err)
+			panic(err)
+		}
+
+		n := tree.RootNode()
+		processed_methods := g.parseMethods(n, temp_input)
+		for fn, method := range processed_methods {
+			processed_expr[fn] = method
+		}
+	}
+	return processed_expr
 }
