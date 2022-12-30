@@ -11,6 +11,7 @@ const defaultOutBindingsFileName = "bindings.cc"
 const defaultOutHeaderFileName = "bindings.h"
 
 type TypeHandler struct {
+	name    string `yaml:"name"`
 	outType string `yaml:"out_type"`
 	outVar  string `yaml:"out_var"`
 	handler string `yaml:"handler"`
@@ -31,7 +32,7 @@ type PackageConfig struct {
 	// Be default unrecognized types will be output as `any /* name */`.
 	TypeMappings map[string]string `yaml:"type_mappings"`
 
-	TypeHandlers map[string]TypeHandler `yaml:"type_handlers"`
+	TypeHandlers map[string][]TypeHandler `yaml:"type_handlers"`
 
 	ClassMethods      map[string][]string `yaml:"class_methods"`
 	ClassFields       map[string][]string `yaml:"class_fields"`
@@ -108,10 +109,10 @@ func (c PackageConfig) IsFieldWrapped(className string, fnName string) bool {
 
 func (c PackageConfig) TypeHasHandler(name string) *TypeHandler {
 	var handler *TypeHandler
-	for typeName, h := range c.TypeHandlers {
+	for _, h := range c.TypeHandlers {
 		fmt.Println("type_handler:", h)
-		if strings.EqualFold(typeName, name) {
-			handler = &h
+		if strings.EqualFold(h[0].name, name) {
+			handler = &h[0]
 			break
 		}
 	}
