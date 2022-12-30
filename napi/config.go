@@ -26,6 +26,7 @@ type PackageConfig struct {
 	TypeMappings map[string]string `yaml:"type_mappings"`
 
 	ClassMethods      map[string][]string `yaml:"class_methods"`
+	ClassFields       map[string][]string `yaml:"class_fields"`
 	ClassConstructors map[string]string   `yaml:"class_constructors"`
 
 	// This content will be put at the top of the output Typescript file.
@@ -77,6 +78,17 @@ func (c Config) PackageConfig(packagePath string) *PackageConfig {
 
 func (c PackageConfig) IsMethodWrapped(className string, fnName string) bool {
 	if v, ok := c.ClassMethods[className]; ok {
+		for _, name := range v {
+			if strings.EqualFold(name, fnName) {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func (c PackageConfig) IsFieldWrapped(className string, fnName string) bool {
+	if v, ok := c.ClassFields[className]; ok {
 		for _, name := range v {
 			if strings.EqualFold(name, fnName) {
 				return true

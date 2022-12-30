@@ -309,7 +309,7 @@ func parseClasses(n *sitter.Node, input []byte) map[string]*CPPClass {
 						parsed := parseFieldDecl(temp_child, input)
 						if parsed.Ident == nil {
 							// TODO: handle
-							// fmt.Println(temp_child.Content(input))
+							fmt.Println("TODO: handle:", temp_child.Content(input))
 						}
 						*classes[class_name].FieldDecl = append(*classes[class_name].FieldDecl, parsed)
 					}

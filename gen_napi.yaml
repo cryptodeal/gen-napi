@@ -610,6 +610,20 @@ packages:
             return;
           }
         }
+    class_fields:
+      Tensor:
+        - 'copy'
+        - 'shape'
+        - 'elements'
+        - 'ndim'
+        - 'isEmpty'
+        - 'bytes'
+        - 'type'
+        - 'isSpares'
+        - 'strides'
+        - 'flatten'
+        - 'asContiguousTensor'
+        - 'isContiguous'
     class_methods:
       Tensor:
         - 'reshape'

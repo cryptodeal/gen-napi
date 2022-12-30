@@ -428,6 +428,42 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 	sb.WriteString("}\n\n")
 }
 
+func (g *PackageGenerator) writeClassField(sb *strings.Builder, f *CPPFieldDecl, className string, classes map[string]*CPPClass) {
+	lower_caser := cases.Lower(language.AmericanEnglish)
+	sb.WriteString(fmt.Sprintf("Napi::Value %s::%s(const Napi::CallbackInfo& info) {\n", className, *f.Ident))
+	g.writeIndent(sb, 1)
+	sb.WriteString("Napi::Env env = info.Env();\n")
+	argCount := len(*f.Args)
+	if argCount > 0 {
+		g.writeIndent(sb, 1)
+		sb.WriteString(fmt.Sprintf("if (info.Length() != %d) {\n", argCount))
+		g.writeIndent(sb, 2)
+		sb.WriteString(fmt.Sprintf("Napi::TypeError::New(info.Env(), %q).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects exactly %d args", *f.Ident, argCount)))
+		g.writeIndent(sb, 2)
+		sb.WriteString("return env.Null();\n")
+		g.writeIndent(sb, 1)
+		sb.WriteString("}\n")
+	}
+	g.writeIndent(sb, 1)
+	sb.WriteString(fmt.Sprintf("this->_%s::%s(", lower_caser.String(className), *f.Ident))
+	for i, arg := range *f.Args {
+		if i > 0 {
+			sb.WriteString(", ")
+		}
+		if _, ok := g.conf.TypeMappings[*arg.Type]; ok {
+			sb.WriteString(fmt.Sprintf("%s::%s(%s)", *g.NameSpace, *arg.Type, *arg.Ident))
+		} else if isClass(*arg.Type, classes) {
+			sb.WriteString(fmt.Sprintf("*(%s->_%s)", *arg.Ident, lower_caser.String(*arg.Type)))
+		} else {
+			sb.WriteString(*arg.Ident)
+		}
+	}
+	sb.WriteString(");\n")
+	g.writeIndent(sb, 1)
+	sb.WriteString("return env.Null();\n")
+	sb.WriteString("}\n")
+}
+
 func (g *PackageGenerator) writeClass(sb *strings.Builder, class *CPPClass, classes map[string]*CPPClass, name string, methods map[string]*CPPMethod, processedMethods map[string]*CPPMethod) {
 
 	if class.FieldDecl != nil {
@@ -452,6 +488,14 @@ func (g *PackageGenerator) writeClass(sb *strings.Builder, class *CPPClass, clas
 		}
 	}
 
+	if class.FieldDecl != nil {
+		for _, f := range *class.FieldDecl {
+			if g.conf.IsFieldWrapped(name, *f.Ident) {
+				g.writeClassField(sb, f, name, classes)
+			}
+		}
+	}
+
 	sb.WriteString(fmt.Sprintf("Napi::FunctionReference* %s::constructor;\n", name))
 	sb.WriteString(fmt.Sprintf("Napi::Function %s::GetClass(Napi::Env env) {\n", name))
 	g.writeIndent(sb, 1)
@@ -466,6 +510,14 @@ func (g *PackageGenerator) writeClass(sb *strings.Builder, class *CPPClass, clas
 		if g.conf.IsMethodWrapped(name, *f.Ident) {
 			g.writeIndent(sb, 2)
 			sb.WriteString(fmt.Sprintf("%s::InstanceMethod(%q, &%s::%s),\n", name, *f.Ident, name, *f.Ident))
+		}
+	}
+	if class.FieldDecl != nil {
+		for _, f := range *class.FieldDecl {
+			if g.conf.IsFieldWrapped(name, *f.Ident) {
+				g.writeIndent(sb, 2)
+				sb.WriteString(fmt.Sprintf("%s::InstanceMethod(%q, &%s::%s),\n", name, *f.Ident, name, *f.Ident))
+			}
 		}
 	}
 	g.writeIndent(sb, 1)
