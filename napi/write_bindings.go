@@ -432,7 +432,7 @@ func (g *PackageGenerator) writeClass(sb *strings.Builder, class *CPPClass, clas
 
 	if class.FieldDecl != nil {
 		for _, f := range *class.FieldDecl {
-			fmt.Println(f.Ident)
+			fmt.Println(*f.Ident)
 		}
 	}
 	// write class constructor (passed in as config option)
