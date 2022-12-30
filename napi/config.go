@@ -9,6 +9,13 @@ import (
 const defaultOutBindingsFileName = "bindings.cc"
 const defaultOutHeaderFileName = "bindings.h"
 
+type TypeHandler struct {
+	name    string
+	outType string
+	outVar  string
+	handler string
+}
+
 type PackageConfig struct {
 	// The package path just like you would import it in Go
 	Path string `yaml:"path"`
@@ -24,6 +31,8 @@ type PackageConfig struct {
 	// Specify your own custom type translations, useful for custom types, `time.Time` and `null.String`.
 	// Be default unrecognized types will be output as `any /* name */`.
 	TypeMappings map[string]string `yaml:"type_mappings"`
+
+	TypeHandlers []TypeHandler
 
 	ClassMethods      map[string][]string `yaml:"class_methods"`
 	ClassFields       map[string][]string `yaml:"class_fields"`
@@ -96,6 +105,17 @@ func (c PackageConfig) IsFieldWrapped(className string, fnName string) bool {
 		}
 	}
 	return false
+}
+
+func (c PackageConfig) TypeHasHandler(name string) *TypeHandler {
+	var handler *TypeHandler
+	for _, h := range c.TypeHandlers {
+		if strings.EqualFold(h.name, name) {
+			handler = &h
+			break
+		}
+	}
+	return handler
 }
 
 func (c PackageConfig) IsMethodIgnored(name string) bool {

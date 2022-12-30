@@ -610,6 +610,19 @@ packages:
             return;
           }
         }
+    type_handlers:
+      - name: 'Shape'
+        outType: 'Napi::TypedArrayOf<int64_t>'
+        outVar: '_out'
+        handler: |
+          const size_t length = static_cast<const size_t>(this->_tensor->ndim());
+          Napi::TypedArrayOf<int64_t> _out =
+              Napi::TypedArrayOf<int64_t>::New(env, length, napi_bigint64_array);
+          const int out_len = static_cast<int>(length);
+          for (auto i = 0; i < out_len; ++i) {
+            const auto idx = g_row_major ? out_len - i - 1 : i;
+            _out[i] = static_cast<long long>(this->_tensor->shape()[idx]);
+          }
     class_fields:
       Tensor:
         - 'copy'

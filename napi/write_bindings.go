@@ -483,7 +483,7 @@ func (g *PackageGenerator) writeClassField(sb *strings.Builder, f *CPPFieldDecl,
 	sb.WriteString(");\n")
 	if f.Returns != nil && *f.Returns.FullType != "void" {
 		jsType, isObject := CPPTypeToTS(returnType)
-		if isObject {
+		if isObject && isClass(returnType, classes) {
 			if v, ok := g.conf.GlobalTypeOutTransforms[returnType]; ok {
 				g.writeIndent(sb, 1)
 				sb.WriteString(strings.ReplaceAll(v, "/return/", "_res"))
@@ -496,6 +496,12 @@ func (g *PackageGenerator) writeClassField(sb *strings.Builder, f *CPPFieldDecl,
 			sb.WriteString(fmt.Sprintf("Napi::Value wrapped_out = %s::constructor->New({_wrapped});\n", returnType))
 			g.writeIndent(sb, 1)
 			sb.WriteString("return wrapped_out;\n")
+		} else if g.conf.TypeHasHandler(returnType) != nil {
+			t := g.conf.TypeHasHandler(returnType)
+			g.writeIndent(sb, 1)
+			sb.WriteString(t.handler)
+			g.writeIndent(sb, 1)
+			sb.WriteString(fmt.Sprintf("return %s;\n", t.outVar))
 		} else {
 			napiHandler := upper_caser.String(jsType[0:1]) + jsType[1:]
 			sb.WriteString(fmt.Sprintf("return Napi::%s::New(env, %s);\n", napiHandler, "_res"))
