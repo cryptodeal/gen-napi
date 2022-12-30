@@ -452,7 +452,7 @@ func (g *PackageGenerator) writeClassField(sb *strings.Builder, f *CPPFieldDecl,
 	g.writeIndent(sb, 1)
 	if f.Returns != nil && *f.Returns.FullType != "void" {
 		sb.WriteString("auto _res = ")
-		returnType = *f.Returns.Name
+		returnType = *f.Returns.FullType
 	}
 	sb.WriteString(fmt.Sprintf("this->_%s::%s(", lower_caser.String(className), *f.Ident))
 	if f.Args != nil {
