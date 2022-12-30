@@ -10,7 +10,7 @@ require (
 require golang.org/x/text v0.5.0 // indirect
 
 require (
-	github.com/inconshreveable/mousetrap v1.0.1 // indirect
+	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/smacker/go-tree-sitter v0.0.0-20221031025734-03a9c97d8039
 	github.com/spf13/pflag v1.0.5 // indirect
 )
