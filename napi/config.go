@@ -32,7 +32,7 @@ type PackageConfig struct {
 	// Be default unrecognized types will be output as `any /* name */`.
 	TypeMappings map[string]string `yaml:"type_mappings"`
 
-	TypeHandlers map[string][]TypeHandler `yaml:"type_handlers"`
+	TypeHandlers []*TypeHandler `yaml:"type_handlers"`
 
 	ClassMethods      map[string][]string `yaml:"class_methods"`
 	ClassFields       map[string][]string `yaml:"class_fields"`
@@ -110,9 +110,9 @@ func (c PackageConfig) IsFieldWrapped(className string, fnName string) bool {
 func (c PackageConfig) TypeHasHandler(name string) *TypeHandler {
 	var handler *TypeHandler
 	for _, h := range c.TypeHandlers {
-		fmt.Println("type_handler:", h)
-		if strings.EqualFold(h[0].name, name) {
-			handler = &h[0]
+		fmt.Println("type_handler:", *h)
+		if strings.EqualFold(h.name, name) {
+			handler = h
 			break
 		}
 	}
