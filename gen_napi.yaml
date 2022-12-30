@@ -611,9 +611,9 @@ packages:
           }
         }
     type_handlers:
-      - name: Shape
-        out_type: Napi::TypedArrayOf<int64_t>
-        out_var: _out
+      Shape:
+        out_type: 'Napi::TypedArrayOf<int64_t>'
+        out_var: '_out'
         handler: |
           const size_t length = static_cast<const size_t>(this->_tensor->ndim());
           Napi::TypedArrayOf<int64_t> _out =

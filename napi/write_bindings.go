@@ -486,9 +486,9 @@ func (g *PackageGenerator) writeClassField(sb *strings.Builder, f *CPPFieldDecl,
 		if g.conf.TypeHasHandler(returnType) != nil {
 			t := g.conf.TypeHasHandler(returnType)
 			g.writeIndent(sb, 1)
-			sb.WriteString(t.handler)
+			sb.WriteString(t.Handler)
 			g.writeIndent(sb, 1)
-			sb.WriteString(fmt.Sprintf("return %s;\n", t.outVar))
+			sb.WriteString(fmt.Sprintf("return %s;\n", t.OutVar))
 		} else if isObject && isClass(returnType, classes) {
 			if v, ok := g.conf.GlobalTypeOutTransforms[returnType]; ok {
 				g.writeIndent(sb, 1)
