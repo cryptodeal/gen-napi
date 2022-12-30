@@ -490,7 +490,7 @@ func (g *PackageGenerator) writeClass(sb *strings.Builder, class *CPPClass, clas
 
 	if class.FieldDecl != nil {
 		for _, f := range *class.FieldDecl {
-			if g.conf.IsFieldWrapped(name, *f.Ident) {
+			if f.Ident != nil && g.conf.IsFieldWrapped(name, *f.Ident) {
 				g.writeClassField(sb, f, name, classes)
 			}
 		}
@@ -514,7 +514,7 @@ func (g *PackageGenerator) writeClass(sb *strings.Builder, class *CPPClass, clas
 	}
 	if class.FieldDecl != nil {
 		for _, f := range *class.FieldDecl {
-			if g.conf.IsFieldWrapped(name, *f.Ident) {
+			if f.Ident != nil && g.conf.IsFieldWrapped(name, *f.Ident) {
 				g.writeIndent(sb, 2)
 				sb.WriteString(fmt.Sprintf("%s::InstanceMethod(%q, &%s::%s),\n", name, *f.Ident, name, *f.Ident))
 			}
