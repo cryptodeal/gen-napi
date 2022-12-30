@@ -1,7 +1,6 @@
 package napi
 
 import (
-	"fmt"
 	"log"
 	"path/filepath"
 	"strings"
@@ -33,7 +32,7 @@ type PackageConfig struct {
 	// Be default unrecognized types will be output as `any /* name */`.
 	TypeMappings map[string]string `yaml:"type_mappings"`
 
-	TypeHandlers []TypeHandler
+	TypeHandlers []TypeHandler `yaml:"type_handlers"`
 
 	ClassMethods      map[string][]string `yaml:"class_methods"`
 	ClassFields       map[string][]string `yaml:"class_fields"`
@@ -111,7 +110,6 @@ func (c PackageConfig) IsFieldWrapped(className string, fnName string) bool {
 func (c PackageConfig) TypeHasHandler(name string) *TypeHandler {
 	var handler *TypeHandler
 	for _, h := range c.TypeHandlers {
-		fmt.Println(h)
 		if strings.EqualFold(h.name, name) {
 			handler = &h
 			break
