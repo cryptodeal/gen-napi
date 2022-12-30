@@ -11,10 +11,10 @@ const defaultOutBindingsFileName = "bindings.cc"
 const defaultOutHeaderFileName = "bindings.h"
 
 type TypeHandler struct {
-	name    string
-	outType string
-	outVar  string
-	handler string
+	name    string `yaml:"name"`
+	outType string `yaml:"out_type"`
+	outVar  string `yaml:"out_var"`
+	handler string `yaml:"handler"`
 }
 
 type PackageConfig struct {
