@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"go/ast"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 
@@ -97,7 +98,9 @@ func (g *TSGo) Generate() error {
 			return err
 		}
 
+		cmd_str := []string{"-i"}
 		outPath := napiGen.conf.ResolvedBindingsOutPath(filepath.Dir(napiConfig.Path))
+		cmd_str = append(cmd_str, outPath)
 		err = os.MkdirAll(filepath.Dir(outPath), os.ModePerm)
 		if err != nil {
 			return nil
@@ -109,12 +112,18 @@ func (g *TSGo) Generate() error {
 		}
 
 		outPath = napiGen.conf.ResolvedHeaderOutPath(filepath.Dir(napiConfig.Path))
+		cmd_str = append(cmd_str, outPath)
 		err = os.MkdirAll(filepath.Dir(outPath), os.ModePerm)
 		if err != nil {
 			return nil
 		}
 
 		err = os.WriteFile(outPath, []byte(header), os.ModePerm)
+		if err != nil {
+			return nil
+		}
+		cmd := exec.Command("clang-format", cmd_str...)
+		err = cmd.Run()
 		if err != nil {
 			return nil
 		}
