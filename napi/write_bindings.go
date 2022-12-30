@@ -400,6 +400,7 @@ func (g *PackageGenerator) writeClass(sb *strings.Builder, class *CPPClass, name
 	sb.WriteString("}\n\n")
 }
 
+// makes calls to functions that write bindings
 func (g *PackageGenerator) writeBindings(sb *strings.Builder, classes map[string]*CPPClass, methods map[string]*CPPMethod, processedMethods map[string]*CPPMethod) {
 	sb.WriteString(fmt.Sprintf("#include %q\n", filepath.Base(g.conf.ResolvedHeaderOutPath(filepath.Dir(*g.Path)))))
 	g.writeBindingsFrontmatter(sb)
@@ -423,8 +424,16 @@ func (g *PackageGenerator) writeBindings(sb *strings.Builder, classes map[string
 		}
 	}
 
+	// writes NAPI `Init` function (init NAPI exports)
 	sb.WriteString("// NAPI exports\n")
 	sb.WriteString("Napi::Object Init(Napi::Env env, Napi::Object exports) {\n")
+	for name, c := range classes {
+		if c.Decl != nil {
+			g.writeIndent(sb, 1)
+			parsedName := ("_" + name)
+			sb.WriteString(fmt.Sprintf("exports.Set(Napi::String::New(env, %q), %s::GetClass(env));\n", parsedName, name))
+		}
+	}
 	for _, f := range methods {
 		g.writeIndent(sb, 1)
 		parsedName := ("_" + *f.Ident)
