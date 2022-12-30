@@ -365,10 +365,20 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 	sb.WriteString("}\n\n")
 }
 
-func (g *PackageGenerator) writeClass(sb *strings.Builder, class *CPPClass, name string, methods map[string]*CPPMethod) {
+func (g *PackageGenerator) writeClass(sb *strings.Builder, class *CPPClass, name string, methods map[string]*CPPMethod, processedMethods map[string]*CPPMethod) {
 	// TODO: write all class methods, fields, etc
 
 	for _, f := range methods {
+		if g.conf.IsMethodWrapped(name, *f.Ident) {
+			sb.WriteString(fmt.Sprintf("Napi::Value %s::%s(const Napi::CallbackInfo& info) {\n", name, *f.Ident))
+			g.writeIndent(sb, 1)
+			sb.WriteString("Napi::Env env = info.Env();\n")
+			g.writeIndent(sb, 1)
+			sb.WriteString("return env.Null();\n")
+			sb.WriteString("}\n\n")
+		}
+	}
+	for _, f := range processedMethods {
 		if g.conf.IsMethodWrapped(name, *f.Ident) {
 			sb.WriteString(fmt.Sprintf("Napi::Value %s::%s(const Napi::CallbackInfo& info) {\n", name, *f.Ident))
 			g.writeIndent(sb, 1)
@@ -384,6 +394,12 @@ func (g *PackageGenerator) writeClass(sb *strings.Builder, class *CPPClass, name
 	g.writeIndent(sb, 1)
 	sb.WriteString(fmt.Sprintf("Napi::Function func = DefineClass(env, %q, {\n", name))
 	for _, f := range methods {
+		if g.conf.IsMethodWrapped(name, *f.Ident) {
+			g.writeIndent(sb, 2)
+			sb.WriteString(fmt.Sprintf("%s::InstanceMethod(%q, &%s::%s),\n", name, *f.Ident, name, *f.Ident))
+		}
+	}
+	for _, f := range processedMethods {
 		if g.conf.IsMethodWrapped(name, *f.Ident) {
 			g.writeIndent(sb, 2)
 			sb.WriteString(fmt.Sprintf("%s::InstanceMethod(%q, &%s::%s),\n", name, *f.Ident, name, *f.Ident))
@@ -420,7 +436,7 @@ func (g *PackageGenerator) writeBindings(sb *strings.Builder, classes map[string
 
 	for name, c := range classes {
 		if c.Decl != nil {
-			g.writeClass(sb, c, name, methods)
+			g.writeClass(sb, c, name, methods, processedMethods)
 		}
 	}
 
