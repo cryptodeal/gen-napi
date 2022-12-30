@@ -354,7 +354,11 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 			for i, arg := range *m.Overloads[0] {
 				fmtd_arg := ""
 				if isClass(*arg.Type, classes) {
-					fmtd_arg = fmt.Sprintf("*(%s->_%s)", *arg.Ident, lower_caser.String(*arg.Type))
+					if wrappedClass != nil && i == 0 {
+						fmtd_arg = fmt.Sprintf("*(this->_%s)", lower_caser.String(*arg.Type))
+					} else {
+						fmtd_arg = fmt.Sprintf("*(%s->_%s)", *arg.Ident, lower_caser.String(*arg.Type))
+					}
 				} else {
 					fmtd_arg = *arg.Ident
 				}
