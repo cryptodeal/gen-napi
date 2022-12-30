@@ -430,6 +430,8 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 
 func (g *PackageGenerator) writeClassField(sb *strings.Builder, f *CPPFieldDecl, className string, classes map[string]*CPPClass) {
 	lower_caser := cases.Lower(language.AmericanEnglish)
+	upper_caser := cases.Lower(language.AmericanEnglish)
+
 	sb.WriteString(fmt.Sprintf("Napi::Value %s::%s(const Napi::CallbackInfo& info) {\n", className, *f.Ident))
 	g.writeIndent(sb, 1)
 	sb.WriteString("Napi::Env env = info.Env();\n")
@@ -446,7 +448,12 @@ func (g *PackageGenerator) writeClassField(sb *strings.Builder, f *CPPFieldDecl,
 			sb.WriteString("}\n")
 		}
 	}
+	var returnType string
 	g.writeIndent(sb, 1)
+	if f.Returns != nil && *f.Returns.FullType != "void" {
+		sb.WriteString("auto _res = ")
+		returnType = *f.Returns.Name
+	}
 	sb.WriteString(fmt.Sprintf("this->_%s::%s(", lower_caser.String(className), *f.Ident))
 	if f.Args != nil {
 		for i, arg := range *f.Args {
@@ -463,8 +470,12 @@ func (g *PackageGenerator) writeClassField(sb *strings.Builder, f *CPPFieldDecl,
 		}
 	}
 	sb.WriteString(");\n")
-	g.writeIndent(sb, 1)
-	sb.WriteString("return env.Null();\n")
+	if f.Returns != nil && *f.Returns.FullType != "void" {
+		g.writeIndent(sb, 1)
+		jsType, _ := CPPTypeToTS(returnType)
+		napiHandler := upper_caser.String(jsType[0:1]) + jsType[1:]
+		sb.WriteString(fmt.Sprintf("return Napi::%s::New(env, %s);\n", napiHandler, "_res"))
+	}
 	sb.WriteString("}\n")
 }
 
