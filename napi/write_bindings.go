@@ -367,9 +367,9 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 
 func (g *PackageGenerator) writeClass(sb *strings.Builder, class *CPPClass, name string, methods map[string]*CPPMethod, processedMethods map[string]*CPPMethod) {
 	// write class constructor (passed in as config option)
-	sb.WriteString(fmt.Sprintf("// %q class constructor", name))
+	sb.WriteString(fmt.Sprintf("// %q class constructor\n", name))
 	sb.WriteString(g.conf.ClassConstructors[name])
-	sb.WriteString(fmt.Sprintf("// exported %q class methods", name))
+	sb.WriteString(fmt.Sprintf("// exported %q class methods\n", name))
 	for _, f := range methods {
 		if g.conf.IsMethodWrapped(name, *f.Ident) {
 			sb.WriteString(fmt.Sprintf("Napi::Value %s::%s(const Napi::CallbackInfo& info) {\n", name, *f.Ident))
