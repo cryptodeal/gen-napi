@@ -15,9 +15,6 @@ type TypeHandler struct {
 	outVar  string `yaml:"out_var"`
 	handler string `yaml:"handler"`
 }
-
-type handlers map[string]TypeHandler
-
 type PackageConfig struct {
 	// The package path just like you would import it in Go
 	Path string `yaml:"path"`
@@ -34,7 +31,7 @@ type PackageConfig struct {
 	// Be default unrecognized types will be output as `any /* name */`.
 	TypeMappings map[string]string `yaml:"type_mappings"`
 
-	TypeHandlers handlers `yaml:"type_handlers"`
+	TypeHandlers map[string]TypeHandler `yaml:"type_handlers"`
 
 	ClassMethods      map[string][]string `yaml:"class_methods"`
 	ClassFields       map[string][]string `yaml:"class_fields"`
