@@ -364,6 +364,15 @@ func parseFieldDecl(n *sitter.Node, input []byte) *CPPFieldDecl {
 		if child_decl != nil {
 			identStr := child_decl.Content(input)
 			field_decl.Ident = &identStr
+		} else {
+			func_decl := findChildNodeByType(declarator, "function_declarator")
+			if func_decl != nil {
+				child_decl := func_decl.ChildByFieldName("declarator")
+				if child_decl != nil {
+					identStr := child_decl.Content(input)
+					field_decl.Ident = &identStr
+				}
+			}
 		}
 	}
 	return &field_decl

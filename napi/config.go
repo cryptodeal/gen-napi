@@ -1,7 +1,6 @@
 package napi
 
 import (
-	"fmt"
 	"log"
 	"path/filepath"
 	"strings"
@@ -110,7 +109,6 @@ func (c PackageConfig) IsFieldWrapped(className string, fnName string) bool {
 func (c PackageConfig) TypeHasHandler(name string) *TypeHandler {
 	var handler *TypeHandler
 	for hName, h := range c.TypeHandlers {
-		fmt.Println("type_handler:", h)
 		if strings.EqualFold(hName, name) {
 			handler = &h
 			break
