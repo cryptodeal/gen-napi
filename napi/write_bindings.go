@@ -217,9 +217,14 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 					g.writeIndent(sb, 1)
 					sb.WriteString("}\n")
 				}
-				if v, ok := g.conf.MethodArgTransforms[*m.Ident][*arg.Ident]; ok && !strings.Contains(v, "/arg_") {
-					g.writeIndent(sb, 1)
-					sb.WriteString(strings.ReplaceAll(v, "/arg/", fmt.Sprintf("info[%d]", argIdx)))
+				if v, ok := g.conf.MethodArgTransforms[*m.Ident][*arg.Ident]; ok {
+					if wrappedClass != nil && strings.Contains(v, "/arg_0/") {
+						v = strings.ReplaceAll(v, "/arg_0/", "this")
+					}
+					if !strings.Contains(v, "/arg_") {
+						g.writeIndent(sb, 1)
+						sb.WriteString(strings.ReplaceAll(v, "/arg/", fmt.Sprintf("info[%d]", argIdx)))
+					}
 				}
 			}
 		}
