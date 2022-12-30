@@ -5,7 +5,7 @@ import (
 	"os"
 
 	"github.com/cryptodeal/gen-napi/napi"
-	"gopkg.in/yaml.v3"
+	"gopkg.in/yaml.v2"
 )
 
 func ReadFromFilepath(cfgFilepath string) napi.Config {
