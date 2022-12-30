@@ -199,6 +199,11 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 					sb.WriteString("}\n")
 					g.writeIndent(sb, 1)
 					sb.WriteString("}\n")
+					if _, ok := g.conf.MethodArgTransforms[*m.Ident][*arg.Ident]; ok && wrappedClass != nil {
+						g.writeIndent(sb, 2)
+						tmpType := *arg.Type
+						sb.WriteString(fmt.Sprintf("auto axes = jsArrayArg<%s>(info[%d].As<Napi::Array>(), g_row_major, this->_%s->ndim(), env);\n", tmpType[strings.Index(*arg.Type, "<")+1:strings.Index(*arg.Type, ">")], argIdx, lower_caser.String(*arg.Type)))
+					}
 				} else if v, ok := g.conf.TypeMappings[*arg.Type]; ok {
 					g.writeIndent(sb, 1)
 					if strings.Contains(v, "Array") || strings.Contains(v, "[]") {
