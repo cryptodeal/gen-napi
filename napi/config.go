@@ -32,7 +32,8 @@ type PackageConfig struct {
 	// Be default unrecognized types will be output as `any /* name */`.
 	TypeMappings map[string]string `yaml:"type_mappings"`
 
-	ClassMethods map[string][]string `yaml:"class_methods"`
+	ClassMethods      map[string][]string `yaml:"class_methods"`
+	ClassConstructors map[string]string   `yaml:"class_constructors"`
 
 	// This content will be put at the top of the output Typescript file.
 	// You would generally use this to import custom types.
