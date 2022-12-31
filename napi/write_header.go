@@ -54,7 +54,11 @@ func (g *PackageGenerator) writeHeader(sb *strings.Builder, classes map[string]*
 			if v, ok := g.conf.ClassOpts[class]; ok {
 				for _, f := range v.ForcedMethods {
 					g.writeIndent(sb, 2)
-					sb.WriteString(fmt.Sprintf("Napi::Value %s(const Napi::CallbackInfo&);\n", f.Name))
+					if f.IsVoid {
+						sb.WriteString(fmt.Sprintf("void %s(const Napi::CallbackInfo&);\n", f.Name))
+					} else {
+						sb.WriteString(fmt.Sprintf("Napi::Value %s(const Napi::CallbackInfo&);\n", f.Name))
+					}
 				}
 			}
 			sb.WriteByte('\n')

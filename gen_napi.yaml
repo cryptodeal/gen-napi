@@ -450,6 +450,7 @@ packages:
         }
     global_forced_methods:
       - name: 'init'
+        is_void: true
         body: |
           static void init(const Napi::CallbackInfo& info) {
             fl::init();
@@ -460,11 +461,13 @@ packages:
             return Napi::Number::New(info.Env(), g_bytes_used);
           }
       - name: 'setRowMajor'
+        is_void: true
         body: |
           static void setRowMajor(const Napi::CallbackInfo& info) {
             g_row_major = true;
           }
       - name: 'setColMajor'
+        is_void: true
         body: |
           static void setColMajor(const Napi::CallbackInfo& info) {
             g_row_major = true;
@@ -1000,11 +1003,13 @@ packages:
                 return Napi::Number::New(info.Env(), this->_tensor->asScalar<uint64_t>());
               }
           - name: 'eval'
+            is_void: true
             body: |
               void Tensor::eval(const Napi::CallbackInfo& info) {
                 fl::eval(*(this->_tensor));
               }
           - name: 'dispose'
+            is_void: true
             body: |
               void Tensor::dispose(const Napi::CallbackInfo& info) {
                 auto& tensor = *reinterpret_cast<fl::Tensor*>(this->_tensor);
