@@ -111,8 +111,6 @@ func (c PackageConfig) IsMethodWrapped(className string, fnName string) bool {
 	return false
 }
 
-func (c PackageConfig) GetForcedMethods()
-
 func (c PackageConfig) IsFieldWrapped(className string, fnName string) bool {
 	if v, ok := c.ClassOpts[className]; ok {
 		for _, f := range v.Fields {
