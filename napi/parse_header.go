@@ -360,6 +360,11 @@ func parseFieldDecl(n *sitter.Node, input []byte) *CPPFieldDecl {
 
 	declarator := n.ChildByFieldName("declarator")
 	if declarator != nil {
+		params := declarator.ChildByFieldName("parameters")
+		if params != nil {
+			args := parseCPPArg(input, declarator.ChildByFieldName("parameters"))
+			field_decl.Args = args
+		}
 		child_decl := declarator.ChildByFieldName("declarator")
 		if child_decl != nil {
 			identStr := child_decl.Content(input)
@@ -372,8 +377,7 @@ func parseFieldDecl(n *sitter.Node, input []byte) *CPPFieldDecl {
 					identStr := child_decl.Content(input)
 					field_decl.Ident = &identStr
 				}
-				args := parseCPPArg(input, func_decl.ChildByFieldName("parameters"))
-				field_decl.Args = args
+
 			}
 		}
 	}
