@@ -22,10 +22,18 @@ type TypeMap struct {
 	CastNapi string `yaml:"cast_napi"`
 }
 
+type FnOpts struct {
+	Name          string   `yaml:"name"`
+	JSWrapperName string   `yaml:"js_wrapper_name"`
+	JSWrapperAlts []string `yaml:"js_wrapper_alts"`
+	FnBody        string   `yaml:"fn_body"`
+}
+
 type ClassOpts struct {
-	Fields      []string `yaml:"fields"`
-	Methods     []string `yaml:"methods"`
-	Constructor string   `yaml:"constructor"`
+	Fields        []string `yaml:"fields"`
+	Methods       []string `yaml:"methods"`
+	ForcedMethods []FnOpts `yaml:"forced_methods"`
+	Constructor   string   `yaml:"constructor"`
 }
 
 type PackageConfig struct {
@@ -94,8 +102,8 @@ func (c Config) PackageConfig(packagePath string) *PackageConfig {
 
 func (c PackageConfig) IsMethodWrapped(className string, fnName string) bool {
 	if v, ok := c.ClassOpts[className]; ok {
-		for _, name := range v.Methods {
-			if strings.EqualFold(name, fnName) {
+		for _, m := range v.Methods {
+			if strings.EqualFold(m, fnName) {
 				return true
 			}
 		}
@@ -103,10 +111,12 @@ func (c PackageConfig) IsMethodWrapped(className string, fnName string) bool {
 	return false
 }
 
+func (c PackageConfig) GetForcedMethods()
+
 func (c PackageConfig) IsFieldWrapped(className string, fnName string) bool {
 	if v, ok := c.ClassOpts[className]; ok {
-		for _, name := range v.Fields {
-			if strings.EqualFold(name, fnName) {
+		for _, f := range v.Fields {
+			if strings.EqualFold(f, fnName) {
 				return true
 			}
 		}

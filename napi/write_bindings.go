@@ -473,7 +473,6 @@ func (g *PackageGenerator) writeClassField(sb *strings.Builder, f *CPPFieldDecl,
 				sb.WriteString("return env.Null();\n")
 				g.writeIndent(sb, 1)
 				sb.WriteString("}\n")
-				fmt.Println("arg type", *arg.Type)
 				g.writeIndent(sb, 1)
 				sb.WriteString(fmt.Sprintf("auto %s = static_cast<%s>(info[%d].As<Napi::%s>().%s());\n", *arg.Ident, v.CastsTo, i, v.NapiType, v.CastNapi))
 			} else if isObject {
@@ -565,6 +564,12 @@ func (g *PackageGenerator) writeClass(sb *strings.Builder, class *CPPClass, clas
 		}
 	}
 
+	if v, ok := g.conf.ClassOpts[name]; ok {
+		for _, f := range v.ForcedMethods {
+			sb.WriteString(fmt.Sprintf("%s\n", f.FnBody))
+		}
+	}
+
 	sb.WriteString(fmt.Sprintf("Napi::FunctionReference* %s::constructor;\n", name))
 	sb.WriteString(fmt.Sprintf("Napi::Function %s::GetClass(Napi::Env env) {\n", name))
 	g.writeIndent(sb, 1)
@@ -589,6 +594,13 @@ func (g *PackageGenerator) writeClass(sb *strings.Builder, class *CPPClass, clas
 			}
 		}
 	}
+	if v, ok := g.conf.ClassOpts[name]; ok {
+		for _, f := range v.ForcedMethods {
+			g.writeIndent(sb, 2)
+			sb.WriteString(fmt.Sprintf("%s::InstanceMethod(%q, &%s::%s),\n", name, f.Name, name, f.Name))
+		}
+	}
+
 	g.writeIndent(sb, 1)
 	sb.WriteString("});\n")
 	g.writeIndent(sb, 1)

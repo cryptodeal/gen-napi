@@ -453,7 +453,7 @@ packages:
         out_type: 'Napi::Number'
         out_var: '_out'
         handler: |
-          int _out = static_cast<int>(/val/)
+          Napi::Number _out = Napi::Number::New(env, static_cast<int>(/val/));
       Shape:
         out_type: 'Napi::TypedArrayOf<int64_t>'
         out_var: '_out'
@@ -715,3 +715,40 @@ packages:
           - 'countNonzero'
           - 'any'
           - 'all'
+        forced_methods:
+          - name: 'toFloat32Array'
+            body: |
+              Napi::Value Tensor::ToFloat32Array(const Napi::CallbackInfo& info) {
+                Napi::Env env = info.Env();
+                size_t elemLen = static_cast<size_t>(this->_tensor->elements());
+                size_t byteLen = elemLen * sizeof(float);
+                void* ptr = this->_tensor->astype(fl::dtype::f32).host<float>();
+                Napi::ArrayBuffer buff = Napi::ArrayBuffer::New(env, ptr, byteLen);
+                Napi::TypedArrayOf<float> out =
+                    Napi::TypedArrayOf<float>::New(env, elemLen, buff, 0, napi_float32_array);
+                return out;
+              }
+          - name: 'toFloat64Array'
+            body: |
+              Napi::Value Tensor::ToFloat64Array(const Napi::CallbackInfo& info) {
+                Napi::Env env = info.Env();
+                size_t elemLen = static_cast<size_t>(this->_tensor->elements());
+                size_t byteLen = elemLen * sizeof(double);
+                void* ptr = this->_tensor->astype(fl::dtype::f64).host<double>();
+                Napi::ArrayBuffer buff = Napi::ArrayBuffer::New(env, ptr, byteLen);
+                Napi::TypedArrayOf<double> out = Napi::TypedArrayOf<double>::New(
+                    env, elemLen, buff, 0, napi_float64_array);
+                return out;
+              }
+          - name: 'toBoolInt8Array'
+            body: |
+              Napi::Value Tensor::ToBoolInt8Array(const Napi::CallbackInfo& info) {
+                Napi::Env env = info.Env();
+                size_t elemLen = static_cast<size_t>(this->_tensor->elements());
+                size_t byteLen = elemLen * sizeof(int8_t);
+                void* ptr = this->_tensor->astype(fl::dtype::b8).host<int>();
+                Napi::ArrayBuffer buff = Napi::ArrayBuffer::New(env, ptr, byteLen);
+                Napi::TypedArrayOf<int8_t> out =
+                    Napi::TypedArrayOf<int8_t>::New(env, elemLen, buff, 0, napi_int8_array);
+                return out;
+              }
