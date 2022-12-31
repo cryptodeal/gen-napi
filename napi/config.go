@@ -31,8 +31,8 @@ type FnOpts struct {
 }
 
 type ClassOpts struct {
-	Fields        []string `yaml:"fields"`
-	Methods       []string `yaml:"methods"`
+	Fields        []FnOpts `yaml:"fields"`
+	Methods       []FnOpts `yaml:"methods"`
 	ForcedMethods []FnOpts `yaml:"forced_methods"`
 	Constructor   string   `yaml:"constructor"`
 }
@@ -106,7 +106,7 @@ func (c Config) PackageConfig(packagePath string) *PackageConfig {
 func (c PackageConfig) IsMethodWrapped(className string, fnName string) bool {
 	if v, ok := c.ClassOpts[className]; ok {
 		for _, m := range v.Methods {
-			if strings.EqualFold(m, fnName) {
+			if strings.EqualFold(m.Name, fnName) {
 				return true
 			}
 		}
@@ -117,7 +117,7 @@ func (c PackageConfig) IsMethodWrapped(className string, fnName string) bool {
 func (c PackageConfig) IsFieldWrapped(className string, fnName string) bool {
 	if v, ok := c.ClassOpts[className]; ok {
 		for _, f := range v.Fields {
-			if strings.EqualFold(f, fnName) {
+			if strings.EqualFold(f.Name, fnName) {
 				return true
 			}
 		}
