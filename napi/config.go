@@ -63,6 +63,8 @@ type PackageConfig struct {
 
 	IgnoredMethods []string `yaml:"ignored_methods"`
 
+	GlobalForcedMethods []FnOpts `yaml:"global_methods"`
+
 	GlobalTypeOutTransforms map[string]string `yaml:"global_type_out_transforms"`
 
 	MethodArgCheckTransforms map[string]string `yaml:"method_arg_check_transforms"`

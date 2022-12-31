@@ -636,6 +636,9 @@ func (g *PackageGenerator) writeBindings(sb *strings.Builder, classes map[string
 		}
 	}
 
+	for _, f := range g.conf.GlobalForcedMethods {
+		sb.WriteString(fmt.Sprintf("%s\n", f.FnBody))
+	}
 	// writes NAPI `Init` function (init NAPI exports)
 	sb.WriteString("// NAPI exports\n")
 	sb.WriteString("Napi::Object Init(Napi::Env env, Napi::Object exports) {\n")
@@ -655,6 +658,11 @@ func (g *PackageGenerator) writeBindings(sb *strings.Builder, classes map[string
 		g.writeIndent(sb, 1)
 		parsedName := ("_" + *f.Ident)
 		sb.WriteString(fmt.Sprintf("exports.Set(Napi::String::New(env, %q), Napi::Function::New(env, %s));\n", parsedName, parsedName))
+	}
+	for _, f := range g.conf.GlobalForcedMethods {
+		g.writeIndent(sb, 1)
+		parsedName := ("_" + f.Name)
+		sb.WriteString(fmt.Sprintf("exports.Set(Napi::String::New(env, %q), Napi::Function::New(env, %s));\n", parsedName, f.Name))
 	}
 	g.writeIndent(sb, 1)
 	sb.WriteString("return exports;\n")
