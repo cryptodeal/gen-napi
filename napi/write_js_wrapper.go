@@ -7,6 +7,11 @@ import (
 
 func (g *PackageGenerator) WriteEnvWrapper(sb *strings.Builder, classes map[string]*CPPClass, methods map[string]*CPPMethod, processedMethods map[string]*CPPMethod) {
 	sb.WriteString(g.WriteEnvImports(classes, methods, processedMethods))
+	for name, c := range classes {
+		if c.Decl != nil {
+			sb.WriteString(g.WriteEnvClassWrapper(name, c, methods, processedMethods))
+		}
+	}
 }
 
 func (g *PackageGenerator) WriteEnvImports(classes map[string]*CPPClass, methods map[string]*CPPMethod, processedMethods map[string]*CPPMethod) string {
@@ -92,7 +97,7 @@ func (g *PackageGenerator) WriteEnvClassWrapper(className string, class *CPPClas
 			g.writeIndent(sb, 2)
 			sb.WriteString(fmt.Sprintf("return this.#_native_self.%s(...args);\n", *m.Ident))
 			g.writeIndent(sb, 1)
-			sb.WriteString("}\n")
+			sb.WriteString("}\n\n")
 		}
 	}
 
