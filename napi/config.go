@@ -26,7 +26,7 @@ type FnOpts struct {
 	Name          string   `yaml:"name"`
 	JSWrapperName string   `yaml:"js_wrapper_name"`
 	JSWrapperAlts []string `yaml:"js_wrapper_alts"`
-	FnBody        string   `yaml:"fn_body"`
+	FnBody        string   `yaml:"body"`
 }
 
 type ClassOpts struct {
