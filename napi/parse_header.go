@@ -372,6 +372,8 @@ func parseFieldDecl(n *sitter.Node, input []byte) *CPPFieldDecl {
 					identStr := child_decl.Content(input)
 					field_decl.Ident = &identStr
 				}
+				args := parseCPPArg(input, func_decl.ChildByFieldName("parameters"))
+				field_decl.Args = args
 			}
 		}
 	}

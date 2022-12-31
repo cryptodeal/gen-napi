@@ -446,7 +446,7 @@ packages:
         out_type: 'Napi::Number'
         out_var: '_out'
         handler: |
-          int _out = static_cast<int>(/res/)
+          int _out = static_cast<int>(/val/)
       Shape:
         out_type: 'Napi::TypedArrayOf<int64_t>'
         out_var: '_out'
@@ -457,7 +457,7 @@ packages:
           const int out_len = static_cast<int>(length);
           for (auto i = 0; i < out_len; ++i) {
             const auto idx = g_row_major ? out_len - i - 1 : i;
-            _out[i] = static_cast<long long>(/res/[idx]);
+            _out[i] = static_cast<long long>(/val/[idx]);
           }
     class_opts:
       Tensor:
