@@ -185,3 +185,15 @@ func (c PackageConfig) ResolvedWrapperOutPath(packageDir string) string {
 	}
 	return conf_path
 }
+
+func (c PackageConfig) ResolvedBindingsImportPath(packageDir string) string {
+	packageDirDepth := len(strings.Split(packageDir, "/"))
+	wrapperDirDepth := len(strings.Split(c.ResolvedWrapperOutPath(packageDir), "/"))
+	depth_dif := wrapperDirDepth - packageDirDepth
+	sb := new(strings.Builder)
+	for i := 0; i < depth_dif; i++ {
+		sb.WriteString("../")
+	}
+	sb.WriteString(c.JSWrapperOpts.AddonPath)
+	return sb.String()
+}

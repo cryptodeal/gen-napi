@@ -11,6 +11,7 @@ func (g *PackageGenerator) WriteEnvWrapper(sb *strings.Builder, classes map[stri
 
 func (g *PackageGenerator) WriteEnvImports(classes map[string]*CPPClass, methods map[string]*CPPMethod, processedMethods map[string]*CPPMethod) string {
 	sb := &strings.Builder{}
+	sb.WriteString("const {\n")
 	used := []string{}
 	for name, c := range classes {
 		if c.Decl != nil {
@@ -59,6 +60,6 @@ func (g *PackageGenerator) WriteEnvImports(classes map[string]*CPPClass, methods
 			sb.WriteString(",\n")
 		}
 	}
-	sb.WriteString(fmt.Sprintf("\n} = require('%s')\n\n", g.conf.JSWrapperOpts.AddonPath))
+	sb.WriteString(fmt.Sprintf("\n} = require('%s')\n\n", g.conf.ResolvedBindingsImportPath(g.conf.Path)))
 	return sb.String()
 }
