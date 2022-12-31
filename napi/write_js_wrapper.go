@@ -114,7 +114,11 @@ func (g *PackageGenerator) WriteEnvImports(classes map[string]*CPPClass, methods
 			sb.WriteString(",\n")
 		}
 		g.writeIndent(sb, 1)
-		sb.WriteString(fmt.Sprintf("_%s", name))
+		if name == "var" {
+			sb.WriteString(fmt.Sprintf("__%s", name))
+		} else {
+			sb.WriteString(fmt.Sprintf("_%s", name))
+		}
 		if i < used_len-1 {
 			sb.WriteString(",\n")
 		}
@@ -131,7 +135,11 @@ func (g *PackageGenerator) WriteEnvImports(classes map[string]*CPPClass, methods
 			sb.WriteString(",\n")
 		}
 		g.writeIndent(sb, 1)
-		sb.WriteString(fmt.Sprintf("_%s", name))
+		if name == "var" {
+			sb.WriteString(fmt.Sprintf("__%s", name))
+		} else {
+			sb.WriteString(fmt.Sprintf("_%s", name))
+		}
 		if i < used_len-1 {
 			sb.WriteString(",\n")
 		}
