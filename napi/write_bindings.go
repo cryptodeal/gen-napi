@@ -463,8 +463,8 @@ func (g *PackageGenerator) writeClassField(sb *strings.Builder, f *CPPFieldDecl,
 
 	if f.Args != nil {
 		for i, arg := range *f.Args {
-			typeHandler, isClass := CPPTypeToTS(*arg.Type)
-			if !isClass {
+			typeHandler, isObject := CPPTypeToTS(*arg.Type)
+			if isObject {
 				g.writeIndent(sb, 1)
 				sb.WriteString(fmt.Sprintf("if (!info[%d].%s()) {\n", i, upper_caser.String(typeHandler)))
 				g.writeIndent(sb, 2)
@@ -473,6 +473,7 @@ func (g *PackageGenerator) writeClassField(sb *strings.Builder, f *CPPFieldDecl,
 				sb.WriteString("return env.Null();\n")
 				g.writeIndent(sb, 1)
 				sb.WriteString("}\n")
+				fmt.Println("arg type", *arg.Type)
 				if v, ok := g.conf.TypeMappings[*arg.Type]; ok {
 					g.writeIndent(sb, 1)
 					sb.WriteString(fmt.Sprintf("auto %s = static_cast<%s>(info[%d].As<Napi::%s>().%s());\n", *arg.Ident, v.CastsTo, i, v.NapiType, v.CastNapi))
