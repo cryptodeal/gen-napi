@@ -21,7 +21,7 @@ func (g *PackageGenerator) WriteEnvImports(classes map[string]*CPPClass, methods
 	for i, name := range used {
 		g.writeIndent(sb, 1)
 		sb.WriteString(fmt.Sprintf("_%s", name))
-		if i < used_len {
+		if i < used_len-1 {
 			sb.WriteString(",\n")
 		}
 	}
@@ -38,7 +38,7 @@ func (g *PackageGenerator) WriteEnvImports(classes map[string]*CPPClass, methods
 		}
 		g.writeIndent(sb, 1)
 		sb.WriteString(fmt.Sprintf("_%s", name))
-		if i < used_len {
+		if i < used_len-1 {
 			sb.WriteString(",\n")
 		}
 	}
@@ -55,7 +55,7 @@ func (g *PackageGenerator) WriteEnvImports(classes map[string]*CPPClass, methods
 		}
 		g.writeIndent(sb, 1)
 		sb.WriteString(fmt.Sprintf("_%s", name))
-		if i < used_len {
+		if i < used_len-1 {
 			sb.WriteString(",\n")
 		}
 	}

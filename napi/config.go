@@ -177,10 +177,11 @@ func (c PackageConfig) ResolvedHeaderOutPath(packageDir string) string {
 }
 
 func (c PackageConfig) ResolvedWrapperOutPath(packageDir string) string {
-	if c.HeaderOutPath == "" {
-		return filepath.Join(packageDir, defaultOutHeaderFileName)
-	} else if !strings.HasSuffix(c.HeaderOutPath, ".js") || !strings.HasSuffix(c.HeaderOutPath, ".mjs") || !strings.HasSuffix(c.HeaderOutPath, ".cjs") || !strings.HasSuffix(c.HeaderOutPath, ".ts") {
-		return filepath.Join(c.HeaderOutPath, defaultOutHeaderFileName)
+	conf_path := c.JSWrapperOpts.WrapperOutPath
+	if conf_path == "" {
+		return filepath.Join(packageDir, defaultOutJsWrapperFileName)
+	} else if !strings.HasSuffix(conf_path, ".js") || !strings.HasSuffix(conf_path, ".mjs") || !strings.HasSuffix(conf_path, ".cjs") || !strings.HasSuffix(conf_path, ".ts") {
+		return filepath.Join(conf_path, defaultOutJsWrapperFileName)
 	}
-	return c.HeaderOutPath
+	return conf_path
 }
