@@ -65,7 +65,7 @@ func (g *PackageGenerator) WriteEnvImports(classes map[string]*CPPClass, methods
 			sb.WriteString(",\n")
 		}
 	}
-	sb.WriteString(fmt.Sprintf("\n} = require('%s')\n\n", g.conf.ResolvedBindingsImportPath(g.conf.Path)))
+	sb.WriteString(fmt.Sprintf("\n} = require(%q)\n\n", g.conf.ResolvedBindingsImportPath(g.conf.Path)))
 	return sb.String()
 }
 
@@ -80,11 +80,11 @@ func (g *PackageGenerator) WriteEnvClassWrapper(className string, class *CPPClas
 	if g.conf.IsEnvTS() {
 		sb.WriteString("private #_native_self: any;\n")
 	} else {
-		sb.WriteString("#_native_self\n\n")
+		sb.WriteString("#_native_self\n")
 	}
-
+	sb.WriteByte('\n')
 	g.writeIndent(sb, 1)
-	sb.WriteString("\nconstructor(t) {\n")
+	sb.WriteString("constructor(t) {\n")
 	g.writeIndent(sb, 2)
 	sb.WriteString(fmt.Sprintf("this.#_native_self = new _%s(t);\n", className))
 	g.writeIndent(sb, 1)
@@ -93,9 +93,38 @@ func (g *PackageGenerator) WriteEnvClassWrapper(className string, class *CPPClas
 	for _, m := range methods {
 		if g.conf.IsMethodWrapped(className, *m.Ident) {
 			g.writeIndent(sb, 1)
-			sb.WriteString(fmt.Sprintf("%s(...args) {\n", *m.Ident))
+			sb.WriteString(fmt.Sprintf("%s(", *m.Ident))
+			for i, p := range *m.Overloads[0] {
+				if i == 0 {
+					continue
+				}
+				if i > 1 && i < len(*m.Overloads[0]) {
+					sb.WriteString(", ")
+				}
+				sb.WriteString(*p.Ident)
+				if g.conf.IsEnvTS() {
+					tsType, _ := CPPTypeToTS(*p.Type)
+					sb.WriteString(fmt.Sprintf(": %s", tsType))
+				}
+			}
+			if g.conf.IsEnvTS() {
+				tsType, _ := CPPTypeToTS(*m.Returns)
+				sb.WriteString(fmt.Sprintf("): %s {\n", tsType))
+			} else {
+				sb.WriteString(") {\n")
+			}
 			g.writeIndent(sb, 2)
-			sb.WriteString(fmt.Sprintf("return this.#_native_self.%s(...args);\n", *m.Ident))
+			sb.WriteString(fmt.Sprintf("return this.#_native_self.%s(this.#_native_self,", *m.Ident))
+			for i, p := range *m.Overloads[0] {
+				if i == 0 {
+					continue
+				}
+				if i > 1 && i < len(*m.Overloads[0]) {
+					sb.WriteString(", ")
+				}
+				sb.WriteString(*p.Ident)
+			}
+			sb.WriteString(");\n")
 			g.writeIndent(sb, 1)
 			sb.WriteString("}\n\n")
 		}
