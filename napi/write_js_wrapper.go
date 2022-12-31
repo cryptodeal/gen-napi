@@ -12,6 +12,65 @@ func (g *PackageGenerator) WriteEnvWrapper(sb *strings.Builder, classes map[stri
 			sb.WriteString(g.WriteEnvClassWrapper(name, c, methods, processedMethods))
 		}
 	}
+	sb.WriteString(g.WriteEnvWrappedFns(methods, processedMethods))
+	if !g.conf.IsEnvTS() {
+		sb.WriteString(g.WriteEnvExports(classes, methods, processedMethods))
+	}
+}
+
+func (g *PackageGenerator) WriteEnvExports(classes map[string]*CPPClass, methods map[string]*CPPMethod, processedMethods map[string]*CPPMethod) string {
+	sb := new(strings.Builder)
+	sb.WriteString("module.exports = {\n")
+	used := []string{}
+	for name, c := range classes {
+		if c.Decl != nil {
+			used = append(used, name)
+		}
+	}
+	used_len := len(used)
+	for i, name := range used {
+		g.writeIndent(sb, 1)
+		sb.WriteString(name)
+		if i < used_len-1 {
+			sb.WriteString(",\n")
+		}
+	}
+	used = []string{}
+	for name, m := range methods {
+		if !g.conf.IsMethodIgnored(*m.Ident) {
+			used = append(used, name)
+		}
+	}
+	used_len = len(used)
+	for i, name := range used {
+		if i == 0 {
+			sb.WriteString(",\n")
+		}
+		g.writeIndent(sb, 1)
+		sb.WriteString(name)
+		if i < used_len-1 {
+			sb.WriteString(",\n")
+		}
+	}
+	used = []string{}
+	for name, m := range processedMethods {
+		if !g.conf.IsMethodIgnored(*m.Ident) {
+			used = append(used, name)
+		}
+	}
+	used_len = len(used)
+	for i, name := range used {
+		if i == 0 {
+			sb.WriteString(",\n")
+		}
+		g.writeIndent(sb, 1)
+		sb.WriteString(name)
+		if i < used_len-1 {
+			sb.WriteString(",\n")
+		}
+	}
+	sb.WriteString("\n}\n")
+	return sb.String()
 }
 
 func (g *PackageGenerator) WriteEnvImports(classes map[string]*CPPClass, methods map[string]*CPPMethod, processedMethods map[string]*CPPMethod) string {
@@ -131,5 +190,57 @@ func (g *PackageGenerator) WriteEnvClassWrapper(className string, class *CPPClas
 	}
 
 	sb.WriteString("}\n\n")
+	return sb.String()
+}
+
+func (g *PackageGenerator) WriteEnvWrappedFns(methods map[string]*CPPMethod, processedMethods map[string]*CPPMethod) string {
+	sb := new(strings.Builder)
+	for _, m := range methods {
+		if !g.conf.IsMethodIgnored(*m.Ident) {
+			sb.WriteString(fmt.Sprintf("const %s = (", *m.Ident))
+			for i, p := range *m.Overloads[0] {
+				if i > 0 && i < len(*m.Overloads[0]) {
+					sb.WriteString(", ")
+				}
+				sb.WriteString(*p.Ident)
+			}
+			sb.WriteString(") => {\n")
+			g.writeIndent(sb, 1)
+			sb.WriteString(fmt.Sprintf("return _%s(", *m.Ident))
+			for i, p := range *m.Overloads[0] {
+				if i > 0 && i < len(*m.Overloads[0]) {
+					sb.WriteString(", ")
+				}
+				sb.WriteString(*p.Ident)
+			}
+			sb.WriteString(");\n")
+			sb.WriteString("}\n\n")
+		}
+	}
+
+	for _, m := range processedMethods {
+		if !g.conf.IsMethodIgnored(*m.Ident) {
+			if !g.conf.IsMethodIgnored(*m.Ident) {
+				sb.WriteString(fmt.Sprintf("const %s = (", *m.Ident))
+				for i, p := range *m.Overloads[0] {
+					if i > 0 && i < len(*m.Overloads[0]) {
+						sb.WriteString(", ")
+					}
+					sb.WriteString(*p.Ident)
+				}
+				sb.WriteString(") => {\n")
+				g.writeIndent(sb, 1)
+				sb.WriteString(fmt.Sprintf("return _%s(", *m.Ident))
+				for i, p := range *m.Overloads[0] {
+					if i > 0 && i < len(*m.Overloads[0]) {
+						sb.WriteString(", ")
+					}
+					sb.WriteString(*p.Ident)
+				}
+				sb.WriteString(");\n")
+				sb.WriteString("}\n\n")
+			}
+		}
+	}
 	return sb.String()
 }
