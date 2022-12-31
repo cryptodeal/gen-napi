@@ -521,7 +521,7 @@ func (g *PackageGenerator) writeClass(sb *strings.Builder, class *CPPClass, clas
 	}
 	// write class constructor (passed in as config option)
 	sb.WriteString(fmt.Sprintf("// %q class constructor\n", name))
-	sb.WriteString(g.conf.ClassConstructors[name])
+	sb.WriteString(g.conf.ClassOpts[name].Constructor)
 	sb.WriteString(fmt.Sprintf("// exported %q class methods\n", name))
 	for _, f := range methods {
 		if g.conf.IsMethodWrapped(name, *f.Ident) {

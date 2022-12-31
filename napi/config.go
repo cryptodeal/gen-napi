@@ -15,6 +15,12 @@ type TypeHandler struct {
 	Handler string `yaml:"handler"`
 }
 
+type ClassOpts struct {
+	Fields      []string `yaml:"fields"`
+	Methods     []string `yaml:"methods"`
+	Constructor string   `yaml:"constructor"`
+}
+
 type PackageConfig struct {
 	// The package path just like you would import it in Go
 	Path string `yaml:"path"`
@@ -33,9 +39,7 @@ type PackageConfig struct {
 
 	TypeHandlers map[string]TypeHandler `yaml:"type_handlers"`
 
-	ClassMethods      map[string][]string `yaml:"class_methods"`
-	ClassFields       map[string][]string `yaml:"class_fields"`
-	ClassConstructors map[string]string   `yaml:"class_constructors"`
+	ClassOpts map[string]ClassOpts `yaml:"class_opts"`
 
 	// This content will be put at the top of the output Typescript file.
 	// You would generally use this to import custom types.
@@ -85,8 +89,8 @@ func (c Config) PackageConfig(packagePath string) *PackageConfig {
 }
 
 func (c PackageConfig) IsMethodWrapped(className string, fnName string) bool {
-	if v, ok := c.ClassMethods[className]; ok {
-		for _, name := range v {
+	if v, ok := c.ClassOpts[className]; ok {
+		for _, name := range v.Methods {
 			if strings.EqualFold(name, fnName) {
 				return true
 			}
@@ -96,8 +100,8 @@ func (c PackageConfig) IsMethodWrapped(className string, fnName string) bool {
 }
 
 func (c PackageConfig) IsFieldWrapped(className string, fnName string) bool {
-	if v, ok := c.ClassFields[className]; ok {
-		for _, name := range v {
+	if v, ok := c.ClassOpts[className]; ok {
+		for _, name := range v.Fields {
 			if strings.EqualFold(name, fnName) {
 				return true
 			}
