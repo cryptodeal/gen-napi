@@ -201,7 +201,11 @@ func (g *PackageGenerator) WriteEnvWrappedFns(methods map[string]*CPPMethod, pro
 	sb := new(strings.Builder)
 	for _, m := range methods {
 		if !g.conf.IsMethodIgnored(*m.Ident) {
-			sb.WriteString(fmt.Sprintf("const %s = (", *m.Ident))
+			if *m.Ident == "var" {
+				sb.WriteString(fmt.Sprintf("const %s = (", "_"+*m.Ident))
+			} else {
+				sb.WriteString(fmt.Sprintf("const %s = (", *m.Ident))
+			}
 			for i, p := range *m.Overloads[0] {
 				if i > 0 && i < len(*m.Overloads[0]) {
 					sb.WriteString(", ")
@@ -210,7 +214,11 @@ func (g *PackageGenerator) WriteEnvWrappedFns(methods map[string]*CPPMethod, pro
 			}
 			sb.WriteString(") => {\n")
 			g.writeIndent(sb, 1)
-			sb.WriteString(fmt.Sprintf("return _%s(", *m.Ident))
+			if *m.Ident == "var" {
+				sb.WriteString(fmt.Sprintf("return __%s(", *m.Ident))
+			} else {
+				sb.WriteString(fmt.Sprintf("return _%s(", *m.Ident))
+			}
 			for i, p := range *m.Overloads[0] {
 				if i > 0 && i < len(*m.Overloads[0]) {
 					sb.WriteString(", ")
@@ -227,7 +235,6 @@ func (g *PackageGenerator) WriteEnvWrappedFns(methods map[string]*CPPMethod, pro
 			if !g.conf.IsMethodIgnored(*m.Ident) {
 				if *m.Ident == "var" {
 					sb.WriteString(fmt.Sprintf("const %s = (", "_"+*m.Ident))
-
 				} else {
 					sb.WriteString(fmt.Sprintf("const %s = (", *m.Ident))
 				}
