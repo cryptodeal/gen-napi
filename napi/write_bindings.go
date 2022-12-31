@@ -464,9 +464,9 @@ func (g *PackageGenerator) writeClassField(sb *strings.Builder, f *CPPFieldDecl,
 	if f.Args != nil {
 		for i, arg := range *f.Args {
 			typeHandler, isObject := CPPTypeToTS(*arg.Type)
-			if isObject {
+			if v, ok := g.conf.TypeMappings[*arg.Type]; ok {
 				g.writeIndent(sb, 1)
-				sb.WriteString(fmt.Sprintf("if (!info[%d].%s()) {\n", i, upper_caser.String(typeHandler)))
+				sb.WriteString(fmt.Sprintf("if (!info[%d].%s()) {\n", i, v.NapiType))
 				g.writeIndent(sb, 2)
 				sb.WriteString(fmt.Sprintf("Napi::TypeError::New(info.Env(), %q).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects args[%d] to be typeof `%s`", *f.Ident, i, typeHandler)))
 				g.writeIndent(sb, 2)
@@ -474,10 +474,12 @@ func (g *PackageGenerator) writeClassField(sb *strings.Builder, f *CPPFieldDecl,
 				g.writeIndent(sb, 1)
 				sb.WriteString("}\n")
 				fmt.Println("arg type", *arg.Type)
-				if v, ok := g.conf.TypeMappings[*arg.Type]; ok {
-					g.writeIndent(sb, 1)
-					sb.WriteString(fmt.Sprintf("auto %s = static_cast<%s>(info[%d].As<Napi::%s>().%s());\n", *arg.Ident, v.CastsTo, i, v.NapiType, v.CastNapi))
-				}
+				g.writeIndent(sb, 1)
+				sb.WriteString(fmt.Sprintf("auto %s = static_cast<%s>(info[%d].As<Napi::%s>().%s());\n", *arg.Ident, v.CastsTo, i, v.NapiType, v.CastNapi))
+			} else if isObject {
+				// TODO: handle
+			} else {
+				// TODO: handle
 			}
 		}
 	}
