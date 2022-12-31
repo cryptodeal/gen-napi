@@ -80,15 +80,15 @@ func (g *PackageGenerator) WriteEnvClassWrapper(className string, class *CPPClas
 	if g.conf.IsEnvTS() {
 		sb.WriteString("private #_native_self: any;\n")
 	} else {
-		sb.WriteString("#_native_self")
+		sb.WriteString("#_native_self\n\n")
 	}
 
 	g.writeIndent(sb, 1)
-	sb.WriteString("constructor(t) {\n")
+	sb.WriteString("\nconstructor(t) {\n")
 	g.writeIndent(sb, 2)
 	sb.WriteString(fmt.Sprintf("this.#_native_self = new _%s(t);\n", className))
 	g.writeIndent(sb, 1)
-	sb.WriteString("}\n")
+	sb.WriteString("}\n\n")
 
 	for _, m := range methods {
 		if g.conf.IsMethodWrapped(className, *m.Ident) {
