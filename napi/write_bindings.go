@@ -466,7 +466,7 @@ func (g *PackageGenerator) writeClassField(sb *strings.Builder, f *CPPFieldDecl,
 			typeHandler, isObject := CPPTypeToTS(*arg.Type)
 			if v, ok := g.conf.TypeMappings[*arg.Type]; ok {
 				g.writeIndent(sb, 1)
-				sb.WriteString(fmt.Sprintf("if (!info[%d].%s()) {\n", i, v.NapiType))
+				sb.WriteString(fmt.Sprintf("if (!info[%d].Is%s()) {\n", i, v.NapiType))
 				g.writeIndent(sb, 2)
 				sb.WriteString(fmt.Sprintf("Napi::TypeError::New(info.Env(), %q).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects args[%d] to be typeof `%s`", *f.Ident, i, typeHandler)))
 				g.writeIndent(sb, 2)
