@@ -38,7 +38,11 @@ func (g *PackageGenerator) WriteEnvExports(classes map[string]*CPPClass, methods
 	used = []string{}
 	for name, m := range methods {
 		if !g.conf.IsMethodIgnored(*m.Ident) {
-			used = append(used, name)
+			if name == "var" {
+				used = append(used, "_"+name)
+			} else {
+				used = append(used, name)
+			}
 		}
 	}
 	used_len = len(used)
@@ -55,7 +59,11 @@ func (g *PackageGenerator) WriteEnvExports(classes map[string]*CPPClass, methods
 	used = []string{}
 	for name, m := range processedMethods {
 		if !g.conf.IsMethodIgnored(*m.Ident) {
-			used = append(used, name)
+			if name == "var" {
+				used = append(used, "_"+name)
+			} else {
+				used = append(used, name)
+			}
 		}
 	}
 	used_len = len(used)
