@@ -93,7 +93,7 @@ func (g *TSGo) Generate() error {
 			Input:     &input,
 		}
 		g.packageGenerators[*napiGen.Path] = napiGen
-		bindings, header, err := napiGen.Generate()
+		bindings, header, env_wrapper, err := napiGen.Generate()
 		if err != nil {
 			return err
 		}
@@ -122,8 +122,21 @@ func (g *TSGo) Generate() error {
 		if err != nil {
 			return nil
 		}
+
+		// programatically exec clang-format
 		cmd := exec.Command("clang-format", cmd_str...)
 		err = cmd.Run()
+		if err != nil {
+			return nil
+		}
+
+		outPath = napiGen.conf.ResolvedWrapperOutPath(filepath.Dir(napiConfig.Path))
+		err = os.MkdirAll(filepath.Dir(outPath), os.ModePerm)
+		if err != nil {
+			return nil
+		}
+
+		err = os.WriteFile(outPath, []byte(env_wrapper), os.ModePerm)
 		if err != nil {
 			return nil
 		}

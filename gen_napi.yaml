@@ -16,6 +16,9 @@ packages:
         napi: 'Number'
         casts_to: 'fl::dtype'
         cast_napi: 'Int32Value'
+    js_wrapper_opts:
+      addon_path: 'build/Release/flashlight_napi_bindings.node'
+      wrapper_out_path: 'test/js'
     ignored_methods:
       - 'scalar'
       - 'pad'

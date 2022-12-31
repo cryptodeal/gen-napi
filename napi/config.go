@@ -8,6 +8,7 @@ import (
 
 const defaultOutBindingsFileName = "bindings.cc"
 const defaultOutHeaderFileName = "bindings.h"
+const defaultOutJsWrapperFileName = "index.js"
 
 type TypeHandler struct {
 	OutType string `yaml:"out_type"`
@@ -37,14 +38,22 @@ type ClassOpts struct {
 	Constructor   string   `yaml:"constructor"`
 }
 
+type JSWrapperOpts struct {
+	AddonPath      string `yaml:"addon_path"`
+	WrapperOutPath string `yaml:"wrapper_out_path"`
+	// specifies whether gen JS/TS wrapper code
+	EnvType string `yaml:"env_type"`
+}
+
 type PackageConfig struct {
 	// The package path just like you would import it in Go
 	Path string `yaml:"path"`
 
 	// Where this output should be written to.
 	// If you specify a folder it will be written to a file `index.ts` within that folder. By default it is written into the Golang package folder.
-	BindingsOutPath string `yaml:"bindings_out_path"`
-	HeaderOutPath   string `yaml:"header_out_path"`
+	BindingsOutPath string        `yaml:"bindings_out_path"`
+	HeaderOutPath   string        `yaml:"header_out_path"`
+	JSWrapperOpts   JSWrapperOpts `yaml:"js_wrapper_opts"`
 
 	// Customize the indentation (use \t if you want tabs)
 	Indent string `yaml:"indent"`
@@ -114,6 +123,10 @@ func (c PackageConfig) IsMethodWrapped(className string, fnName string) bool {
 	return false
 }
 
+func (c PackageConfig) IsTypescript() bool {
+	return c.JSWrapperOpts.EnvType == "ts"
+}
+
 func (c PackageConfig) IsFieldWrapped(className string, fnName string) bool {
 	if v, ok := c.ClassOpts[className]; ok {
 		for _, f := range v.Fields {
@@ -158,6 +171,15 @@ func (c PackageConfig) ResolvedHeaderOutPath(packageDir string) string {
 	if c.HeaderOutPath == "" {
 		return filepath.Join(packageDir, defaultOutHeaderFileName)
 	} else if !strings.HasSuffix(c.HeaderOutPath, ".h") {
+		return filepath.Join(c.HeaderOutPath, defaultOutHeaderFileName)
+	}
+	return c.HeaderOutPath
+}
+
+func (c PackageConfig) ResolvedWrapperOutPath(packageDir string) string {
+	if c.HeaderOutPath == "" {
+		return filepath.Join(packageDir, defaultOutHeaderFileName)
+	} else if !strings.HasSuffix(c.HeaderOutPath, ".js") || !strings.HasSuffix(c.HeaderOutPath, ".mjs") || !strings.HasSuffix(c.HeaderOutPath, ".cjs") || !strings.HasSuffix(c.HeaderOutPath, ".ts") {
 		return filepath.Join(c.HeaderOutPath, defaultOutHeaderFileName)
 	}
 	return c.HeaderOutPath
