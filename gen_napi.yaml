@@ -529,12 +529,33 @@ packages:
           }
       - name: '_dtypeUint64'
         body: |
-          static Napi::Value dtypeUint64(const Napi::CallbackInfo& info) {
+          static Napi::Value _dtypeUint64(const Napi::CallbackInfo& info) {
             return Napi::Number::New(info.Env(), static_cast<double>(fl::dtype::u64));
+          }
+      - name: '_rand'
+        body: |
+          static Napi::Value _rand(const Napi::CallbackInfo& info) {
+            Napi::Env env = info.Env();
+            if (info.Length() != 1 || !info[0].IsArray()) {
+              Napi::TypeError::New(info.Env(),
+                                  "`rand` expects exactly 1 arg; "
+                                  "(expected type `number[]`)...")
+                  .ThrowAsJavaScriptException();
+              return env.Null();
+            }
+            std::vector<long long> shape =
+                jsArrayArg<long long>(info[0].As<Napi::Array>(), g_row_major, false, env);
+            fl::Tensor t;
+            t = fl::rand(fl::Shape(shape));
+            g_bytes_used += t.bytes();
+            auto* tensor = new fl::Tensor(t);
+            auto wrapped = Napi::External<fl::Tensor>::New(env, tensor);
+            Napi::Value wrappedTensor = Tensor::constructor->New({wrapped});
+            return wrappedTensor;
           }
       - name: '_randn'
         body: |
-          static Napi::Value randn(const Napi::CallbackInfo& info) {
+          static Napi::Value _randn(const Napi::CallbackInfo& info) {
             Napi::Env env = info.Env();
             if (info.Length() != 1 || !info[0].IsArray()) {
               Napi::TypeError::New(env, "`randn` expects exactly 1 arg; (expected type `number[]`)...").ThrowAsJavaScriptException();
