@@ -206,17 +206,17 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 					}
 				} else if v, ok := g.conf.TypeMappings[*arg.Type]; ok {
 					g.writeIndent(sb, 1)
-					if strings.Contains(v, "Array") || strings.Contains(v, "[]") {
+					if strings.Contains(v.TSType, "Array") || strings.Contains(v.TSType, "[]") {
 						sb.WriteString(fmt.Sprintf("if (!info[%d].IsArray()) {\n", argIdx))
-					} else if strings.Contains(v, "any") || strings.Contains(v, "object") || strings.Contains(v, "Record<") || strings.Contains(v, "Map<") {
+					} else if strings.Contains(v.TSType, "any") || strings.Contains(v.TSType, "object") || strings.Contains(v.TSType, "Record<") || strings.Contains(v.TSType, "Map<") {
 						sb.WriteString(fmt.Sprintf("if (!info[%d].IsObject()) {\n", argIdx))
-					} else if strings.Contains(v, "string") {
+					} else if strings.Contains(v.TSType, "string") {
 						sb.WriteString(fmt.Sprintf("if (!info[%d].IsString()) {\n", argIdx))
-					} else if strings.Contains(v, "number") {
+					} else if strings.Contains(v.TSType, "number") {
 						sb.WriteString(fmt.Sprintf("if (!info[%d].IsNumber()) {\n", argIdx))
 					}
 					g.writeIndent(sb, 2)
-					sb.WriteString(fmt.Sprintf("Napi::TypeError::New(info.Env(), %q).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects args[%d] to be typeof `%s`", *m.Ident, argIdx, v)))
+					sb.WriteString(fmt.Sprintf("Napi::TypeError::New(info.Env(), %q).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects args[%d] to be typeof `%s`", *m.Ident, argIdx, v.TSType)))
 					g.writeIndent(sb, 2)
 					sb.WriteString("return env.Null();\n")
 					g.writeIndent(sb, 1)
@@ -458,6 +458,26 @@ func (g *PackageGenerator) writeClassField(sb *strings.Builder, f *CPPFieldDecl,
 			sb.WriteString("return env.Null();\n")
 			g.writeIndent(sb, 1)
 			sb.WriteString("}\n")
+		}
+	}
+
+	if f.Args != nil {
+		for i, arg := range *f.Args {
+			typeHandler, isClass := CPPTypeToTS(*arg.Type)
+			if !isClass {
+				g.writeIndent(sb, 1)
+				sb.WriteString(fmt.Sprintf("if (!info[%d].%s()) {\n", i, upper_caser.String(typeHandler)))
+				g.writeIndent(sb, 2)
+				sb.WriteString(fmt.Sprintf("Napi::TypeError::New(info.Env(), %q).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects args[%d] to be typeof `%s`", *f.Ident, i, typeHandler)))
+				g.writeIndent(sb, 2)
+				sb.WriteString("return env.Null();\n")
+				g.writeIndent(sb, 1)
+				sb.WriteString("}\n")
+				if v, ok := g.conf.TypeMappings[*arg.Type]; ok {
+					g.writeIndent(sb, 1)
+					sb.WriteString(fmt.Sprintf("auto %s = static_cast<%s>(info[%d].As<Napi::%s>().%s());\n", *arg.Ident, v.CastsTo, i, v.NapiType, v.CastNapi))
+				}
+			}
 		}
 	}
 	g.writeIndent(sb, 1)

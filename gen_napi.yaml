@@ -7,8 +7,15 @@ packages:
     header_out_path: 'test/out'
     indent: "\t"
     type_mappings:
-      Shape: 'number[]'
-      Dim: 'number'
+      Shape:
+        ts: 'number[]'
+      Dim:
+        ts: 'number'
+      dtype:
+        ts: 'number'
+        napi: 'Number'
+        casts_to: 'fl::dtype'
+        cast_napi: 'Int32Value'
     ignored_methods:
       - 'scalar'
       - 'pad'

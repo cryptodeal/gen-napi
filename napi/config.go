@@ -15,6 +15,13 @@ type TypeHandler struct {
 	Handler string `yaml:"handler"`
 }
 
+type TypeMap struct {
+	TSType   string `yaml:"ts"`
+	NapiType string `yaml:"napi"`
+	CastsTo  string `yaml:"casts_to"`
+	CastNapi string `yaml:"cast_napi"`
+}
+
 type ClassOpts struct {
 	Fields      []string `yaml:"fields"`
 	Methods     []string `yaml:"methods"`
@@ -35,7 +42,7 @@ type PackageConfig struct {
 
 	// Specify your own custom type translations, useful for custom types, `time.Time` and `null.String`.
 	// Be default unrecognized types will be output as `any /* name */`.
-	TypeMappings map[string]string `yaml:"type_mappings"`
+	TypeMappings map[string]TypeMap `yaml:"type_mappings"`
 
 	TypeHandlers map[string]TypeHandler `yaml:"type_handlers"`
 
