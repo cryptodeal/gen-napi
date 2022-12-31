@@ -38,7 +38,6 @@ packages:
     global_type_out_transforms:
       Tensor: |
         g_bytes_used += /return/.bytes();
-
     method_arg_check_transforms:
       arange: |
         if (!info[0].IsNumber()) {
@@ -443,6 +442,11 @@ packages:
           }
         }
     type_handlers:
+      dtype:
+        out_type: 'Napi::Number'
+        out_var: '_out'
+        handler: |
+          int _out = static_cast<int>(/res/)
       Shape:
         out_type: 'Napi::TypedArrayOf<int64_t>'
         out_var: '_out'
@@ -453,7 +457,7 @@ packages:
           const int out_len = static_cast<int>(length);
           for (auto i = 0; i < out_len; ++i) {
             const auto idx = g_row_major ? out_len - i - 1 : i;
-            _out[i] = static_cast<long long>(this->_tensor->shape()[idx]);
+            _out[i] = static_cast<long long>(/res/[idx]);
           }
     class_opts:
       Tensor:
@@ -632,13 +636,14 @@ packages:
           - 'isEmpty'
           - 'bytes'
           - 'strides'
+          - 'astype'
+          - 'type'
           - 'isSparse'
           - 'flatten'
           - 'asContiguousTensor'
           - 'isContiguous'
         methods:
           - 'reshape'
-          - 'astype'
           - 'transpose'
           - 'tile'
           - 'nonzero'

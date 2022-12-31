@@ -57,9 +57,6 @@ type PackageConfig struct {
 
 	GlobalVars  string            `yaml:"global_vars"`
 	HelperFuncs map[string]string `yaml:"helper_funcs"`
-
-	// If true, will also generate Bun FFI Bindings for the package
-	FFIBindings bool `yaml:"ffi_bindings"`
 }
 
 type Config struct {
