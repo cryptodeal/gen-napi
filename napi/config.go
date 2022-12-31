@@ -123,7 +123,7 @@ func (c PackageConfig) IsMethodWrapped(className string, fnName string) bool {
 	return false
 }
 
-func (c PackageConfig) IsTypescript() bool {
+func (c PackageConfig) IsEnvTS() bool {
 	return c.JSWrapperOpts.EnvType == "ts"
 }
 
@@ -189,7 +189,7 @@ func (c PackageConfig) ResolvedWrapperOutPath(packageDir string) string {
 func (c PackageConfig) ResolvedBindingsImportPath(packageDir string) string {
 	packageDirDepth := len(strings.Split(packageDir, "/"))
 	wrapperDirDepth := len(strings.Split(c.ResolvedWrapperOutPath(packageDir), "/"))
-	depth_dif := wrapperDirDepth - packageDirDepth
+	depth_dif := (wrapperDirDepth - packageDirDepth) + 1
 	sb := new(strings.Builder)
 	for i := 0; i < depth_dif; i++ {
 		sb.WriteString("../")

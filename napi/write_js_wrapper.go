@@ -10,7 +10,7 @@ func (g *PackageGenerator) WriteEnvWrapper(sb *strings.Builder, classes map[stri
 }
 
 func (g *PackageGenerator) WriteEnvImports(classes map[string]*CPPClass, methods map[string]*CPPMethod, processedMethods map[string]*CPPMethod) string {
-	sb := &strings.Builder{}
+	sb := new(strings.Builder)
 	sb.WriteString("const {\n")
 	used := []string{}
 	for name, c := range classes {
@@ -61,5 +61,41 @@ func (g *PackageGenerator) WriteEnvImports(classes map[string]*CPPClass, methods
 		}
 	}
 	sb.WriteString(fmt.Sprintf("\n} = require('%s')\n\n", g.conf.ResolvedBindingsImportPath(g.conf.Path)))
+	return sb.String()
+}
+
+func (g *PackageGenerator) WriteEnvClassWrapper(className string, class *CPPClass, methods map[string]*CPPMethod, processedMethods map[string]*CPPMethod) string {
+	sb := new(strings.Builder)
+	if g.conf.IsEnvTS() {
+		sb.WriteString("export ")
+	}
+	sb.WriteString(fmt.Sprintf("class %s {\n", className))
+
+	g.writeIndent(sb, 1)
+	if g.conf.IsEnvTS() {
+		sb.WriteString("private #_native_self: any;\n")
+	} else {
+		sb.WriteString("#_native_self")
+	}
+
+	g.writeIndent(sb, 1)
+	sb.WriteString("constructor(t) {\n")
+	g.writeIndent(sb, 2)
+	sb.WriteString(fmt.Sprintf("this.#_native_self = new _%s(t);\n", className))
+	g.writeIndent(sb, 1)
+	sb.WriteString("}\n")
+
+	for _, m := range methods {
+		if g.conf.IsMethodWrapped(className, *m.Ident) {
+			g.writeIndent(sb, 1)
+			sb.WriteString(fmt.Sprintf("%s(...args) {\n", *m.Ident))
+			g.writeIndent(sb, 2)
+			sb.WriteString(fmt.Sprintf("return this.#_native_self.%s(...args);\n", *m.Ident))
+			g.writeIndent(sb, 1)
+			sb.WriteString("}\n")
+		}
+	}
+
+	sb.WriteString("}\n\n")
 	return sb.String()
 }

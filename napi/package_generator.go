@@ -16,6 +16,7 @@ func (g *PackageGenerator) Generate() (string, string, string, error) {
 	// write headers for generated file for specific package
 	g.writeFileCodegenHeader(bindings)
 	g.writeFileCodegenHeader(headers)
+	g.writeFileCodegenHeader(env_wrapper)
 
 	// write headers
 	g.writeHeader(headers, classes, methods, lits)
