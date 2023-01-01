@@ -321,6 +321,38 @@ func (g *PackageGenerator) WriteEnvClassWrapper(className string, class *CPPClas
 		}
 	}
 
+	if v, ok := g.conf.ClassOpts[className]; ok {
+		for _, m := range v.ForcedMethods {
+			g.writeIndent(sb, 1)
+			sb.WriteString(fmt.Sprintf("%s(", m.Name))
+			for i, p := range m.Args {
+				if i > 0 && i < len(m.Args) {
+					sb.WriteString(", ")
+				}
+				sb.WriteString(p.Name)
+				if g.conf.IsEnvTS() {
+					sb.WriteString(fmt.Sprintf(": %s", p.TSType))
+				}
+			}
+			if g.conf.IsEnvTS() {
+				sb.WriteString("): any {\n")
+			} else {
+				sb.WriteString(") {\n")
+			}
+			g.writeIndent(sb, 2)
+			sb.WriteString(fmt.Sprintf("this.#_native_self.%s(", m.Name))
+			for i, p := range m.Args {
+				if i > 0 && i < len(m.Args) {
+					sb.WriteString(", ")
+				}
+				sb.WriteString(p.Name)
+			}
+			sb.WriteString(");\n")
+			g.writeIndent(sb, 1)
+			sb.WriteString("}\n\n")
+		}
+	}
+
 	sb.WriteString("}\n\n")
 	return sb.String()
 }
