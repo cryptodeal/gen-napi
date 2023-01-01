@@ -77,6 +77,17 @@ func (g *PackageGenerator) WriteEnvExports(classes map[string]*CPPClass, methods
 			sb.WriteString(",\n")
 		}
 	}
+	used_len = len(g.conf.GlobalForcedMethods)
+	for i, m := range g.conf.GlobalForcedMethods {
+		if i == 0 {
+			sb.WriteString(",\n")
+		}
+		g.writeIndent(sb, 1)
+		sb.WriteString(m.Name)
+		if i < used_len-1 {
+			sb.WriteString(",\n")
+		}
+	}
 	sb.WriteString("\n}\n")
 	return sb.String()
 }
@@ -94,7 +105,7 @@ func (g *PackageGenerator) WriteEnvImports(classes map[string]*CPPClass, methods
 	for i, name := range used {
 		g.writeIndent(sb, 1)
 		if name == "var" {
-			sb.WriteString(fmt.Sprintf("__%s", name))
+			sb.WriteString(fmt.Sprintf("_%s: __%s", name, name))
 		} else {
 			sb.WriteString(fmt.Sprintf("_%s", name))
 		}
@@ -115,7 +126,7 @@ func (g *PackageGenerator) WriteEnvImports(classes map[string]*CPPClass, methods
 		}
 		g.writeIndent(sb, 1)
 		if name == "var" {
-			sb.WriteString(fmt.Sprintf("__%s", name))
+			sb.WriteString(fmt.Sprintf("_%s: __%s", name, name))
 		} else {
 			sb.WriteString(fmt.Sprintf("_%s", name))
 		}
@@ -136,10 +147,26 @@ func (g *PackageGenerator) WriteEnvImports(classes map[string]*CPPClass, methods
 		}
 		g.writeIndent(sb, 1)
 		if name == "var" {
-			sb.WriteString(fmt.Sprintf("__%s", name))
+			sb.WriteString(fmt.Sprintf("_%s: __%s", name, name))
 		} else {
 			sb.WriteString(fmt.Sprintf("_%s", name))
 		}
+		if i < used_len-1 {
+			sb.WriteString(",\n")
+		}
+	}
+	used_len = len(g.conf.GlobalForcedMethods)
+	for i, m := range g.conf.GlobalForcedMethods {
+		if i == 0 {
+			sb.WriteString(",\n")
+		}
+		g.writeIndent(sb, 1)
+		if m.Name == "var" {
+			sb.WriteString(fmt.Sprintf("_%s: __%s", m.Name, m.Name))
+		} else {
+			sb.WriteString(fmt.Sprintf("_%s", m.Name))
+		}
+		sb.WriteString(m.Name)
 		if i < used_len-1 {
 			sb.WriteString(",\n")
 		}
@@ -199,6 +226,86 @@ func (g *PackageGenerator) WriteEnvClassWrapper(className string, class *CPPClas
 					continue
 				}
 				if i > 1 && i < len(*m.Overloads[0]) {
+					sb.WriteString(", ")
+				}
+				sb.WriteString(*p.Ident)
+			}
+			sb.WriteString(");\n")
+			g.writeIndent(sb, 1)
+			sb.WriteString("}\n\n")
+		}
+	}
+
+	for _, m := range processedMethods {
+		if g.conf.IsMethodWrapped(className, *m.Ident) {
+			g.writeIndent(sb, 1)
+			sb.WriteString(fmt.Sprintf("%s(", *m.Ident))
+			for i, p := range *m.Overloads[0] {
+				if i == 0 {
+					continue
+				}
+				if i > 1 && i < len(*m.Overloads[0]) {
+					sb.WriteString(", ")
+				}
+				sb.WriteString(*p.Ident)
+				if g.conf.IsEnvTS() {
+					tsType, _ := CPPTypeToTS(*p.Type)
+					sb.WriteString(fmt.Sprintf(": %s", tsType))
+				}
+			}
+			if g.conf.IsEnvTS() {
+				tsType, _ := CPPTypeToTS(*m.Returns)
+				sb.WriteString(fmt.Sprintf("): %s {\n", tsType))
+			} else {
+				sb.WriteString(") {\n")
+			}
+			g.writeIndent(sb, 2)
+			sb.WriteString(fmt.Sprintf("return this.#_native_self.%s(this.#_native_self,", *m.Ident))
+			for i, p := range *m.Overloads[0] {
+				if i == 0 {
+					continue
+				}
+				if i > 1 && i < len(*m.Overloads[0]) {
+					sb.WriteString(", ")
+				}
+				sb.WriteString(*p.Ident)
+			}
+			sb.WriteString(");\n")
+			g.writeIndent(sb, 1)
+			sb.WriteString("}\n\n")
+		}
+	}
+
+	for _, m := range *class.FieldDecl {
+		if g.conf.IsFieldWrapped(className, *m.Ident) {
+			g.writeIndent(sb, 1)
+			sb.WriteString(fmt.Sprintf("%s(", *m.Ident))
+			for i, p := range *m.Args {
+				if i == 0 {
+					continue
+				}
+				if i > 1 && i < len(*m.Args) {
+					sb.WriteString(", ")
+				}
+				sb.WriteString(*p.Ident)
+				if g.conf.IsEnvTS() {
+					tsType, _ := CPPTypeToTS(*p.Type)
+					sb.WriteString(fmt.Sprintf(": %s", tsType))
+				}
+			}
+			if g.conf.IsEnvTS() {
+				tsType, _ := CPPTypeToTS(*m.Returns.FullType)
+				sb.WriteString(fmt.Sprintf("): %s {\n", tsType))
+			} else {
+				sb.WriteString(") {\n")
+			}
+			g.writeIndent(sb, 2)
+			sb.WriteString(fmt.Sprintf("return this.#_native_self.%s(this.#_native_self,", *m.Ident))
+			for i, p := range *m.Args {
+				if i == 0 {
+					continue
+				}
+				if i > 1 && i < len(*m.Args) {
 					sb.WriteString(", ")
 				}
 				sb.WriteString(*p.Ident)
@@ -278,5 +385,35 @@ func (g *PackageGenerator) WriteEnvWrappedFns(methods map[string]*CPPMethod, pro
 			}
 		}
 	}
+
+	for _, m := range g.conf.GlobalForcedMethods {
+		if m.Name == "var" {
+			sb.WriteString(fmt.Sprintf("const %s = (", "_"+m.Name))
+		} else {
+			sb.WriteString(fmt.Sprintf("const %s = (", m.Name))
+		}
+		for i, p := range m.Args {
+			if i > 0 && i < len(m.Args) {
+				sb.WriteString(", ")
+			}
+			sb.WriteString(p.Name)
+		}
+		sb.WriteString(") => {\n")
+		g.writeIndent(sb, 1)
+		if m.Name == "var" {
+			sb.WriteString(fmt.Sprintf("return __%s(", m.Name))
+		} else {
+			sb.WriteString(fmt.Sprintf("return _%s(", m.Name))
+		}
+		for i, p := range m.Args {
+			if i > 0 && i < len(m.Args) {
+				sb.WriteString(", ")
+			}
+			sb.WriteString(p.Name)
+		}
+		sb.WriteString(");\n")
+		sb.WriteString("}\n\n")
+	}
+
 	return sb.String()
 }

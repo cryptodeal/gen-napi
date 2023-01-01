@@ -536,6 +536,9 @@ packages:
             return Napi::Number::New(info.Env(), static_cast<double>(fl::dtype::u64));
           }
       - name: '_rand'
+        args:
+          - name: shape
+            ts_type: number[]
         body: |
           static Napi::Value _rand(const Napi::CallbackInfo& info) {
             Napi::Env env = info.Env();
@@ -557,6 +560,9 @@ packages:
             return wrappedTensor;
           }
       - name: '_randn'
+        args:
+          - name: shape
+            ts_type: number[]
         body: |
           static Napi::Value _randn(const Napi::CallbackInfo& info) {
             Napi::Env env = info.Env();

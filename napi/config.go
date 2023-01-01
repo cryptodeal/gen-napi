@@ -23,8 +23,14 @@ type TypeMap struct {
 	CastNapi string `yaml:"cast_napi"`
 }
 
+type FnArg struct {
+	Name   string `yaml:"name"`
+	TSType string `yaml:"ts_type"`
+}
+
 type FnOpts struct {
 	Name          string   `yaml:"name"`
+	Args          []FnArg  `yaml:"args"`
 	JSWrapperName string   `yaml:"js_wrapper_name"`
 	JSWrapperAlts []string `yaml:"js_wrapper_alts"`
 	FnBody        string   `yaml:"body"`
