@@ -216,12 +216,20 @@ func (g *PackageGenerator) WriteEnvClassWrapper(className string, class *CPPClas
 				sb.WriteString(*p.Ident)
 				if g.conf.IsEnvTS() {
 					tsType, _ := CPPTypeToTS(*p.Type)
-					sb.WriteString(fmt.Sprintf(": %s", tsType))
+					if v, ok := g.conf.TypeMappings[tsType]; ok {
+						sb.WriteString(fmt.Sprintf(": %s {\n", v.TSType))
+					} else {
+						sb.WriteString(fmt.Sprintf(": %s {\n", tsType))
+					}
 				}
 			}
 			if g.conf.IsEnvTS() {
 				tsType, _ := CPPTypeToTS(*m.Returns)
-				sb.WriteString(fmt.Sprintf("): %s {\n", tsType))
+				if v, ok := g.conf.TypeMappings[tsType]; ok {
+					sb.WriteString(fmt.Sprintf("): %s {\n", v.TSType))
+				} else {
+					sb.WriteString(fmt.Sprintf("): %s {\n", tsType))
+				}
 			} else {
 				sb.WriteString(") {\n")
 			}
@@ -259,12 +267,20 @@ func (g *PackageGenerator) WriteEnvClassWrapper(className string, class *CPPClas
 				sb.WriteString(*p.Ident)
 				if g.conf.IsEnvTS() {
 					tsType, _ := CPPTypeToTS(*p.Type)
-					sb.WriteString(fmt.Sprintf(": %s", tsType))
+					if v, ok := g.conf.TypeMappings[tsType]; ok {
+						sb.WriteString(fmt.Sprintf(": %s {\n", v.TSType))
+					} else {
+						sb.WriteString(fmt.Sprintf(": %s {\n", tsType))
+					}
 				}
 			}
 			if g.conf.IsEnvTS() {
 				tsType, _ := CPPTypeToTS(*m.Returns)
-				sb.WriteString(fmt.Sprintf("): %s {\n", tsType))
+				if v, ok := g.conf.TypeMappings[tsType]; ok {
+					sb.WriteString(fmt.Sprintf("): %s {\n", v.TSType))
+				} else {
+					sb.WriteString(fmt.Sprintf("): %s {\n", tsType))
+				}
 			} else {
 				sb.WriteString(") {\n")
 			}
@@ -304,7 +320,11 @@ func (g *PackageGenerator) WriteEnvClassWrapper(className string, class *CPPClas
 						sb.WriteString(*p.Ident)
 						if g.conf.IsEnvTS() {
 							tsType, _ := CPPTypeToTS(*p.Type)
-							sb.WriteString(fmt.Sprintf(": %s", tsType))
+							if v, ok := g.conf.TypeMappings[tsType]; ok {
+								sb.WriteString(fmt.Sprintf(": %s {\n", v.TSType))
+							} else {
+								sb.WriteString(fmt.Sprintf(": %s {\n", tsType))
+							}
 						}
 					}
 				}
