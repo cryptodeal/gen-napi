@@ -340,7 +340,7 @@ func (g *PackageGenerator) WriteEnvClassWrapper(className string, class *CPPClas
 				sb.WriteString(") {\n")
 			}
 			g.writeIndent(sb, 2)
-			sb.WriteString(fmt.Sprintf("this.#_native_self.%s(", m.Name))
+			sb.WriteString(fmt.Sprintf("return this.#_native_self.%s(", m.Name))
 			for i, p := range m.Args {
 				if i > 0 && i < len(m.Args) {
 					sb.WriteString(", ")
