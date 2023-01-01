@@ -186,7 +186,7 @@ func (c PackageConfig) ResolvedWrapperOutPath(packageDir string) string {
 	conf_path := c.JSWrapperOpts.WrapperOutPath
 	if conf_path == "" {
 		return filepath.Join(packageDir, defaultOutJsWrapperFileName)
-	} else if !strings.HasSuffix(conf_path, ".js") || !strings.HasSuffix(conf_path, ".mjs") || !strings.HasSuffix(conf_path, ".cjs") || !strings.HasSuffix(conf_path, ".ts") {
+	} else if !strings.HasSuffix(conf_path, ".js") && !strings.HasSuffix(conf_path, ".mjs") && !strings.HasSuffix(conf_path, ".cjs") && !strings.HasSuffix(conf_path, ".ts") {
 		return filepath.Join(conf_path, defaultOutJsWrapperFileName)
 	}
 	return conf_path
