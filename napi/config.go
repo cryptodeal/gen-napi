@@ -130,7 +130,7 @@ func (c PackageConfig) IsMethodWrapped(className string, fnName string) bool {
 }
 
 func (c PackageConfig) IsEnvTS() bool {
-	return c.JSWrapperOpts.EnvType == "ts"
+	return c.JSWrapperOpts.EnvType == "ts" || strings.HasSuffix(c.JSWrapperOpts.WrapperOutPath, ".ts")
 }
 
 func (c PackageConfig) IsFieldWrapped(className string, fnName string) bool {
