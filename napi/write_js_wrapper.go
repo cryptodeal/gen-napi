@@ -275,6 +275,11 @@ func (g *PackageGenerator) WriteEnvClassWrapper(className string, class *CPPClas
 					if v, ok := g.conf.TypeMappings[tsType]; ok {
 						sb.WriteString(fmt.Sprintf(": %s", v.TSType))
 					} else {
+						if strings.Contains(tsType, "std::vector") {
+							vectorType := tsType[strings.Index(tsType, "<")+1 : strings.Index(tsType, ">")]
+							tsType, _ = CPPTypeToTS(vectorType)
+							tsType = tsType + "[]"
+						}
 						sb.WriteString(fmt.Sprintf(": %s", tsType))
 					}
 				}
@@ -284,6 +289,11 @@ func (g *PackageGenerator) WriteEnvClassWrapper(className string, class *CPPClas
 				if v, ok := g.conf.TypeMappings[tsType]; ok {
 					sb.WriteString(fmt.Sprintf("): %s {\n", v.TSType))
 				} else {
+					if strings.Contains(tsType, "std::vector") {
+						vectorType := tsType[strings.Index(tsType, "<")+1 : strings.Index(tsType, ">")]
+						tsType, _ = CPPTypeToTS(vectorType)
+						tsType = tsType + "[]"
+					}
 					sb.WriteString(fmt.Sprintf("): %s {\n", tsType))
 				}
 			} else {
@@ -328,6 +338,11 @@ func (g *PackageGenerator) WriteEnvClassWrapper(className string, class *CPPClas
 							if v, ok := g.conf.TypeMappings[tsType]; ok {
 								sb.WriteString(fmt.Sprintf(": %s", v.TSType))
 							} else {
+								if strings.Contains(tsType, "std::vector") {
+									vectorType := tsType[strings.Index(tsType, "<")+1 : strings.Index(tsType, ">")]
+									tsType, _ = CPPTypeToTS(vectorType)
+									tsType = tsType + "[]"
+								}
 								sb.WriteString(fmt.Sprintf(": %s", tsType))
 							}
 						}
@@ -428,6 +443,11 @@ func (g *PackageGenerator) WriteEnvWrappedFns(methods map[string]*CPPMethod, pro
 					if v, ok := g.conf.TypeMappings[tsType]; ok {
 						sb.WriteString(fmt.Sprintf(": %s", v.TSType))
 					} else {
+						if strings.Contains(tsType, "std::vector") {
+							vectorType := tsType[strings.Index(tsType, "<")+1 : strings.Index(tsType, ">")]
+							tsType, _ = CPPTypeToTS(vectorType)
+							tsType = tsType + "[]"
+						}
 						sb.WriteString(fmt.Sprintf(": %s", tsType))
 					}
 				}
