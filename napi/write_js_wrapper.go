@@ -196,7 +196,7 @@ func (g *PackageGenerator) WriteEnvClassWrapper(className string, class *CPPClas
 	sb.WriteString("}\n\n")
 
 	g.writeIndent(sb, 1)
-	sb.WriteString("get _native_self(t) {\n")
+	sb.WriteString("get _native_self() {\n")
 	g.writeIndent(sb, 2)
 	sb.WriteString("return this.#_native_self;\n")
 	g.writeIndent(sb, 1)
