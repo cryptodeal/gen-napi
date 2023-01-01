@@ -182,12 +182,11 @@ func (g *PackageGenerator) WriteEnvClassWrapper(className string, class *CPPClas
 	sb.WriteString(fmt.Sprintf("class %s {\n", className))
 
 	g.writeIndent(sb, 1)
+	sb.WriteString("#_native_self")
 	if g.conf.IsEnvTS() {
-		sb.WriteString("private #_native_self: any;\n")
-	} else {
-		sb.WriteString("#_native_self\n")
+		sb.WriteString(": any")
 	}
-	sb.WriteByte('\n')
+	sb.WriteString(";\n\n")
 	g.writeIndent(sb, 1)
 	sb.WriteString("constructor(t) {\n")
 	g.writeIndent(sb, 2)
