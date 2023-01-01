@@ -294,7 +294,7 @@ func (g *PackageGenerator) WriteEnvClassWrapper(className string, class *CPPClas
 				}
 			}
 			if g.conf.IsEnvTS() {
-				tsType, _ := CPPTypeToTS(*m.Returns.FullType)
+				tsType, _ := CPPTypeToTS(*m.Returns.Name)
 				sb.WriteString(fmt.Sprintf("): %s {\n", tsType))
 			} else {
 				sb.WriteString(") {\n")
