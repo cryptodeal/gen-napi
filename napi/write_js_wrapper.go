@@ -166,7 +166,6 @@ func (g *PackageGenerator) WriteEnvImports(classes map[string]*CPPClass, methods
 		} else {
 			sb.WriteString(fmt.Sprintf("_%s", m.Name))
 		}
-		sb.WriteString(m.Name)
 		if i < used_len-1 {
 			sb.WriteString(",\n")
 		}

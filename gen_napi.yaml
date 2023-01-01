@@ -455,7 +455,7 @@ packages:
       - name: 'init'
         is_void: true
         body: |
-          static void _init(const Napi::CallbackInfo& info) {
+          static void init(const Napi::CallbackInfo& info) {
             fl::init();
           }
       - name: 'bytesUsed'
