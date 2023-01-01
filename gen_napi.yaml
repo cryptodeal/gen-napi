@@ -18,7 +18,7 @@ packages:
         cast_napi: 'Int32Value'
     js_wrapper_opts:
       addon_path: 'build/Release/flashlight_napi_bindings.node'
-      wrapper_out_path: 'test/js/index.ts'
+      wrapper_out_path: 'test/js/index.cjs'
     ignored_methods:
       - 'scalar'
       - 'pad'
@@ -462,7 +462,7 @@ packages:
         ts_return_type: 'bigint'
         body: |
           static Napi::Value bytesUsed(const Napi::CallbackInfo& info) {
-            return Napi::BigInt::New(info.Env(), g_bytes_used);
+            return Napi::BigInt::New(info.Env(), static_cast<int64_t>(g_bytes_used));
           }
       - name: 'setRowMajor'
         is_void: true
@@ -1017,7 +1017,7 @@ packages:
             ts_return_type: 'bigint'
             body: |
               Napi::Value Tensor::toInt64Scalar(const Napi::CallbackInfo& info) {
-                return Napi::BigInt::New(info.Env(), this->_tensor->asScalar<int64_t>());
+                return Napi::BigInt::New(info.Env(), static_cast<int64_t>(this->_tensor->asScalar<int64_t>()));
               }
           - name: 'toUint8Scalar'
             ts_return_type: 'number'
@@ -1041,7 +1041,7 @@ packages:
             ts_return_type: 'bigint'
             body: |
               Napi::Value Tensor::toUint64Scalar(const Napi::CallbackInfo& info) {
-                return Napi::BigInt::New(info.Env(), this->_tensor->asScalar<uint64_t>());
+                return Napi::BigInt::New(info.Env(), static_cast<int64_t>(this->_tensor->asScalar<uint64_t>()));
               }
           - name: 'eval'
             is_void: true
