@@ -219,7 +219,7 @@ func (g *PackageGenerator) WriteEnvClassWrapper(className string, class *CPPClas
 				sb.WriteString(") {\n")
 			}
 			g.writeIndent(sb, 2)
-			sb.WriteString(fmt.Sprintf("return this.#_native_self.%s(this.#_native_self,", *m.Ident))
+			sb.WriteString(fmt.Sprintf("return this.#_native_self.%s(", *m.Ident))
 			for i, p := range *m.Overloads[0] {
 				if i == 0 {
 					continue
@@ -259,7 +259,7 @@ func (g *PackageGenerator) WriteEnvClassWrapper(className string, class *CPPClas
 				sb.WriteString(") {\n")
 			}
 			g.writeIndent(sb, 2)
-			sb.WriteString(fmt.Sprintf("return this.#_native_self.%s(this.#_native_self,", *m.Ident))
+			sb.WriteString(fmt.Sprintf("return this.#_native_self.%s(", *m.Ident))
 			for i, p := range *m.Overloads[0] {
 				if i == 0 {
 					continue
@@ -302,7 +302,7 @@ func (g *PackageGenerator) WriteEnvClassWrapper(className string, class *CPPClas
 					sb.WriteString(") {\n")
 				}
 				g.writeIndent(sb, 2)
-				sb.WriteString(fmt.Sprintf("return this.#_native_self.%s(this.#_native_self,", *m.Ident))
+				sb.WriteString(fmt.Sprintf("return this.#_native_self.%s(", *m.Ident))
 				if m.Args != nil {
 					for i, p := range *m.Args {
 						if i == 0 {
