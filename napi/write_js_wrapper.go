@@ -428,6 +428,9 @@ func (g *PackageGenerator) WriteEnvWrappedFns(methods map[string]*CPPMethod, pro
 	sb := new(strings.Builder)
 	for _, m := range methods {
 		if !g.conf.IsMethodIgnored(*m.Ident) {
+			if g.conf.IsEnvTS() {
+				sb.WriteString("export ")
+			}
 			if *m.Ident == "var" {
 				sb.WriteString(fmt.Sprintf("const %s = (", "_"+*m.Ident))
 			} else {
@@ -485,6 +488,9 @@ func (g *PackageGenerator) WriteEnvWrappedFns(methods map[string]*CPPMethod, pro
 	for _, m := range processedMethods {
 		if !g.conf.IsMethodIgnored(*m.Ident) {
 			if !g.conf.IsMethodIgnored(*m.Ident) {
+				if g.conf.IsEnvTS() {
+					sb.WriteString("export ")
+				}
 				if *m.Ident == "var" {
 					sb.WriteString(fmt.Sprintf("const %s = (", "_"+*m.Ident))
 				} else {
@@ -536,6 +542,9 @@ func (g *PackageGenerator) WriteEnvWrappedFns(methods map[string]*CPPMethod, pro
 	}
 
 	for _, m := range g.conf.GlobalForcedMethods {
+		if g.conf.IsEnvTS() {
+			sb.WriteString("export ")
+		}
 		if m.Name == "var" {
 			sb.WriteString(fmt.Sprintf("const %s = (", "_"+m.Name))
 		} else {
@@ -547,13 +556,7 @@ func (g *PackageGenerator) WriteEnvWrappedFns(methods map[string]*CPPMethod, pro
 			}
 			sb.WriteString(p.Name)
 			if g.conf.IsEnvTS() {
-				if m.IsVoid {
-					sb.WriteString("): void {\n")
-				} else {
-					sb.WriteString(fmt.Sprintf("): %s {\n", m.TSReturnType))
-				}
-			} else {
-				sb.WriteString(") {\n")
+				sb.WriteString(fmt.Sprintf(": %s", p.TSType))
 			}
 		}
 		if g.conf.IsEnvTS() {

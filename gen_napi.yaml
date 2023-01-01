@@ -459,9 +459,10 @@ packages:
             fl::init();
           }
       - name: 'bytesUsed'
+        ts_return_type: 'bigint'
         body: |
           static Napi::Value bytesUsed(const Napi::CallbackInfo& info) {
-            return Napi::Number::New(info.Env(), g_bytes_used);
+            return Napi::BigInt::New(info.Env(), g_bytes_used);
           }
       - name: 'setRowMajor'
         is_void: true
