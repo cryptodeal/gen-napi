@@ -12,7 +12,7 @@ func (g *PackageGenerator) WriteEnvWrapper(sb *strings.Builder, classes map[stri
 			sb.WriteString(g.WriteEnvClassWrapper(name, c, methods, processedMethods))
 		}
 	}
-	sb.WriteString(g.WriteEnvWrappedFns(methods, processedMethods))
+	sb.WriteString(g.WriteEnvWrappedFns(methods, processedMethods, classes))
 	if !g.conf.IsEnvTS() {
 		sb.WriteString(g.WriteEnvExports(classes, methods, processedMethods))
 	}
@@ -195,6 +195,13 @@ func (g *PackageGenerator) WriteEnvClassWrapper(className string, class *CPPClas
 	g.writeIndent(sb, 1)
 	sb.WriteString("}\n\n")
 
+	g.writeIndent(sb, 1)
+	sb.WriteString("get _native_self(t) {\n")
+	g.writeIndent(sb, 2)
+	sb.WriteString("return this.#_native_self;\n")
+	g.writeIndent(sb, 1)
+	sb.WriteString("}\n\n")
+
 	for _, m := range methods {
 		if g.conf.IsMethodWrapped(className, *m.Ident) {
 			g.writeIndent(sb, 1)
@@ -228,6 +235,9 @@ func (g *PackageGenerator) WriteEnvClassWrapper(className string, class *CPPClas
 					sb.WriteString(", ")
 				}
 				sb.WriteString(*p.Ident)
+				if *p.Type == className {
+					sb.WriteString(".#_native_self")
+				}
 			}
 			sb.WriteString(");\n")
 			g.writeIndent(sb, 1)
@@ -268,6 +278,9 @@ func (g *PackageGenerator) WriteEnvClassWrapper(className string, class *CPPClas
 					sb.WriteString(", ")
 				}
 				sb.WriteString(*p.Ident)
+				if *p.Type == className {
+					sb.WriteString(".#_native_self")
+				}
 			}
 			sb.WriteString(");\n")
 			g.writeIndent(sb, 1)
@@ -312,6 +325,9 @@ func (g *PackageGenerator) WriteEnvClassWrapper(className string, class *CPPClas
 							sb.WriteString(", ")
 						}
 						sb.WriteString(*p.Ident)
+						if *p.Type == className {
+							sb.WriteString(".#_native_self")
+						}
 					}
 				}
 				sb.WriteString(");\n")
@@ -345,6 +361,9 @@ func (g *PackageGenerator) WriteEnvClassWrapper(className string, class *CPPClas
 				if i > 0 && i < len(m.Args) {
 					sb.WriteString(", ")
 				}
+				if p.TSType == className {
+					sb.WriteString(".#_native_self")
+				}
 				sb.WriteString(p.Name)
 			}
 			sb.WriteString(");\n")
@@ -357,7 +376,7 @@ func (g *PackageGenerator) WriteEnvClassWrapper(className string, class *CPPClas
 	return sb.String()
 }
 
-func (g *PackageGenerator) WriteEnvWrappedFns(methods map[string]*CPPMethod, processedMethods map[string]*CPPMethod) string {
+func (g *PackageGenerator) WriteEnvWrappedFns(methods map[string]*CPPMethod, processedMethods map[string]*CPPMethod, classes map[string]*CPPClass) string {
 	sb := new(strings.Builder)
 	for _, m := range methods {
 		if !g.conf.IsMethodIgnored(*m.Ident) {
@@ -384,6 +403,9 @@ func (g *PackageGenerator) WriteEnvWrappedFns(methods map[string]*CPPMethod, pro
 					sb.WriteString(", ")
 				}
 				sb.WriteString(*p.Ident)
+				if isClass(*p.Type, classes) {
+					sb.WriteString("._native_self")
+				}
 			}
 			sb.WriteString(");\n")
 			sb.WriteString("}\n\n")
@@ -416,6 +438,9 @@ func (g *PackageGenerator) WriteEnvWrappedFns(methods map[string]*CPPMethod, pro
 						sb.WriteString(", ")
 					}
 					sb.WriteString(*p.Ident)
+					if isClass(*p.Type, classes) {
+						sb.WriteString("._native_self")
+					}
 				}
 				sb.WriteString(");\n")
 				sb.WriteString("}\n\n")
