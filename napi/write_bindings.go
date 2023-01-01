@@ -661,7 +661,8 @@ func (g *PackageGenerator) writeBindings(sb *strings.Builder, classes map[string
 	}
 	for _, f := range g.conf.GlobalForcedMethods {
 		g.writeIndent(sb, 1)
-		sb.WriteString(fmt.Sprintf("exports.Set(Napi::String::New(env, %q), Napi::Function::New(env, %s));\n", "_"+f.Name, f.Name))
+		parsedName := ("_" + f.Name)
+		sb.WriteString(fmt.Sprintf("exports.Set(Napi::String::New(env, %q), Napi::Function::New(env, %s));\n", parsedName, parsedName))
 	}
 	g.writeIndent(sb, 1)
 	sb.WriteString("return exports;\n")
