@@ -277,42 +277,44 @@ func (g *PackageGenerator) WriteEnvClassWrapper(className string, class *CPPClas
 	}
 
 	for _, m := range *class.FieldDecl {
-		if g.conf.IsFieldWrapped(className, *m.Ident) {
-			g.writeIndent(sb, 1)
-			sb.WriteString(fmt.Sprintf("%s(", *m.Ident))
-			for i, p := range *m.Args {
-				if i == 0 {
-					continue
+		if m.Ident != nil {
+			if g.conf.IsFieldWrapped(className, *m.Ident) {
+				g.writeIndent(sb, 1)
+				sb.WriteString(fmt.Sprintf("%s(", *m.Ident))
+				for i, p := range *m.Args {
+					if i == 0 {
+						continue
+					}
+					if i > 1 && i < len(*m.Args) {
+						sb.WriteString(", ")
+					}
+					sb.WriteString(*p.Ident)
+					if g.conf.IsEnvTS() {
+						tsType, _ := CPPTypeToTS(*p.Type)
+						sb.WriteString(fmt.Sprintf(": %s", tsType))
+					}
 				}
-				if i > 1 && i < len(*m.Args) {
-					sb.WriteString(", ")
-				}
-				sb.WriteString(*p.Ident)
 				if g.conf.IsEnvTS() {
-					tsType, _ := CPPTypeToTS(*p.Type)
-					sb.WriteString(fmt.Sprintf(": %s", tsType))
+					tsType, _ := CPPTypeToTS(*m.Returns.Name)
+					sb.WriteString(fmt.Sprintf("): %s {\n", tsType))
+				} else {
+					sb.WriteString(") {\n")
 				}
-			}
-			if g.conf.IsEnvTS() {
-				tsType, _ := CPPTypeToTS(*m.Returns.Name)
-				sb.WriteString(fmt.Sprintf("): %s {\n", tsType))
-			} else {
-				sb.WriteString(") {\n")
-			}
-			g.writeIndent(sb, 2)
-			sb.WriteString(fmt.Sprintf("return this.#_native_self.%s(this.#_native_self,", *m.Ident))
-			for i, p := range *m.Args {
-				if i == 0 {
-					continue
+				g.writeIndent(sb, 2)
+				sb.WriteString(fmt.Sprintf("return this.#_native_self.%s(this.#_native_self,", *m.Ident))
+				for i, p := range *m.Args {
+					if i == 0 {
+						continue
+					}
+					if i > 1 && i < len(*m.Args) {
+						sb.WriteString(", ")
+					}
+					sb.WriteString(*p.Ident)
 				}
-				if i > 1 && i < len(*m.Args) {
-					sb.WriteString(", ")
-				}
-				sb.WriteString(*p.Ident)
+				sb.WriteString(");\n")
+				g.writeIndent(sb, 1)
+				sb.WriteString("}\n\n")
 			}
-			sb.WriteString(");\n")
-			g.writeIndent(sb, 1)
-			sb.WriteString("}\n\n")
 		}
 	}
 
