@@ -452,95 +452,95 @@ packages:
           }
         }
     global_methods:
-      - name: '_init'
+      - name: 'init'
         is_void: true
         body: |
           static void _init(const Napi::CallbackInfo& info) {
             fl::init();
           }
-      - name: '_bytesUsed'
+      - name: 'bytesUsed'
         body: |
-          static Napi::Value _bytesUsed(const Napi::CallbackInfo& info) {
+          static Napi::Value bytesUsed(const Napi::CallbackInfo& info) {
             return Napi::Number::New(info.Env(), g_bytes_used);
           }
-      - name: '_setRowMajor'
+      - name: 'setRowMajor'
         is_void: true
         body: |
-          static void _setRowMajor(const Napi::CallbackInfo& info) {
+          static void setRowMajor(const Napi::CallbackInfo& info) {
             g_row_major = true;
           }
-      - name: '_setColMajor'
+      - name: 'setColMajor'
         is_void: true
         body: |
-          static void _setColMajor(const Napi::CallbackInfo& info) {
+          static void setColMajor(const Napi::CallbackInfo& info) {
             g_row_major = true;
           }
-      - name: '_isRowMajor'
+      - name: 'isRowMajor'
         body: |
-          static Napi::Value _isRowMajor(const Napi::CallbackInfo& info) {
+          static Napi::Value isRowMajor(const Napi::CallbackInfo& info) {
             return Napi::Boolean::New(info.Env(), g_row_major);
           }
-      - name: '_isColMajor'
+      - name: 'isColMajor'
         body: |
-          static Napi::Value _isColMajor(const Napi::CallbackInfo& info) {
+          static Napi::Value isColMajor(const Napi::CallbackInfo& info) {
             return Napi::Boolean::New(info.Env(), !g_row_major);
           }
-      - name: '_dtypeFloat32'
+      - name: 'dtypeFloat32'
         body: |
-          static Napi::Value _dtypeFloat32(const Napi::CallbackInfo& info) {
+          static Napi::Value dtypeFloat32(const Napi::CallbackInfo& info) {
             return Napi::Number::New(info.Env(), static_cast<double>(fl::dtype::f32));
           }
-      - name: '_dtypeFloat64'
+      - name: 'dtypeFloat64'
         body: |
-          static Napi::Value _dtypeFloat64(const Napi::CallbackInfo& info) {
+          static Napi::Value dtypeFloat64(const Napi::CallbackInfo& info) {
             return Napi::Number::New(info.Env(), static_cast<double>(fl::dtype::f64));
           }
-      - name: '_dtypeBoolInt8'
+      - name: 'dtypeBoolInt8'
         body: |
-          static Napi::Value _dtypeBoolInt8(const Napi::CallbackInfo& info) {
+          static Napi::Value dtypeBoolInt8(const Napi::CallbackInfo& info) {
             return Napi::Number::New(info.Env(), static_cast<double>(fl::dtype::b8));
           }
-      - name: '_dtypeInt16'
+      - name: 'dtypeInt16'
         body: |
-          static Napi::Value _dtypeInt16(const Napi::CallbackInfo& info) {
+          static Napi::Value dtypeInt16(const Napi::CallbackInfo& info) {
             return Napi::Number::New(info.Env(), static_cast<double>(fl::dtype::s16));
           }
-      - name: '_dtypeInt32'
+      - name: 'dtypeInt32'
         body: |
-          static Napi::Value _dtypeInt32(const Napi::CallbackInfo& info) {
+          static Napi::Value dtypeInt32(const Napi::CallbackInfo& info) {
             return Napi::Number::New(info.Env(), static_cast<double>(fl::dtype::s32));
           }
-      - name: '_dtypeInt64'
+      - name: 'dtypeInt64'
         body: |
-          static Napi::Value _dtypeInt64(const Napi::CallbackInfo& info) {
+          static Napi::Value dtypeInt64(const Napi::CallbackInfo& info) {
             return Napi::Number::New(info.Env(), static_cast<double>(fl::dtype::s64));
           }
-      - name: '_dtypeUint8'
+      - name: 'dtypeUint8'
         body: |
-          static Napi::Value _dtypeUint8(const Napi::CallbackInfo& info) {
+          static Napi::Value dtypeUint8(const Napi::CallbackInfo& info) {
             return Napi::Number::New(info.Env(), static_cast<double>(fl::dtype::u8));
           }
-      - name: '_dtypeUint16'
+      - name: 'dtypeUint16'
         body: |
-          static Napi::Value _dtypeUint16(const Napi::CallbackInfo& info) {
+          static Napi::Value dtypeUint16(const Napi::CallbackInfo& info) {
             return Napi::Number::New(info.Env(), static_cast<double>(fl::dtype::u16));
           }
-      - name: '_dtypeUint32'
+      - name: 'dtypeUint32'
         body: |
-          static Napi::Value _dtypeUint32(const Napi::CallbackInfo& info) {
+          static Napi::Value dtypeUint32(const Napi::CallbackInfo& info) {
             return Napi::Number::New(info.Env(), static_cast<double>(fl::dtype::u32));
           }
-      - name: '_dtypeUint64'
+      - name: 'dtypeUint64'
         body: |
-          static Napi::Value _dtypeUint64(const Napi::CallbackInfo& info) {
+          static Napi::Value dtypeUint64(const Napi::CallbackInfo& info) {
             return Napi::Number::New(info.Env(), static_cast<double>(fl::dtype::u64));
           }
-      - name: '_rand'
+      - name: 'rand'
         args:
           - name: shape
             ts_type: number[]
         body: |
-          static Napi::Value _rand(const Napi::CallbackInfo& info) {
+          static Napi::Value rand(const Napi::CallbackInfo& info) {
             Napi::Env env = info.Env();
             if (info.Length() != 1 || !info[0].IsArray()) {
               Napi::TypeError::New(info.Env(),
@@ -559,12 +559,12 @@ packages:
             Napi::Value wrappedTensor = Tensor::constructor->New({wrapped});
             return wrappedTensor;
           }
-      - name: '_randn'
+      - name: 'randn'
         args:
           - name: shape
             ts_type: number[]
         body: |
-          static Napi::Value _randn(const Napi::CallbackInfo& info) {
+          static Napi::Value randn(const Napi::CallbackInfo& info) {
             Napi::Env env = info.Env();
             if (info.Length() != 1 || !info[0].IsArray()) {
               Napi::TypeError::New(env, "`randn` expects exactly 1 arg; (expected type `number[]`)...").ThrowAsJavaScriptException();
