@@ -35,6 +35,7 @@ type FnOpts struct {
 	JSWrapperAlts []string `yaml:"js_wrapper_alts"`
 	FnBody        string   `yaml:"body"`
 	IsVoid        bool     `yaml:"is_void"`
+	TSReturnType  string   `yaml:"ts_return_type"`
 }
 
 type ClassOpts struct {

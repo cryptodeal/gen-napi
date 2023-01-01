@@ -476,66 +476,79 @@ packages:
             g_row_major = true;
           }
       - name: 'isRowMajor'
+        ts_return_type: 'boolean'
         body: |
           static Napi::Value isRowMajor(const Napi::CallbackInfo& info) {
             return Napi::Boolean::New(info.Env(), g_row_major);
           }
       - name: 'isColMajor'
+        ts_return_type: 'boolean'
         body: |
           static Napi::Value isColMajor(const Napi::CallbackInfo& info) {
             return Napi::Boolean::New(info.Env(), !g_row_major);
           }
       - name: 'dtypeFloat32'
+        ts_return_type: 'number'
         body: |
           static Napi::Value dtypeFloat32(const Napi::CallbackInfo& info) {
             return Napi::Number::New(info.Env(), static_cast<double>(fl::dtype::f32));
           }
       - name: 'dtypeFloat64'
+        ts_return_type: 'number'
         body: |
           static Napi::Value dtypeFloat64(const Napi::CallbackInfo& info) {
             return Napi::Number::New(info.Env(), static_cast<double>(fl::dtype::f64));
           }
       - name: 'dtypeBoolInt8'
+        ts_return_type: 'number'
         body: |
           static Napi::Value dtypeBoolInt8(const Napi::CallbackInfo& info) {
             return Napi::Number::New(info.Env(), static_cast<double>(fl::dtype::b8));
           }
       - name: 'dtypeInt16'
+        ts_return_type: 'number'
         body: |
           static Napi::Value dtypeInt16(const Napi::CallbackInfo& info) {
             return Napi::Number::New(info.Env(), static_cast<double>(fl::dtype::s16));
           }
       - name: 'dtypeInt32'
+        ts_return_type: 'number'
         body: |
           static Napi::Value dtypeInt32(const Napi::CallbackInfo& info) {
             return Napi::Number::New(info.Env(), static_cast<double>(fl::dtype::s32));
           }
       - name: 'dtypeInt64'
+        ts_return_type: 'number'
         body: |
           static Napi::Value dtypeInt64(const Napi::CallbackInfo& info) {
             return Napi::Number::New(info.Env(), static_cast<double>(fl::dtype::s64));
           }
       - name: 'dtypeUint8'
+        ts_return_type: 'number'
         body: |
           static Napi::Value dtypeUint8(const Napi::CallbackInfo& info) {
             return Napi::Number::New(info.Env(), static_cast<double>(fl::dtype::u8));
           }
       - name: 'dtypeUint16'
+        ts_return_type: 'number'
         body: |
           static Napi::Value dtypeUint16(const Napi::CallbackInfo& info) {
             return Napi::Number::New(info.Env(), static_cast<double>(fl::dtype::u16));
           }
       - name: 'dtypeUint32'
+        ts_return_type: 'number'
         body: |
           static Napi::Value dtypeUint32(const Napi::CallbackInfo& info) {
             return Napi::Number::New(info.Env(), static_cast<double>(fl::dtype::u32));
           }
       - name: 'dtypeUint64'
+        ts_return_type: 'number'
         body: |
           static Napi::Value dtypeUint64(const Napi::CallbackInfo& info) {
             return Napi::Number::New(info.Env(), static_cast<double>(fl::dtype::u64));
           }
       - name: 'rand'
+        ts_return_type: 'Tensor'
         args:
           - name: shape
             ts_type: number[]
@@ -560,6 +573,7 @@ packages:
             return wrappedTensor;
           }
       - name: 'randn'
+        ts_return_type: 'Tensor'
         args:
           - name: shape
             ts_type: number[]
@@ -849,6 +863,7 @@ packages:
           - name: 'all'
         forced_methods:
           - name: 'toFloat32Array'
+            ts_return_type: 'Float32Array'
             body: |
               Napi::Value Tensor::toFloat32Array(const Napi::CallbackInfo& info) {
                 Napi::Env env = info.Env();
@@ -860,6 +875,7 @@ packages:
                 return out;
               }
           - name: 'toFloat64Array'
+            ts_return_type: 'Float64Array'
             body: |
               Napi::Value Tensor::toFloat64Array(const Napi::CallbackInfo& info) {
                 Napi::Env env = info.Env();
@@ -871,6 +887,7 @@ packages:
                 return out;
               }
           - name: 'toBoolInt8Array'
+            ts_return_type: 'Int8Array'
             body: |
               Napi::Value Tensor::toBoolInt8Array(const Napi::CallbackInfo& info) {
                 Napi::Env env = info.Env();
@@ -882,6 +899,7 @@ packages:
                 return out;
               }
           - name: 'toInt16Array'
+            ts_return_type: 'Int16Array'
             body: |
               Napi::Value Tensor::toInt16Array(const Napi::CallbackInfo& info) {
                 Napi::Env env = info.Env();
@@ -893,6 +911,7 @@ packages:
                 return out;
               }
           - name: 'toInt32Array'
+            ts_return_type: 'Int32Array'
             body: |
               Napi::Value Tensor::toInt32Array(const Napi::CallbackInfo& info) {
                 Napi::Env env = info.Env();
@@ -904,6 +923,7 @@ packages:
                 return out;
               }
           - name: 'toInt64Array'
+            ts_return_type: 'BigInt64Array'
             body: |
               Napi::Value Tensor::toInt64Array(const Napi::CallbackInfo& info) {
                 Napi::Env env = info.Env();
@@ -915,6 +935,7 @@ packages:
                 return out;
               }
           - name: 'toUint8Array'
+            ts_return_type: 'Uint8Array'
             body: |
               Napi::Value Tensor::toUint8Array(const Napi::CallbackInfo& info) {
                 Napi::Env env = info.Env();
@@ -926,6 +947,7 @@ packages:
                 return out;
               }
           - name: 'toUint16Array'
+            ts_return_type: 'Uint16Array'
             body: |
               Napi::Value Tensor::toUint16Array(const Napi::CallbackInfo& info) {
                 Napi::Env env = info.Env();
@@ -937,6 +959,7 @@ packages:
                 return out;
               }
           - name: 'toUint32Array'
+            ts_return_type: 'Uint32Array'
             body: |
               Napi::Value Tensor::toUint32Array(const Napi::CallbackInfo& info) {
                 Napi::Env env = info.Env();
@@ -948,6 +971,7 @@ packages:
                 return out;
               }
           - name: 'toUint64Array'
+            ts_return_type: 'BigUint64Array'
             body: |
               Napi::Value Tensor::toUint64Array(const Napi::CallbackInfo& info) {
                 Napi::Env env = info.Env();
@@ -959,54 +983,64 @@ packages:
                 return out;
               }
           - name: 'toFloat32Scalar'
+            ts_return_type: 'number'
             body: |
               Napi::Value Tensor::toFloat32Scalar(const Napi::CallbackInfo& info) {
                 return Napi::Number::New(info.Env(), this->_tensor->asScalar<float>());
               }
           - name: 'toFloat64Scalar'
+            ts_return_type: 'number'
             body: |
               Napi::Value Tensor::toFloat64Scalar(const Napi::CallbackInfo& info) {
                 return Napi::Number::New(info.Env(), this->_tensor->asScalar<double>());
               }
           - name: 'toBoolInt8Scalar'
+            ts_return_type: 'number'
             body: |
               Napi::Value Tensor::toBoolInt8Scalar(const Napi::CallbackInfo& info) {
                 return Napi::Number::New(info.Env(), this->_tensor->asScalar<char>());
               }
           - name: 'toInt16Scalar'
+            ts_return_type: 'number'
             body: |
               Napi::Value Tensor::toInt16Scalar(const Napi::CallbackInfo& info) {
                 return Napi::Number::New(info.Env(), this->_tensor->asScalar<int16_t>());
               }
           - name: 'toInt32Scalar'
+            ts_return_type: 'number'
             body: |
               Napi::Value Tensor::toInt32Scalar(const Napi::CallbackInfo& info) {
                 return Napi::Number::New(info.Env(), this->_tensor->asScalar<int32_t>());
               }
           - name: 'toInt64Scalar'
+            ts_return_type: 'bigint'
             body: |
               Napi::Value Tensor::toInt64Scalar(const Napi::CallbackInfo& info) {
-                return Napi::Number::New(info.Env(), this->_tensor->asScalar<int64_t>());
+                return Napi::BigInt::New(info.Env(), this->_tensor->asScalar<int64_t>());
               }
           - name: 'toUint8Scalar'
+            ts_return_type: 'number'
             body: |
               Napi::Value Tensor::toUint8Scalar(const Napi::CallbackInfo& info) {
                 return Napi::Number::New(info.Env(), this->_tensor->asScalar<uint8_t>());
               }
           - name: 'toUint16Scalar'
+            ts_return_type: 'number'
             body: |
               Napi::Value Tensor::toUint16Scalar(const Napi::CallbackInfo& info) {
                 return Napi::Number::New(info.Env(), this->_tensor->asScalar<uint16_t>());
               }
           - name: 'toUint32Scalar'
+            ts_return_type: 'number'
             body: |
               Napi::Value Tensor::toUint32Scalar(const Napi::CallbackInfo& info) {
                 return Napi::Number::New(info.Env(), this->_tensor->asScalar<uint32_t>());
               }
           - name: 'toUint64Scalar'
+            ts_return_type: 'bigint'
             body: |
               Napi::Value Tensor::toUint64Scalar(const Napi::CallbackInfo& info) {
-                return Napi::Number::New(info.Env(), this->_tensor->asScalar<uint64_t>());
+                return Napi::BigInt::New(info.Env(), this->_tensor->asScalar<uint64_t>());
               }
           - name: 'eval'
             is_void: true

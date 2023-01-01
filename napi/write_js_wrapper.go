@@ -219,6 +219,11 @@ func (g *PackageGenerator) WriteEnvClassWrapper(className string, class *CPPClas
 					if v, ok := g.conf.TypeMappings[tsType]; ok {
 						sb.WriteString(fmt.Sprintf(": %s", v.TSType))
 					} else {
+						if strings.Contains(tsType, "std::vector") {
+							vectorType := tsType[strings.Index(tsType, "<")+1 : strings.Index(tsType, ">")]
+							tsType, _ = CPPTypeToTS(vectorType)
+							tsType = tsType + "[]"
+						}
 						sb.WriteString(fmt.Sprintf(": %s", tsType))
 					}
 				}
@@ -375,7 +380,11 @@ func (g *PackageGenerator) WriteEnvClassWrapper(className string, class *CPPClas
 				}
 			}
 			if g.conf.IsEnvTS() {
-				sb.WriteString("): any {\n")
+				if m.IsVoid {
+					sb.WriteString("): void {\n")
+				} else {
+					sb.WriteString(fmt.Sprintf("): %s {\n", m.TSReturnType))
+				}
 			} else {
 				sb.WriteString(") {\n")
 			}
@@ -414,8 +423,25 @@ func (g *PackageGenerator) WriteEnvWrappedFns(methods map[string]*CPPMethod, pro
 					sb.WriteString(", ")
 				}
 				sb.WriteString(*p.Ident)
+				if g.conf.IsEnvTS() {
+					tsType, _ := CPPTypeToTS(*p.Type)
+					if v, ok := g.conf.TypeMappings[tsType]; ok {
+						sb.WriteString(fmt.Sprintf(": %s", v.TSType))
+					} else {
+						sb.WriteString(fmt.Sprintf(": %s", tsType))
+					}
+				}
 			}
-			sb.WriteString(") => {\n")
+			if g.conf.IsEnvTS() {
+				tsType, _ := CPPTypeToTS(*m.Returns)
+				if v, ok := g.conf.TypeMappings[tsType]; ok {
+					sb.WriteString(fmt.Sprintf("): %s {\n", v.TSType))
+				} else {
+					sb.WriteString(") => {\n")
+				}
+			} else {
+				sb.WriteString(") => {\n")
+			}
 			g.writeIndent(sb, 1)
 			if *m.Ident == "var" {
 				sb.WriteString(fmt.Sprintf("return __%s(", *m.Ident))
@@ -449,8 +475,25 @@ func (g *PackageGenerator) WriteEnvWrappedFns(methods map[string]*CPPMethod, pro
 						sb.WriteString(", ")
 					}
 					sb.WriteString(*p.Ident)
+					if g.conf.IsEnvTS() {
+						tsType, _ := CPPTypeToTS(*p.Type)
+						if v, ok := g.conf.TypeMappings[tsType]; ok {
+							sb.WriteString(fmt.Sprintf(": %s", v.TSType))
+						} else {
+							sb.WriteString(fmt.Sprintf(": %s", tsType))
+						}
+					}
 				}
-				sb.WriteString(") => {\n")
+				if g.conf.IsEnvTS() {
+					tsType, _ := CPPTypeToTS(*m.Returns)
+					if v, ok := g.conf.TypeMappings[tsType]; ok {
+						sb.WriteString(fmt.Sprintf("): %s {\n", v.TSType))
+					} else {
+						sb.WriteString(") => {\n")
+					}
+				} else {
+					sb.WriteString(") => {\n")
+				}
 				g.writeIndent(sb, 1)
 				if *m.Ident == "var" {
 					sb.WriteString(fmt.Sprintf("return __%s(", *m.Ident))
@@ -483,8 +526,25 @@ func (g *PackageGenerator) WriteEnvWrappedFns(methods map[string]*CPPMethod, pro
 				sb.WriteString(", ")
 			}
 			sb.WriteString(p.Name)
+			if g.conf.IsEnvTS() {
+				if m.IsVoid {
+					sb.WriteString("): void {\n")
+				} else {
+					sb.WriteString(fmt.Sprintf("): %s {\n", m.TSReturnType))
+				}
+			} else {
+				sb.WriteString(") {\n")
+			}
 		}
-		sb.WriteString(") => {\n")
+		if g.conf.IsEnvTS() {
+			if m.IsVoid {
+				sb.WriteString(") => {\n")
+			} else {
+				sb.WriteString(fmt.Sprintf("): %s => {\n", m.TSReturnType))
+			}
+		} else {
+			sb.WriteString(") => {\n")
+		}
 		g.writeIndent(sb, 1)
 		if m.Name == "var" {
 			sb.WriteString(fmt.Sprintf("return __%s(", m.Name))
