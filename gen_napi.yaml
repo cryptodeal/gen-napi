@@ -224,7 +224,7 @@ packages:
           const auto& shape = fl::Shape(new_shape);
           /return/ = fl::reshape(/return/, shape);
       mean:
-        arg_count:
+        arg_count: 3
         return_transforms: |
           /return/ = fl::mean(/arg_0/, /arg_1/, /arg_2/);
           auto axes_set = std::unordered_set<int>(/arg_1/.begin(), /arg_1/.end());
