@@ -246,7 +246,7 @@ func (g *PackageGenerator) WriteEnvClassWrapper(className string, class *CPPClas
 				if i == 0 {
 					continue
 				}
-				if i > m.ExpectedArgs {
+				if i >= m.ExpectedArgs {
 					break
 				}
 				if i > 1 && i < len(*m.Overloads[0]) {
@@ -480,7 +480,7 @@ func (g *PackageGenerator) WriteEnvWrappedFns(methods map[string]*CPPMethod, pro
 				sb.WriteString(fmt.Sprintf("return _%s(", *m.Ident))
 			}
 			for i, p := range *m.Overloads[0] {
-				if i > m.ExpectedArgs {
+				if i >= m.ExpectedArgs {
 					break
 				}
 				if i > 0 && i < len(*m.Overloads[0]) {
