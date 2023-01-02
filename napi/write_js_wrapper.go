@@ -384,7 +384,7 @@ func (g *PackageGenerator) WriteEnvClassWrapper(className string, class *CPPClas
 				g.writeIndent(sb, 2)
 				sb.WriteString("return ")
 				if tsType == className {
-					sb.WriteString(fmt.Sprintf("return new %s(", tsType))
+					sb.WriteString(fmt.Sprintf("new %s(", tsType))
 				}
 				sb.WriteString(fmt.Sprintf("this.#_native_self.%s(", *m.Ident))
 				if m.Args != nil {
@@ -436,7 +436,7 @@ func (g *PackageGenerator) WriteEnvClassWrapper(className string, class *CPPClas
 			g.writeIndent(sb, 2)
 			sb.WriteString("return ")
 			if m.TSReturnType == className {
-				sb.WriteString(fmt.Sprintf("return new %s(", m.TSReturnType))
+				sb.WriteString(fmt.Sprintf("new %s(", m.TSReturnType))
 			}
 			sb.WriteString(fmt.Sprintf("this.#_native_self.%s(", m.Name))
 			for i, p := range m.Args {
