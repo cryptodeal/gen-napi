@@ -354,10 +354,10 @@ func (g *PackageGenerator) WriteEnvClassWrapper(className string, class *CPPClas
 					}
 				}
 				if g.conf.IsEnvTS() {
-					if m.Returns.Name == nil {
+					if m.Returns.FullType == nil {
 						sb.WriteString("): void {\n")
 					} else {
-						tsType, _ := CPPTypeToTS(*m.Returns.Name)
+						tsType, _ := CPPTypeToTS(*m.Returns.FullType)
 						sb.WriteString(fmt.Sprintf("): %s {\n", tsType))
 					}
 				} else {
