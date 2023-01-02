@@ -1,6 +1,18 @@
-const { Tensor } = require('./test/js/index.cjs')
-const test = new Tensor(new Float64Array([1, 2, 3, 4, 5, 6]))
-const test2 = new Tensor(new Float64Array([1, 2, 3, 4, 5, 6])).add(test)
+const sm = require('./test/js/index.cjs')
+function genRand() {
+  const out = new Float32Array(128)
+  for (let i = 0; i < 128; ++i) {
+    out[i] = Math.random()
+  }
+  return out
+}
 
-console.log(test.toFloat64Array())
-console.log(test2.toFloat64Array())
+const t0 = performance.now() / 1e3
+let m = 0
+for (let i = 0; i < 10000; ++i) {
+  const a = sm.rand([128])
+  const b = new sm.Tensor(genRand())
+  m += a.add(b).mean().toFloat32()
+}
+const t1 = performance.now() / 1e3
+console.log(t1 - t0, 'seconds to calculate', m)

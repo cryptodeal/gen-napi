@@ -230,8 +230,8 @@ func (g *PackageGenerator) WriteEnvClassWrapper(className string, class *CPPClas
 					}
 				}
 			}
+			tsType, _ := CPPTypeToTS(*m.Returns)
 			if g.conf.IsEnvTS() {
-				tsType, _ := CPPTypeToTS(*m.Returns)
 				if v, ok := g.conf.TypeMappings[tsType]; ok {
 					sb.WriteString(fmt.Sprintf("): %s {\n", v.TSType))
 				} else {
@@ -241,7 +241,11 @@ func (g *PackageGenerator) WriteEnvClassWrapper(className string, class *CPPClas
 				sb.WriteString(") {\n")
 			}
 			g.writeIndent(sb, 2)
-			sb.WriteString(fmt.Sprintf("return this.#_native_self.%s(", *m.Ident))
+			sb.WriteString("return ")
+			if tsType == className {
+				sb.WriteString(fmt.Sprintf("new %s(", tsType))
+			}
+			sb.WriteString(fmt.Sprintf("this.#_native_self.%s(", *m.Ident))
 			for i, p := range *m.Overloads[0] {
 				if i == 0 {
 					continue
@@ -256,6 +260,9 @@ func (g *PackageGenerator) WriteEnvClassWrapper(className string, class *CPPClas
 				if *p.Type == className {
 					sb.WriteString(".#_native_self")
 				}
+			}
+			if tsType == className {
+				sb.WriteByte(')')
 			}
 			sb.WriteString(");\n")
 			g.writeIndent(sb, 1)
@@ -289,8 +296,8 @@ func (g *PackageGenerator) WriteEnvClassWrapper(className string, class *CPPClas
 					}
 				}
 			}
+			tsType, _ := CPPTypeToTS(*m.Returns)
 			if g.conf.IsEnvTS() {
-				tsType, _ := CPPTypeToTS(*m.Returns)
 				if v, ok := g.conf.TypeMappings[tsType]; ok {
 					sb.WriteString(fmt.Sprintf("): %s {\n", v.TSType))
 				} else {
@@ -305,7 +312,11 @@ func (g *PackageGenerator) WriteEnvClassWrapper(className string, class *CPPClas
 				sb.WriteString(") {\n")
 			}
 			g.writeIndent(sb, 2)
-			sb.WriteString(fmt.Sprintf("return this.#_native_self.%s(", *m.Ident))
+			sb.WriteString("return ")
+			if tsType == className {
+				sb.WriteString(fmt.Sprintf("new %s(", tsType))
+			}
+			sb.WriteString(fmt.Sprintf("this.#_native_self.%s(", *m.Ident))
 			for i, p := range *m.Overloads[0] {
 				if i == 0 {
 					continue
@@ -317,6 +328,9 @@ func (g *PackageGenerator) WriteEnvClassWrapper(className string, class *CPPClas
 				if *p.Type == className {
 					sb.WriteString(".#_native_self")
 				}
+			}
+			if tsType == className {
+				sb.WriteByte(')')
 			}
 			sb.WriteString(");\n")
 			g.writeIndent(sb, 1)
@@ -353,13 +367,11 @@ func (g *PackageGenerator) WriteEnvClassWrapper(className string, class *CPPClas
 						}
 					}
 				}
-
+				tsType, _ := CPPTypeToTS(*m.Returns.FullType)
 				if g.conf.IsEnvTS() {
-
 					if m.Returns.FullType == nil {
-						sb.WriteString("): void {\n")
+						sb.WriteString(") {\n")
 					} else {
-						tsType, _ := CPPTypeToTS(*m.Returns.FullType)
 						if v, ok := g.conf.TypeMappings[tsType]; ok {
 							sb.WriteString(fmt.Sprintf("): %s {\n", v.TSType))
 						} else {
@@ -370,7 +382,11 @@ func (g *PackageGenerator) WriteEnvClassWrapper(className string, class *CPPClas
 					sb.WriteString(") {\n")
 				}
 				g.writeIndent(sb, 2)
-				sb.WriteString(fmt.Sprintf("return this.#_native_self.%s(", *m.Ident))
+				sb.WriteString("return ")
+				if tsType == className {
+					sb.WriteString(fmt.Sprintf("return new %s(", tsType))
+				}
+				sb.WriteString(fmt.Sprintf("this.#_native_self.%s(", *m.Ident))
 				if m.Args != nil {
 					for i, p := range *m.Args {
 						if i == 0 {
@@ -384,6 +400,9 @@ func (g *PackageGenerator) WriteEnvClassWrapper(className string, class *CPPClas
 							sb.WriteString(".#_native_self")
 						}
 					}
+				}
+				if tsType == className {
+					sb.WriteByte(')')
 				}
 				sb.WriteString(");\n")
 				g.writeIndent(sb, 1)
@@ -407,7 +426,7 @@ func (g *PackageGenerator) WriteEnvClassWrapper(className string, class *CPPClas
 			}
 			if g.conf.IsEnvTS() {
 				if m.IsVoid {
-					sb.WriteString("): void {\n")
+					sb.WriteString(") {\n")
 				} else {
 					sb.WriteString(fmt.Sprintf("): %s {\n", m.TSReturnType))
 				}
@@ -415,7 +434,11 @@ func (g *PackageGenerator) WriteEnvClassWrapper(className string, class *CPPClas
 				sb.WriteString(") {\n")
 			}
 			g.writeIndent(sb, 2)
-			sb.WriteString(fmt.Sprintf("return this.#_native_self.%s(", m.Name))
+			sb.WriteString("return ")
+			if m.TSReturnType == className {
+				sb.WriteString(fmt.Sprintf("return new %s(", m.TSReturnType))
+			}
+			sb.WriteString(fmt.Sprintf("this.#_native_self.%s(", m.Name))
 			for i, p := range m.Args {
 				if i > 0 && i < len(m.Args) {
 					sb.WriteString(", ")
@@ -424,6 +447,9 @@ func (g *PackageGenerator) WriteEnvClassWrapper(className string, class *CPPClas
 					sb.WriteString(".#_native_self")
 				}
 				sb.WriteString(p.Name)
+			}
+			if m.TSReturnType == className {
+				sb.WriteByte(')')
 			}
 			sb.WriteString(");\n")
 			g.writeIndent(sb, 1)
@@ -469,8 +495,8 @@ func (g *PackageGenerator) WriteEnvWrappedFns(methods map[string]*CPPMethod, pro
 					}
 				}
 			}
+			tsType, _ := CPPTypeToTS(*m.Returns)
 			if g.conf.IsEnvTS() {
-				tsType, _ := CPPTypeToTS(*m.Returns)
 				if v, ok := g.conf.TypeMappings[tsType]; ok {
 					sb.WriteString(fmt.Sprintf("): %s {\n", v.TSType))
 				} else {
@@ -480,10 +506,14 @@ func (g *PackageGenerator) WriteEnvWrappedFns(methods map[string]*CPPMethod, pro
 				sb.WriteString(") => {\n")
 			}
 			g.writeIndent(sb, 1)
+			sb.WriteString("return ")
+			if isClass(tsType, classes) {
+				sb.WriteString(fmt.Sprintf("new %s(", tsType))
+			}
 			if *m.Ident == "var" {
-				sb.WriteString(fmt.Sprintf("return __%s(", *m.Ident))
+				sb.WriteString(fmt.Sprintf("__%s(", *m.Ident))
 			} else {
-				sb.WriteString(fmt.Sprintf("return _%s(", *m.Ident))
+				sb.WriteString(fmt.Sprintf("_%s(", *m.Ident))
 			}
 			for i, p := range *m.Overloads[0] {
 				if i >= m.ExpectedArgs {
@@ -496,6 +526,9 @@ func (g *PackageGenerator) WriteEnvWrappedFns(methods map[string]*CPPMethod, pro
 				if isClass(*p.Type, classes) {
 					sb.WriteString("._native_self")
 				}
+			}
+			if isClass(tsType, classes) {
+				sb.WriteByte(')')
 			}
 			sb.WriteString(");\n")
 			sb.WriteString("}\n\n")
@@ -527,8 +560,8 @@ func (g *PackageGenerator) WriteEnvWrappedFns(methods map[string]*CPPMethod, pro
 						}
 					}
 				}
+				tsType, _ := CPPTypeToTS(*m.Returns)
 				if g.conf.IsEnvTS() {
-					tsType, _ := CPPTypeToTS(*m.Returns)
 					if v, ok := g.conf.TypeMappings[tsType]; ok {
 						sb.WriteString(fmt.Sprintf("): %s {\n", v.TSType))
 					} else {
@@ -538,10 +571,14 @@ func (g *PackageGenerator) WriteEnvWrappedFns(methods map[string]*CPPMethod, pro
 					sb.WriteString(") => {\n")
 				}
 				g.writeIndent(sb, 1)
+				sb.WriteString("return ")
+				if isClass(tsType, classes) {
+					sb.WriteString(fmt.Sprintf("new %s(", tsType))
+				}
 				if *m.Ident == "var" {
-					sb.WriteString(fmt.Sprintf("return __%s(", *m.Ident))
+					sb.WriteString(fmt.Sprintf("__%s(", *m.Ident))
 				} else {
-					sb.WriteString(fmt.Sprintf("return _%s(", *m.Ident))
+					sb.WriteString(fmt.Sprintf("_%s(", *m.Ident))
 				}
 				for i, p := range *m.Overloads[0] {
 					if i > 0 && i < len(*m.Overloads[0]) {
@@ -551,6 +588,9 @@ func (g *PackageGenerator) WriteEnvWrappedFns(methods map[string]*CPPMethod, pro
 					if isClass(*p.Type, classes) {
 						sb.WriteString("._native_self")
 					}
+				}
+				if isClass(tsType, classes) {
+					sb.WriteByte(')')
 				}
 				sb.WriteString(");\n")
 				sb.WriteString("}\n\n")
@@ -586,16 +626,23 @@ func (g *PackageGenerator) WriteEnvWrappedFns(methods map[string]*CPPMethod, pro
 			sb.WriteString(") => {\n")
 		}
 		g.writeIndent(sb, 1)
+		sb.WriteString("return ")
+		if isClass(m.TSReturnType, classes) {
+			sb.WriteString(fmt.Sprintf("new %s(", m.TSReturnType))
+		}
 		if m.Name == "var" {
-			sb.WriteString(fmt.Sprintf("return __%s(", m.Name))
+			sb.WriteString(fmt.Sprintf("__%s(", m.Name))
 		} else {
-			sb.WriteString(fmt.Sprintf("return _%s(", m.Name))
+			sb.WriteString(fmt.Sprintf("_%s(", m.Name))
 		}
 		for i, p := range m.Args {
 			if i > 0 && i < len(m.Args) {
 				sb.WriteString(", ")
 			}
 			sb.WriteString(p.Name)
+		}
+		if isClass(m.TSReturnType, classes) {
+			sb.WriteByte(')')
 		}
 		sb.WriteString(");\n")
 		sb.WriteString("}\n\n")
