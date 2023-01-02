@@ -78,9 +78,10 @@ type CPPArg struct {
 }
 
 type CPPMethod struct {
-	Ident     *string
-	Overloads []*[]*CPPArg
-	Returns   *string
+	Ident        *string
+	Overloads    []*[]*CPPArg
+	Returns      *string
+	ExpectedArgs int
 }
 
 type TemplateMethod struct {
