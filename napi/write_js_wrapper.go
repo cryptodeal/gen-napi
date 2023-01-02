@@ -353,12 +353,18 @@ func (g *PackageGenerator) WriteEnvClassWrapper(className string, class *CPPClas
 						}
 					}
 				}
+
 				if g.conf.IsEnvTS() {
+
 					if m.Returns.FullType == nil {
 						sb.WriteString("): void {\n")
 					} else {
 						tsType, _ := CPPTypeToTS(*m.Returns.FullType)
-						sb.WriteString(fmt.Sprintf("): %s {\n", tsType))
+						if v, ok := g.conf.TypeMappings[tsType]; ok {
+							sb.WriteString(fmt.Sprintf("): %s {\n", v.TSType))
+						} else {
+							sb.WriteString(fmt.Sprintf("): %s {\n", tsType))
+						}
 					}
 				} else {
 					sb.WriteString(") {\n")
