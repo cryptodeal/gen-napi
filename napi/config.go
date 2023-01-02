@@ -16,6 +16,13 @@ type TypeHandler struct {
 	Handler string `yaml:"handler"`
 }
 
+type MethodTransforms struct {
+	ArgCount           int               `yaml:"arg_count"`
+	ArgCheckTransforms string            `yaml:"arg_check_transforms"`
+	ReturnTransforms   string            `yaml:"return_transforms"`
+	ArgTransforms      map[string]string `yaml:"arg_transforms"`
+}
+
 type TypeMap struct {
 	TSType   string `yaml:"ts"`
 	NapiType string `yaml:"napi"`
@@ -84,10 +91,7 @@ type PackageConfig struct {
 
 	GlobalTypeOutTransforms map[string]string `yaml:"global_type_out_transforms"`
 
-	MethodArgCheckTransforms map[string]string `yaml:"method_arg_check_transforms"`
-
-	MethodReturnTransforms map[string]string            `yaml:"method_return_transforms"`
-	MethodArgTransforms    map[string]map[string]string `yaml:"method_arg_transforms"`
+	MethodTransforms map[string]MethodTransforms `yaml:"method_transforms"`
 
 	GlobalVars  string            `yaml:"global_vars"`
 	HelperFuncs map[string]string `yaml:"helper_funcs"`

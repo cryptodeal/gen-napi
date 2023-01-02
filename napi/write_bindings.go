@@ -41,8 +41,8 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 	hasObject := false
 	// if len(m.Overloads) == 1 {
 	var expected_count int
-	if v, ok := g.conf.MethodReturnTransforms[*m.Ident]; ok {
-		expected_count = (strings.Count(strings.Split(v, "\n")[0], ",") + 1)
+	if v, ok := g.conf.MethodTransforms[*m.Ident]; ok {
+		expected_count = v.ArgCount
 		m.ExpectedArgs = expected_count
 	} else {
 		expected_count = len(*m.Overloads[0])
@@ -64,8 +64,8 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 		sb.WriteString("}\n")
 	}
 	if expected_count > 0 {
-		if v, ok := g.conf.MethodArgCheckTransforms[*m.Ident]; ok {
-			lines := strings.Split(v, "\n")
+		if v, ok := g.conf.MethodTransforms[*m.Ident]; ok && v.ArgCheckTransforms != "" {
+			lines := strings.Split(v.ArgCheckTransforms, "\n")
 			for _, line := range lines {
 				g.writeIndent(sb, 1)
 				sb.WriteString(fmt.Sprintf("%s\n", line))
@@ -77,9 +77,9 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 				if i > expected_count {
 					break
 				}
-				if v, ok := g.conf.MethodArgTransforms[*m.Ident][*arg.Ident]; ok && !strings.Contains(v, "/arg_") {
+				if v2, ok2 := v.ArgTransforms[*arg.Ident]; ok2 && !strings.Contains(v2, "/arg_") {
 					g.writeIndent(sb, 1)
-					sb.WriteString(strings.ReplaceAll(v, "/arg/", fmt.Sprintf("info[%d]", i)))
+					sb.WriteString(strings.ReplaceAll(v2, "/arg/", fmt.Sprintf("info[%d]", i)))
 				}
 			}
 		} else {
@@ -145,7 +145,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 					sb.WriteString("return env.Null();\n")
 					g.writeIndent(sb, 1)
 					sb.WriteString("}\n")
-					if _, ok := g.conf.MethodArgTransforms[*m.Ident][*arg.Ident]; !ok {
+					if _, ok := g.conf.MethodTransforms[*m.Ident].ArgTransforms[*arg.Ident]; !ok {
 						g.writeIndent(sb, 1)
 						sb.WriteString(fmt.Sprintf("%s %s = ", *arg.Type, *arg.Ident))
 						if needsCast != nil {
@@ -167,7 +167,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 					sb.WriteString("return env.Null();\n")
 					g.writeIndent(sb, 1)
 					sb.WriteString("}\n")
-					if _, ok := g.conf.MethodArgTransforms[*m.Ident][*arg.Ident]; !ok {
+					if _, ok := g.conf.MethodTransforms[*m.Ident].ArgTransforms[*arg.Ident]; !ok {
 						g.writeIndent(sb, 1)
 						sb.WriteString(fmt.Sprintf("Napi::Object %s_obj = info[%d].As<Napi::Object>();\n", *arg.Ident, argIdx))
 					}
@@ -224,7 +224,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 					g.writeIndent(sb, 1)
 					sb.WriteString("}\n")
 				}
-				if v, ok := g.conf.MethodArgTransforms[*m.Ident][*arg.Ident]; ok {
+				if v, ok := g.conf.MethodTransforms[*m.Ident].ArgTransforms[*arg.Ident]; ok {
 					if wrappedClass != nil && strings.Contains(v, "/arg_0/") {
 						v = strings.ReplaceAll(v, "/arg_0/", "this")
 					}
@@ -263,7 +263,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 			if i > expected_count {
 				break
 			}
-			if v, ok := g.conf.MethodArgTransforms[*m.Ident][*arg.Ident]; ok && strings.Contains(v, "/arg_") {
+			if v, ok := g.conf.MethodTransforms[*m.Ident].ArgTransforms[*arg.Ident]; ok && strings.Contains(v, "/arg_") {
 				g.writeIndent(sb, 2)
 				if strings.Contains(v, "/arg_") {
 					for j, val := range *m.Overloads[0] {
@@ -294,8 +294,8 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 		}
 		g.writeIndent(sb, 2)
 		sb.WriteString(fmt.Sprintf("%s::%s _res;\n", *g.NameSpace, obj_type))
-		if v, ok := g.conf.MethodReturnTransforms[*m.Ident]; ok {
-			parsed_transform := strings.ReplaceAll(v, "/return/", "_res")
+		if v, ok := g.conf.MethodTransforms[*m.Ident]; ok && v.ReturnTransforms != "" {
+			parsed_transform := strings.ReplaceAll(v.ReturnTransforms, "/return/", "_res")
 			for i, arg := range *m.Overloads[0] {
 				fmtd_arg := ""
 				if isClass(*arg.Type, classes) {
@@ -361,8 +361,8 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 	} else {
 		g.writeIndent(sb, 1)
 		sb.WriteString(fmt.Sprintf("%s::%s _res;\n", *g.NameSpace, *m.Returns))
-		if v, ok := g.conf.MethodReturnTransforms[*m.Ident]; ok {
-			parsed_transform := strings.ReplaceAll(v, "/return/", "_res")
+		if v, ok := g.conf.MethodTransforms[*m.Ident]; ok && v.ReturnTransforms != "" {
+			parsed_transform := strings.ReplaceAll(v.ReturnTransforms, "/return/", "_res")
 			for i, arg := range *m.Overloads[0] {
 				fmtd_arg := ""
 				if isClass(*arg.Type, classes) {

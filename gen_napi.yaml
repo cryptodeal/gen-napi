@@ -48,305 +48,353 @@ packages:
     global_type_out_transforms:
       Tensor: |
         g_bytes_used += /return/.bytes();
-    method_arg_check_transforms:
-      arange: |
-        if (!info[0].IsNumber()) {
-          Napi::TypeError::New(info.Env(), "`arange` expects args[0] to be typeof `number`").ThrowAsJavaScriptException();
-          return env.Null();
-        }
-        if (!info[1].IsNumber()) {
-          Napi::TypeError::New(info.Env(),"`arange` expects args[1] to be typeof `number`").ThrowAsJavaScriptException();
-          return env.Null();
-        }
-        if (!info[2].IsNumber()) {
-          Napi::TypeError::New(info.Env(), "`arange` expects args[2] to be typeof `number`").ThrowAsJavaScriptException();
-          return env.Null();
-        }
-    method_return_transforms:
-      any: |
-        /return/ = fl::any(/arg_0/, /arg_1/, /arg_2/);
-        auto axes_set = std::unordered_set<int>(/arg_1/.begin(), /arg_1/.end());
-        auto base_shape = (/arg_0/).shape().get();
-        std::vector<fl::Dim> new_shape;
-        for (size_t idx = 0; idx < base_shape.size(); ++idx) {
-          if (axes_set.count(idx) || (axes_set.size() == 0)) {
-            if (/arg_2/) {
-              new_shape.emplace_back(1);
-            }
-            continue;
-          }
-          new_shape.emplace_back(base_shape[idx]);
-        }
-        const auto& shape = fl::Shape(new_shape);
-        /return/ = fl::reshape(/return/, shape);
-      all: |
-        /return/ = fl::all(/arg_0/, /arg_1/, /arg_2/);
-        auto axes_set = std::unordered_set<int>(/arg_1/.begin(), /arg_1/.end());
-        auto base_shape = (/arg_0/).shape().get();
-        std::vector<fl::Dim> new_shape;
-        for (size_t idx = 0; idx < base_shape.size(); ++idx) {
-          if (axes_set.count(idx) || (axes_set.size() == 0)) {
-            if (/arg_2/) {
-              new_shape.emplace_back(1);
-            }
-            continue;
-          }
-          new_shape.emplace_back(base_shape[idx]);
-        }
-        const auto& shape = fl::Shape(new_shape);
-        /return/ = fl::reshape(/return/, shape);
-      amin: |
-        /return/ = fl::amin(/arg_0/, /arg_1/, /arg_2/);
-        auto axes_set = std::unordered_set<int>(/arg_1/.begin(), /arg_1/.end());
-        auto base_shape = (/arg_0/).shape().get();
-        std::vector<fl::Dim> new_shape;
-        for (size_t idx = 0; idx < base_shape.size(); ++idx) {
-          if (axes_set.count(idx) || (axes_set.size() == 0)) {
-            if (/arg_2/) {
-              new_shape.emplace_back(1);
-            }
-            continue;
-          }
-          new_shape.emplace_back(base_shape[idx]);
-        }
-        const auto& shape = fl::Shape(new_shape);
-        /return/ = fl::reshape(/return/, shape);
-      amax: |
-        /return/ = fl::amax(/arg_0/, /arg_1/, /arg_2/);
-        auto axes_set = std::unordered_set<int>(/arg_1/.begin(), /arg_1/.end());
-        auto base_shape = (/arg_0/).shape().get();
-        std::vector<fl::Dim> new_shape;
-        for (size_t idx = 0; idx < base_shape.size(); ++idx) {
-          if (axes_set.count(idx) || (axes_set.size() == 0)) {
-            if (/arg_2/) {
-              new_shape.emplace_back(1);
-            }
-            continue;
-          }
-          new_shape.emplace_back(base_shape[idx]);
-        }
-        const auto& shape = fl::Shape(new_shape);
-        /return/ = fl::reshape(/return/, shape);
-      argmin: |
-        /return/ = fl::argmin(/arg_0/, /arg_1/, /arg_2/);
-        auto axes_set = std::unordered_set<int>{static_cast<int>(/arg_1/)};
-        auto base_shape = (/arg_0/).shape().get();
-        std::vector<fl::Dim> new_shape;
-        for (size_t idx = 0; idx < base_shape.size(); ++idx) {
-          if (axes_set.count(idx) || (axes_set.size() == 0)) {
-            if (/arg_2/) {
-              new_shape.emplace_back(1);
-            }
-            continue;
-          }
-          new_shape.emplace_back(base_shape[idx]);
-        }
-        const auto& shape = fl::Shape(new_shape);
-        /return/ = fl::reshape(/return/, shape);
-      argmax: |
-        /return/ = fl::argmax(/arg_0/, /arg_1/, /arg_2/);
-        auto axes_set = std::unordered_set<int>{static_cast<int>(/arg_1/)};
-        auto base_shape = (/arg_0/).shape().get();
-        std::vector<fl::Dim> new_shape;
-        for (size_t idx = 0; idx < base_shape.size(); ++idx) {
-          if (axes_set.count(idx) || (axes_set.size() == 0)) {
-            if (/arg_2/) {
-              new_shape.emplace_back(1);
-            }
-            continue;
-          }
-          new_shape.emplace_back(base_shape[idx]);
-        }
-        const auto& shape = fl::Shape(new_shape);
-        /return/ = fl::reshape(/return/, shape);
-      countNonzero: |
-        /return/ = fl::countNonzero(/arg_0/, /arg_1/, /arg_2/);
-        auto axes_set = std::unordered_set<int>(/arg_1/.begin(), /arg_1/.end());
-        auto base_shape = (/arg_0/).shape().get();
-        std::vector<fl::Dim> new_shape;
-        for (size_t idx = 0; idx < base_shape.size(); ++idx) {
-          if (axes_set.count(idx) || (axes_set.size() == 0)) {
-            if (/arg_2/) {
-              new_shape.emplace_back(1);
-            }
-            continue;
-          }
-          new_shape.emplace_back(base_shape[idx]);
-        }
-        const auto& shape = fl::Shape(new_shape);
-        /return/ = fl::reshape(/return/, shape);
-      sum: |
-        /return/ = fl::sum(/arg_0/, /arg_1/, /arg_2/);
-        auto axes_set = std::unordered_set<int>(/arg_1/.begin(), /arg_1/.end());
-        auto base_shape = (/arg_0/).shape().get();
-        std::vector<fl::Dim> new_shape;
-        for (size_t idx = 0; idx < base_shape.size(); ++idx) {
-          if (axes_set.count(idx) || (axes_set.size() == 0)) {
-            if (/arg_2/) {
-              new_shape.emplace_back(1);
-            }
-            continue;
-          }
-          new_shape.emplace_back(base_shape[idx]);
-        }
-        const auto& shape = fl::Shape(new_shape);
-        /return/ = fl::reshape(/return/, shape);
-      mean: |
-        /return/ = fl::mean(/arg_0/, /arg_1/, /arg_2/);
-        auto axes_set = std::unordered_set<int>(/arg_1/.begin(), /arg_1/.end());
-        auto base_shape = (/arg_0/).shape().get();
-        std::vector<fl::Dim> new_shape;
-        for (size_t idx = 0; idx < base_shape.size(); ++idx) {
-          if (axes_set.count(idx) || (axes_set.size() == 0)) {
-            if (/arg_2/) {
-              new_shape.emplace_back(1);
-            }
-            continue;
-          }
-          new_shape.emplace_back(base_shape[idx]);
-        }
-        const auto& shape = fl::Shape(new_shape);
-        /return/ = fl::reshape(/return/, shape);
-      median: |
-        /return/ = fl::median(/arg_0/, /arg_1/, /arg_2/);
-        auto axes_set = std::unordered_set<int>(/arg_1/.begin(), /arg_1/.end());
-        auto base_shape = (/arg_0/).shape().get();
-        std::vector<fl::Dim> new_shape;
-        for (size_t idx = 0; idx < base_shape.size(); ++idx) {
-          if (axes_set.count(idx) || (axes_set.size() == 0)) {
-            if (/arg_2/) {
-              new_shape.emplace_back(1);
-            }
-            continue;
-          }
-          new_shape.emplace_back(base_shape[idx]);
-        }
-        const auto& shape = fl::Shape(new_shape);
-        /return/ = fl::reshape(/return/, shape);
-      var: |
-        /return/ = fl::var(/arg_0/, /arg_1/, /arg_2/, /arg_3/);
-        auto axes_set = std::unordered_set<int>(/arg_1/.begin(), /arg_1/.end());
-        auto base_shape = (/arg_0/).shape().get();
-        std::vector<fl::Dim> new_shape;
-        for (size_t idx = 0; idx < base_shape.size(); ++idx) {
-          if (axes_set.count(idx) || (axes_set.size() == 0)) {
-            if (/arg_3/) {
-              new_shape.emplace_back(1);
-            }
-            continue;
-          }
-          new_shape.emplace_back(base_shape[idx]);
-        }
-        const auto& shape = fl::Shape(new_shape);
-        /return/ = fl::reshape(/return/, shape);
-      std: |
-        /return/ = fl::median(/arg_0/, /arg_1/, /arg_2/);
-        auto axes_set = std::unordered_set<int>(/arg_1/.begin(), /arg_1/.end());
-        auto base_shape = (/arg_0/).shape().get();
-        std::vector<fl::Dim> new_shape;
-        for (size_t idx = 0; idx < base_shape.size(); ++idx) {
-          if (axes_set.count(idx) || (axes_set.size() == 0)) {
-            if (/arg_2/) {
-              new_shape.emplace_back(1);
-            }
-            continue;
-          }
-          new_shape.emplace_back(base_shape[idx]);
-        }
-        const auto& shape = fl::Shape(new_shape);
-        /return/ = fl::reshape(/return/, shape);
-      norm: |
-        /return/ = fl::norm(/arg_0/, /arg_1/, /arg_2/, /arg_3/);
-        if (p == std::numeric_limits<double>::infinity()) {
-          /return/ = fl::abs(/arg_0/);
-          /return/ = fl::amax(/arg_0/, /arg_1/, /arg_3/);
-        }
-        auto axes_set = std::unordered_set<int>(/arg_1/.begin(), /arg_1/.end());
-        auto base_shape = (/arg_0/).shape().get();
-        std::vector<fl::Dim> new_shape;
-        for (size_t idx = 0; idx < base_shape.size(); ++idx) {
-          if (axes_set.count(idx) || (axes_set.size() == 0)) {
-            if (/arg_3/) {
-              new_shape.emplace_back(1);
-            }
-            continue;
-          }
-          new_shape.emplace_back(base_shape[idx]);
-        }
-        const auto& shape = fl::Shape(new_shape);
-        /return/ = fl::reshape(/return/, shape);
-      arange: |
-        /return/ = fl::arange(/arg_0/, /arg_1/, /arg_2/);
-      full: |
-        /return/ = fl::full(fl::Shape(/arg_0/), /arg_1/);
-      identity: |
-        /return/ = fl::identity(/arg_0/);
-      iota: |
-        /return/ = fl::iota(fl::Shape(/arg_0/), fl::Shape(/arg_1/));
-      tril: |
-        if (g_row_major) {
-          /return/ = fl::triu(/arg_0/);
-        } else {
-          /return/ = fl::tril(/arg_0/);
-        }
-      triu: |
-        if (g_row_major) {
-          /return/ = fl::tril(/arg_0/);
-        } else {
-          /return/ = fl::triu(/arg_0/);
-        }
-      sort: |
-        /return/ = fl::sort(/arg_0/, /arg_1/);
-      matmul: |
-        if (g_row_major) {
-          /return/ = fl::matmul(/arg_1/, /arg_0/);
-        } else {
-          /return/ = fl::matmul(/arg_0/, /arg_1/);
-        }
-    method_arg_transforms:
-      argmin:
-        axis: |
-          auto axis = axisArg(/arg/.As<Napi::Number>().Uint32Value(), g_row_major, /arg_0/->_tensor->ndim());
-      argmax:
-        axis: |
-          auto axis = axisArg(/arg/.As<Napi::Number>().Uint32Value(), g_row_major, /arg_0/->_tensor->ndim());
+    method_transforms:
       arange:
-        start: |
-          float start = /arg/.As<Napi::Number>().FloatValue();
-        end: |
-          float end = /arg/.As<Napi::Number>().FloatValue();
-        step: |
-          float step = /arg/.As<Napi::Number>().FloatValue();
+        arg_count: 3
+        arg_check_transforms: |
+          if (!info[0].IsNumber()) {
+             Napi::TypeError::New(info.Env(), "`arange` expects args[0] to be typeof `number`").ThrowAsJavaScriptException();
+             return env.Null();
+           }
+           if (!info[1].IsNumber()) {
+             Napi::TypeError::New(info.Env(),"`arange` expects args[1] to be typeof `number`").ThrowAsJavaScriptException();
+             return env.Null();
+           }
+           if (!info[2].IsNumber()) {
+             Napi::TypeError::New(info.Env(), "`arange` expects args[2] to be typeof `number`").ThrowAsJavaScriptException();
+             return env.Null();
+           }
+        return_transforms: |
+          /return/ = fl::arange(/arg_0/, /arg_1/, /arg_2/);
+        arg_transforms:
+          start: |
+            float start = /arg/.As<Napi::Number>().FloatValue();
+          end: |
+            float end = /arg/.As<Napi::Number>().FloatValue();
+          step: |
+            float step = /arg/.As<Napi::Number>().FloatValue();
+      any:
+        arg_count: 3
+        return_transforms: |
+          /return/ = fl::any(/arg_0/, /arg_1/, /arg_2/);
+          auto axes_set = std::unordered_set<int>(/arg_1/.begin(), /arg_1/.end());
+          auto base_shape = (/arg_0/).shape().get();
+          std::vector<fl::Dim> new_shape;
+          for (size_t idx = 0; idx < base_shape.size(); ++idx) {
+            if (axes_set.count(idx) || (axes_set.size() == 0)) {
+              if (/arg_2/) {
+                new_shape.emplace_back(1);
+              }
+              continue;
+            }
+            new_shape.emplace_back(base_shape[idx]);
+          }
+          const auto& shape = fl::Shape(new_shape);
+          /return/ = fl::reshape(/return/, shape);
+      all:
+        arg_count: 3
+        return_transforms: |
+          /return/ = fl::all(/arg_0/, /arg_1/, /arg_2/);
+          auto axes_set = std::unordered_set<int>(/arg_1/.begin(), /arg_1/.end());
+          auto base_shape = (/arg_0/).shape().get();
+          std::vector<fl::Dim> new_shape;
+          for (size_t idx = 0; idx < base_shape.size(); ++idx) {
+            if (axes_set.count(idx) || (axes_set.size() == 0)) {
+              if (/arg_2/) {
+                new_shape.emplace_back(1);
+              }
+              continue;
+            }
+            new_shape.emplace_back(base_shape[idx]);
+          }
+          const auto& shape = fl::Shape(new_shape);
+          /return/ = fl::reshape(/return/, shape);
+      amin:
+        arg_count: 3
+        return_transforms: |
+          /return/ = fl::amin(/arg_0/, /arg_1/, /arg_2/);
+          auto axes_set = std::unordered_set<int>(/arg_1/.begin(), /arg_1/.end());
+          auto base_shape = (/arg_0/).shape().get();
+          std::vector<fl::Dim> new_shape;
+          for (size_t idx = 0; idx < base_shape.size(); ++idx) {
+            if (axes_set.count(idx) || (axes_set.size() == 0)) {
+              if (/arg_2/) {
+                new_shape.emplace_back(1);
+              }
+              continue;
+            }
+            new_shape.emplace_back(base_shape[idx]);
+          }
+          const auto& shape = fl::Shape(new_shape);
+          /return/ = fl::reshape(/return/, shape);
+      amax:
+        arg_count: 3
+        return_transforms: |
+          /return/ = fl::amax(/arg_0/, /arg_1/, /arg_2/);
+          auto axes_set = std::unordered_set<int>(/arg_1/.begin(), /arg_1/.end());
+          auto base_shape = (/arg_0/).shape().get();
+          std::vector<fl::Dim> new_shape;
+          for (size_t idx = 0; idx < base_shape.size(); ++idx) {
+            if (axes_set.count(idx) || (axes_set.size() == 0)) {
+              if (/arg_2/) {
+                new_shape.emplace_back(1);
+              }
+              continue;
+            }
+            new_shape.emplace_back(base_shape[idx]);
+          }
+          const auto& shape = fl::Shape(new_shape);
+          /return/ = fl::reshape(/return/, shape);
+      argmin:
+        arg_count: 3
+        return_transforms: |
+          /return/ = fl::argmin(/arg_0/, /arg_1/, /arg_2/);
+          auto axes_set = std::unordered_set<int>{static_cast<int>(/arg_1/)};
+          auto base_shape = (/arg_0/).shape().get();
+          std::vector<fl::Dim> new_shape;
+          for (size_t idx = 0; idx < base_shape.size(); ++idx) {
+            if (axes_set.count(idx) || (axes_set.size() == 0)) {
+              if (/arg_2/) {
+                new_shape.emplace_back(1);
+              }
+              continue;
+            }
+            new_shape.emplace_back(base_shape[idx]);
+          }
+          const auto& shape = fl::Shape(new_shape);
+          /return/ = fl::reshape(/return/, shape);
+        arg_transforms:
+          axis: |
+            auto axis = axisArg(/arg/.As<Napi::Number>().Uint32Value(), g_row_major, /arg_0/->_tensor->ndim());
+      argmax:
+        arg_count: 3
+        return_transforms: |
+          /return/ = fl::argmax(/arg_0/, /arg_1/, /arg_2/);
+          auto axes_set = std::unordered_set<int>{static_cast<int>(/arg_1/)};
+          auto base_shape = (/arg_0/).shape().get();
+          std::vector<fl::Dim> new_shape;
+          for (size_t idx = 0; idx < base_shape.size(); ++idx) {
+            if (axes_set.count(idx) || (axes_set.size() == 0)) {
+              if (/arg_2/) {
+                new_shape.emplace_back(1);
+              }
+              continue;
+            }
+            new_shape.emplace_back(base_shape[idx]);
+          }
+          const auto& shape = fl::Shape(new_shape);
+          /return/ = fl::reshape(/return/, shape);
+        arg_transforms:
+          axis: |
+            auto axis = axisArg(/arg/.As<Napi::Number>().Uint32Value(), g_row_major, /arg_0/->_tensor->ndim());
+      countNonzero:
+        arg_count: 3
+        return_transforms: |
+          /return/ = fl::countNonzero(/arg_0/, /arg_1/, /arg_2/);
+          auto axes_set = std::unordered_set<int>(/arg_1/.begin(), /arg_1/.end());
+          auto base_shape = (/arg_0/).shape().get();
+          std::vector<fl::Dim> new_shape;
+          for (size_t idx = 0; idx < base_shape.size(); ++idx) {
+            if (axes_set.count(idx) || (axes_set.size() == 0)) {
+              if (/arg_2/) {
+                new_shape.emplace_back(1);
+              }
+              continue;
+            }
+            new_shape.emplace_back(base_shape[idx]);
+          }
+          const auto& shape = fl::Shape(new_shape);
+          /return/ = fl::reshape(/return/, shape);
+      sum:
+        arg_count: 3
+        return_transforms: |
+          /return/ = fl::sum(/arg_0/, /arg_1/, /arg_2/);
+          auto axes_set = std::unordered_set<int>(/arg_1/.begin(), /arg_1/.end());
+          auto base_shape = (/arg_0/).shape().get();
+          std::vector<fl::Dim> new_shape;
+          for (size_t idx = 0; idx < base_shape.size(); ++idx) {
+            if (axes_set.count(idx) || (axes_set.size() == 0)) {
+              if (/arg_2/) {
+                new_shape.emplace_back(1);
+              }
+              continue;
+            }
+            new_shape.emplace_back(base_shape[idx]);
+          }
+          const auto& shape = fl::Shape(new_shape);
+          /return/ = fl::reshape(/return/, shape);
+      mean:
+        arg_count:
+        return_transforms: |
+          /return/ = fl::mean(/arg_0/, /arg_1/, /arg_2/);
+          auto axes_set = std::unordered_set<int>(/arg_1/.begin(), /arg_1/.end());
+          auto base_shape = (/arg_0/).shape().get();
+          std::vector<fl::Dim> new_shape;
+          for (size_t idx = 0; idx < base_shape.size(); ++idx) {
+            if (axes_set.count(idx) || (axes_set.size() == 0)) {
+              if (/arg_2/) {
+                new_shape.emplace_back(1);
+              }
+              continue;
+            }
+            new_shape.emplace_back(base_shape[idx]);
+          }
+          const auto& shape = fl::Shape(new_shape);
+          /return/ = fl::reshape(/return/, shape);
+      median:
+        arg_count: 3
+        return_transforms: |
+          /return/ = fl::median(/arg_0/, /arg_1/, /arg_2/);
+          auto axes_set = std::unordered_set<int>(/arg_1/.begin(), /arg_1/.end());
+          auto base_shape = (/arg_0/).shape().get();
+          std::vector<fl::Dim> new_shape;
+          for (size_t idx = 0; idx < base_shape.size(); ++idx) {
+            if (axes_set.count(idx) || (axes_set.size() == 0)) {
+              if (/arg_2/) {
+                new_shape.emplace_back(1);
+              }
+              continue;
+            }
+            new_shape.emplace_back(base_shape[idx]);
+          }
+          const auto& shape = fl::Shape(new_shape);
+          /return/ = fl::reshape(/return/, shape);
+      var:
+        arg_count: 4
+        return_transforms: |
+          /return/ = fl::var(/arg_0/, /arg_1/, /arg_2/, /arg_3/);
+          auto axes_set = std::unordered_set<int>(/arg_1/.begin(), /arg_1/.end());
+          auto base_shape = (/arg_0/).shape().get();
+          std::vector<fl::Dim> new_shape;
+          for (size_t idx = 0; idx < base_shape.size(); ++idx) {
+            if (axes_set.count(idx) || (axes_set.size() == 0)) {
+              if (/arg_3/) {
+                new_shape.emplace_back(1);
+              }
+              continue;
+            }
+            new_shape.emplace_back(base_shape[idx]);
+          }
+          const auto& shape = fl::Shape(new_shape);
+          /return/ = fl::reshape(/return/, shape);
+      std:
+        arg_count: 3
+        return_transforms: |
+          /return/ = fl::median(/arg_0/, /arg_1/, /arg_2/);
+          auto axes_set = std::unordered_set<int>(/arg_1/.begin(), /arg_1/.end());
+          auto base_shape = (/arg_0/).shape().get();
+          std::vector<fl::Dim> new_shape;
+          for (size_t idx = 0; idx < base_shape.size(); ++idx) {
+            if (axes_set.count(idx) || (axes_set.size() == 0)) {
+              if (/arg_2/) {
+                new_shape.emplace_back(1);
+              }
+              continue;
+            }
+            new_shape.emplace_back(base_shape[idx]);
+          }
+          const auto& shape = fl::Shape(new_shape);
+          /return/ = fl::reshape(/return/, shape);
+      norm:
+        arg_count: 4
+        return_transforms: |
+          /return/ = fl::norm(/arg_0/, /arg_1/, /arg_2/, /arg_3/);
+          if (p == std::numeric_limits<double>::infinity()) {
+            /return/ = fl::abs(/arg_0/);
+            /return/ = fl::amax(/arg_0/, /arg_1/, /arg_3/);
+          }
+          auto axes_set = std::unordered_set<int>(/arg_1/.begin(), /arg_1/.end());
+          auto base_shape = (/arg_0/).shape().get();
+          std::vector<fl::Dim> new_shape;
+          for (size_t idx = 0; idx < base_shape.size(); ++idx) {
+            if (axes_set.count(idx) || (axes_set.size() == 0)) {
+              if (/arg_3/) {
+                new_shape.emplace_back(1);
+              }
+              continue;
+            }
+            new_shape.emplace_back(base_shape[idx]);
+          }
+          const auto& shape = fl::Shape(new_shape);
+          /return/ = fl::reshape(/return/, shape);
       full:
-        dims: |
-          std::vector<long long> dims = jsArrayArg<long long>(/arg/.As<Napi::Array>(), g_row_major, false, env);
-        val: |
-          float val = /arg/.As<Napi::Number>().FloatValue();
+        arg_count: 2
+        return_transforms: |
+          /return/ = fl::full(fl::Shape(/arg_0/), /arg_1/);
+        arg_transforms:
+          dims: |
+            std::vector<long long> dims = jsArrayArg<long long>(/arg/.As<Napi::Array>(), g_row_major, false, env);
+          val: |
+            float val = /arg/.As<Napi::Number>().FloatValue();
       identity:
-        dim: |
-          int64_t dim = /arg/.As<Napi::Number>().Int64Value();
+        arg_count: 1
+        return_transforms: |
+          /return/ = fl::identity(/arg_0/);
+        arg_transforms:
+          dim: |
+            int64_t dim = /arg/.As<Napi::Number>().Int64Value();
       iota:
-        dims: |
-          auto dims = jsArrayArg<long long>(/arg/.As<Napi::Array>(), g_row_major, false, env);
-        tileDims: |
-          auto tileDims = jsArrayArg<long long>(/arg/.As<Napi::Array>(), g_row_major, false, env);
+        arg_count: 2
+        return_transforms: |
+          /return/ = fl::iota(fl::Shape(/arg_0/), fl::Shape(/arg_1/));
+        arg_transforms:
+          dims: |
+            auto dims = jsArrayArg<long long>(/arg/.As<Napi::Array>(), g_row_major, false, env);
+          tileDims: |
+            auto tileDims = jsArrayArg<long long>(/arg/.As<Napi::Array>(), g_row_major, false, env);
       concatenate:
-        axis: |
-          auto axis = axisArg(/arg/.As<Napi::Number>().Int32Value(), g_row_major, (&tensors[0])->ndim());
-        tensors: |
-          auto tensors = jsTensorArrayArg<fl::Tensor>(/arg/.As<Napi::Array>(), env);
+        arg_count: 2
+        arg_transforms:
+          axis: |
+            auto axis = axisArg(/arg/.As<Napi::Number>().Int32Value(), g_row_major, (&tensors[0])->ndim());
+          tensors: |
+            auto tensors = jsTensorArrayArg<fl::Tensor>(/arg/.As<Napi::Array>(), env);
+      tril:
+        arg_count: 1
+        return_transforms: |
+          if (g_row_major) {
+            /return/ = fl::triu(/arg_0/);
+          } else {
+            /return/ = fl::tril(/arg_0/);
+          }
+      triu:
+        arg_count: 1
+        return_transforms: |
+          if (g_row_major) {
+            /return/ = fl::tril(/arg_0/);
+          } else {
+            /return/ = fl::triu(/arg_0/);
+          }
       sort:
-        axis: |
-          auto axis = /arg/.As<Napi::Number>().Uint32Value();
+        arg_count: 2
+        return_transforms: |
+          /return/ = fl::sort(/arg_0/, /arg_1/);
+        arg_transforms:
+          axis: |
+            auto axis = /arg/.As<Napi::Number>().Uint32Value();
+      matmul:
+        arg_count: 2
+        return_transforms: |
+          if (g_row_major) {
+            /return/ = fl::matmul(/arg_1/, /arg_0/);
+          } else {
+            /return/ = fl::matmul(/arg_0/, /arg_1/);
+          }
       tile:
-        shape: |
-          auto shape = jsArrayArg<long long>(/arg/.As<Napi::Array>(), g_row_major, false, env);
+        arg_count: 2
+        arg_transforms:
+          shape: |
+            auto shape = jsArrayArg<long long>(/arg/.As<Napi::Array>(), g_row_major, false, env);
       transpose:
-        axes: |
-          auto axes = jsArrayArg<long long>(/arg/.As<Napi::Array>(), g_row_major, /arg_0/->_tensor->ndim(), env);
+        arg_count: 2
+        arg_transforms:
+          axes: |
+            auto axes = jsArrayArg<long long>(/arg/.As<Napi::Array>(), g_row_major, /arg_0/->_tensor->ndim(), env);
       reshape:
-        shape: |
-          auto shape = jsArrayArg<long long>(/arg/.As<Napi::Array>(), g_row_major, false, env);
+        arg_count: 2
+        arg_transforms:
+          shape: |
+            auto shape = jsArrayArg<long long>(/arg/.As<Napi::Array>(), g_row_major, false, env);
     helper_funcs:
       arrayArg: |
         template <typename T>
@@ -618,7 +666,6 @@ packages:
         constructor: |
           Tensor::Tensor(const Napi::CallbackInfo& info) : ObjectWrap(info) {
             Napi::Env env = info.Env();
-
             // throw error if number of args passed to constructor is not 1
             if (info.Length() != 1) {
               Napi::TypeError::New(env,
@@ -627,24 +674,20 @@ packages:
                   .ThrowAsJavaScriptException();
               return;
             }
-
             if (info[0].IsExternal()) {
               auto tensor = info[0].As<Napi::External<fl::Tensor>>();
               this->_tensor = tensor.Data();
             }
-
             // TODO: handle `arg instanceof Tensor`
             if (info[0].IsObject()) {
               Napi::Object obj = info[0].As<Napi::Object>();
               if (obj.InstanceOf(Tensor::constructor->Value())) {
                 Tensor* t = Napi::ObjectWrap<Tensor>::Unwrap(obj);
                 this->_tensor = t->_tensor;
-
                 // TODO: finish handling this case
                 return;
               }
             }
-
             // TODO: handle `typeof arg === 'string
             if (info[0].IsString()) {
               Napi::String str = info[0].As<Napi::String>();
@@ -653,7 +696,6 @@ packages:
               this->_tensor = t;
               return;
             }
-
             // handle if arg is a TypedArray
             if (info[0].IsTypedArray()) {
               Napi::TypedArray underlying = info[0].As<Napi::TypedArray>();
@@ -767,7 +809,6 @@ packages:
                 }
               }
             }
-
             // TODO: handle `typeof arg === 'number'`
             if (info[0].IsNumber()) {
               const size_t length = 1;
