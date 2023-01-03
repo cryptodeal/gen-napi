@@ -666,6 +666,10 @@ packages:
           }
     class_opts:
       Tensor:
+        finalizer_transform: |
+          if (/this/->hasAdapter()) {
+            g_bytes_used -= /this/->bytes();
+          }
         constructor: |
           Tensor::Tensor(const Napi::CallbackInfo& info) : ObjectWrap(info) {
             Napi::Env env = info.Env();
@@ -966,6 +970,32 @@ packages:
                 Napi::ArrayBuffer buff = Napi::ArrayBuffer::New(env, ptr, byteLen);
                 Napi::TypedArrayOf<int32_t> out = Napi::TypedArrayOf<int32_t>::New(env, elemLen, buff, 0, napi_int32_array);
                 return out;
+              }
+          - name: 'save'
+            args:
+              - name: 'filename'
+                ts_type: 'string'
+            is_void: true
+            body: |
+              void Tensor::save(const Napi::CallbackInfo& info) {
+                Napi::Env env = info.Env();
+                if (info.Length() != 1) {
+                  Napi::TypeError::New(
+                      env, "Tensor method `save` expects exactly 1 arg (string)... ")
+                      .ThrowAsJavaScriptException();
+                  return;
+                }
+                if (!info[0].IsString()) {
+                  Napi::TypeError::New(
+                      env,
+                      "Tensor method `save` requires arg `filename` of type `string`... ")
+                      .ThrowAsJavaScriptException();
+                  return;
+                }
+                Napi::String str = info[0].As<Napi::String>();
+                std::string filename = str.Utf8Value();
+                fl::save(filename, *(this->_tensor));
+                return;
               }
           - name: 'toInt64Array'
             ts_return_type: 'BigInt64Array'

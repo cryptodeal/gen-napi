@@ -46,10 +46,11 @@ type FnOpts struct {
 }
 
 type ClassOpts struct {
-	Fields        []FnOpts `yaml:"fields"`
-	Methods       []FnOpts `yaml:"methods"`
-	ForcedMethods []FnOpts `yaml:"forced_methods"`
-	Constructor   string   `yaml:"constructor"`
+	Fields             []FnOpts `yaml:"fields"`
+	FinalizerTransform string   `yaml:"finalizer_transform"`
+	Methods            []FnOpts `yaml:"methods"`
+	ForcedMethods      []FnOpts `yaml:"forced_methods"`
+	Constructor        string   `yaml:"constructor"`
 }
 
 type JSWrapperOpts struct {

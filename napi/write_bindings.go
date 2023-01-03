@@ -535,7 +535,7 @@ func (g *PackageGenerator) writeClassField(sb *strings.Builder, f *CPPFieldDecl,
 }
 
 func (g *PackageGenerator) writeClass(sb *strings.Builder, class *CPPClass, classes map[string]*CPPClass, name string, methods map[string]*CPPMethod, processedMethods map[string]*CPPMethod) {
-
+	lower_caser := cases.Lower(language.AmericanEnglish)
 	if class.FieldDecl != nil {
 		for _, f := range *class.FieldDecl {
 			if f.Ident != nil {
@@ -546,6 +546,13 @@ func (g *PackageGenerator) writeClass(sb *strings.Builder, class *CPPClass, clas
 	// write class constructor (passed in as config option)
 	sb.WriteString(fmt.Sprintf("// %q class constructor\n", name))
 	sb.WriteString(g.conf.ClassOpts[name].Constructor)
+	sb.WriteString("\nvoid %s::Finalize(Napi::Env env) {\n")
+	if v, ok := g.conf.ClassOpts[name]; ok && v.FinalizerTransform != "" {
+		sb.WriteString(strings.ReplaceAll(v.FinalizerTransform, "/this/", fmt.Sprintf("this->_%s", lower_caser.String(name))))
+	}
+	g.writeIndent(sb, 1)
+	sb.WriteString(fmt.Sprintf("delete this->_%s;\n", lower_caser.String(name)))
+	sb.WriteString("}\n\n")
 	sb.WriteString(fmt.Sprintf("// exported %q class methods\n", name))
 	for _, f := range methods {
 		if g.conf.IsMethodWrapped(name, *f.Ident) {
