@@ -546,7 +546,7 @@ func (g *PackageGenerator) writeClass(sb *strings.Builder, class *CPPClass, clas
 	// write class constructor (passed in as config option)
 	sb.WriteString(fmt.Sprintf("// %q class constructor\n", name))
 	sb.WriteString(g.conf.ClassOpts[name].Constructor)
-	sb.WriteString("\nvoid %s::Finalize(Napi::Env env) {\n")
+	sb.WriteString(fmt.Sprintf("\nvoid %s::Finalize(Napi::Env env) {\n", name))
 	if v, ok := g.conf.ClassOpts[name]; ok && v.FinalizerTransform != "" {
 		sb.WriteString(strings.ReplaceAll(v.FinalizerTransform, "/this/", fmt.Sprintf("this->_%s", lower_caser.String(name))))
 	}
