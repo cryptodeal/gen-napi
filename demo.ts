@@ -1,5 +1,4 @@
-const sm = require('./test/js/index.cjs')
-sm.init()
+const sm = require('./test/js/index.ts')
 function genRand() {
   const out = new Float32Array(128)
   for (let i = 0; i < 128; ++i) {

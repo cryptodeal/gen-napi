@@ -29,8 +29,10 @@ func (g *PackageGenerator) writeHeader(sb *strings.Builder, classes map[string]*
 			sb.WriteString(fmt.Sprintf("%s::%s* _%s;\n", *cf.NameSpace, class, lower_caser.String(class)[0:1]+class[1:]))
 			g.writeIndent(sb, 2)
 			sb.WriteString("static Napi::Function GetClass(Napi::Env);\n")
+			/* TODO: fix finalize method
 			g.writeIndent(sb, 2)
 			sb.WriteString("virtual void Finalize(Napi::Env env);\n\n")
+			*/
 			g.writeIndent(sb, 2)
 			sb.WriteString("// methods defined in src, wrapped as class methods\n")
 			if cf.FieldDecl != nil {
