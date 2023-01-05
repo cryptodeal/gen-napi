@@ -539,7 +539,7 @@ func (g *PackageGenerator) writeClassField(sb *strings.Builder, f *CPPFieldDecl,
 			g.writeIndent(sb, 1)
 			sb.WriteString(fmt.Sprintf("auto* out = new %s::%s(_res);\n", *g.NameSpace, returnType))
 			g.writeIndent(sb, 1)
-			sb.WriteString(fmt.Sprintf("auto wrapped = Napi::External<%s::%s>::New(env, out, [](Napi::Env env, void* ptr) {\n", *g.NameSpace, returnType))
+			sb.WriteString(fmt.Sprintf("auto _wrapped = Napi::External<%s::%s>::New(env, out, [](Napi::Env env, void* ptr) {\n", *g.NameSpace, returnType))
 			g.writeIndent(sb, 2)
 			sb.WriteString(fmt.Sprintf("auto* val = static_cast<%s::%s*>(ptr);\n", *g.NameSpace, returnType))
 			if v, ok := g.conf.ClassOpts[returnType]; ok && v.ExternalFinalizer != "" {
