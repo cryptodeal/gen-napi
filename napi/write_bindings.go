@@ -349,11 +349,9 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 		g.writeIndent(sb, 2)
 		sb.WriteString(fmt.Sprintf("auto* out = new %s::%s(_res);\n", *g.NameSpace, obj_type))
 		g.writeIndent(sb, 2)
-		sb.WriteString(fmt.Sprintf("Napi::External<%s::%s> _wrapped = Externalize%s(env, out);\n", *g.NameSpace, obj_type, obj_type))
+		sb.WriteString(fmt.Sprintf("Napi::External<%s::%s> _external_out = Externalize%s(env, out);\n", *g.NameSpace, obj_type, obj_type))
 		g.writeIndent(sb, 2)
-		sb.WriteString(fmt.Sprintf("Napi::Value wrapped_out = %s::constructor->New({_wrapped});\n", obj_type))
-		g.writeIndent(sb, 2)
-		sb.WriteString("return wrapped_out;\n")
+		sb.WriteString("return _external_out;\n")
 		g.writeIndent(sb, 1)
 		sb.WriteString("}\n")
 		g.writeIndent(sb, 1)
@@ -414,11 +412,9 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 		g.writeIndent(sb, 1)
 		sb.WriteString(fmt.Sprintf("auto* out = new %s::%s(_res);\n", *g.NameSpace, *m.Returns))
 		g.writeIndent(sb, 1)
-		sb.WriteString(fmt.Sprintf("Napi::External<%s::%s> _wrapped = Externalize%s(env, out);\n", *g.NameSpace, *m.Returns, *m.Returns))
+		sb.WriteString(fmt.Sprintf("Napi::External<%s::%s> _external_out = Externalize%s(env, out);\n", *g.NameSpace, *m.Returns, *m.Returns))
 		g.writeIndent(sb, 1)
-		sb.WriteString(fmt.Sprintf("Napi::Value wrapped_out = %s::constructor->New({_wrapped});\n", *m.Returns))
-		g.writeIndent(sb, 1)
-		sb.WriteString("return wrapped_out;\n")
+		sb.WriteString("return _external_out;\n")
 	}
 	/* TODO: Handle cases w multiple overloads
 	} else {
@@ -446,7 +442,7 @@ func (g *PackageGenerator) writeClassField(sb *strings.Builder, f *CPPFieldDecl,
 	} else {
 		sb.WriteString("Napi::Value ")
 	}
-	sb.WriteString(fmt.Sprintf("%s::%s(const Napi::CallbackInfo& info) {\n", className, *f.Ident))
+	sb.WriteString(fmt.Sprintf("_%s(const Napi::CallbackInfo& info) {\n", *f.Ident))
 	g.writeIndent(sb, 1)
 	sb.WriteString("Napi::Env env = info.Env();\n")
 	if f.Args != nil {
@@ -521,105 +517,15 @@ func (g *PackageGenerator) writeClassField(sb *strings.Builder, f *CPPFieldDecl,
 			g.writeIndent(sb, 1)
 			sb.WriteString(fmt.Sprintf("auto* out = new %s::%s(_res);\n", *g.NameSpace, returnType))
 			g.writeIndent(sb, 1)
-			sb.WriteString(fmt.Sprintf("Napi::External<%s::%s> _wrapped = Externalize%s(env, out);", *g.NameSpace, returnType, returnType))
+			sb.WriteString(fmt.Sprintf("Napi::External<%s::%s> _external_out = Externalize%s(env, out);", *g.NameSpace, returnType, returnType))
 			g.writeIndent(sb, 1)
-			sb.WriteString(fmt.Sprintf("Napi::Value wrapped_out = %s::constructor->New({_wrapped});\n", returnType))
 			g.writeIndent(sb, 1)
-			sb.WriteString("return wrapped_out;\n")
+			sb.WriteString("return _external_out;\n")
 		} else {
 			napiHandler := upper_caser.String(jsType[0:1]) + jsType[1:]
 			sb.WriteString(fmt.Sprintf("return Napi::%s::New(env, %s);\n", napiHandler, "_res"))
 		}
 	}
-	sb.WriteString("}\n\n")
-}
-
-func (g *PackageGenerator) writeClass(sb *strings.Builder, class *CPPClass, classes map[string]*CPPClass, name string, methods map[string]*CPPMethod, processedMethods map[string]*CPPMethod) {
-	// lower_caser := cases.Lower(language.AmericanEnglish)
-	if class.FieldDecl != nil {
-		for _, f := range *class.FieldDecl {
-			if f.Ident != nil {
-				fmt.Println(*f.Ident)
-			}
-		}
-	}
-	// write class constructor (passed in as config option)
-	sb.WriteString(fmt.Sprintf("// %q class constructor\n", name))
-	sb.WriteString(g.conf.ClassOpts[name].Constructor)
-	/* TODO: fix finalize method
-	sb.WriteString(fmt.Sprintf("\nvoid %s::Finalize(Napi::Env env) {\n", name))
-	if v, ok := g.conf.ClassOpts[name]; ok && v.FinalizerTransform != "" {
-		sb.WriteString(strings.ReplaceAll(v.FinalizerTransform, "/this/", fmt.Sprintf("this->_%s", lower_caser.String(name))))
-	}
-	g.writeIndent(sb, 1)
-	sb.WriteString(fmt.Sprintf("delete this->_%s;\n", lower_caser.String(name)))
-	sb.WriteString("}\n\n")
-	*/
-	sb.WriteString(fmt.Sprintf("// exported %q class methods\n", name))
-	for _, f := range methods {
-		if g.conf.IsMethodWrapped(name, *f.Ident) {
-			g.writeMethod(sb, f, classes, &name)
-		}
-	}
-	for _, f := range processedMethods {
-		if g.conf.IsMethodWrapped(name, *f.Ident) {
-			g.writeMethod(sb, f, classes, &name)
-		}
-	}
-
-	if class.FieldDecl != nil {
-		for _, f := range *class.FieldDecl {
-			if f.Ident != nil && g.conf.IsFieldWrapped(name, *f.Ident) {
-				g.writeClassField(sb, f, name, classes)
-			}
-		}
-	}
-
-	if v, ok := g.conf.ClassOpts[name]; ok {
-		for _, f := range v.ForcedMethods {
-			sb.WriteString(fmt.Sprintf("%s\n", f.FnBody))
-		}
-	}
-
-	sb.WriteString(fmt.Sprintf("Napi::FunctionReference* %s::constructor;\n", name))
-	sb.WriteString(fmt.Sprintf("Napi::Function %s::GetClass(Napi::Env env) {\n", name))
-	g.writeIndent(sb, 1)
-	sb.WriteString(fmt.Sprintf("Napi::Function func = DefineClass(env, %q, {\n", name))
-	for _, f := range methods {
-		if g.conf.IsMethodWrapped(name, *f.Ident) {
-			g.writeIndent(sb, 2)
-			sb.WriteString(fmt.Sprintf("%s::InstanceMethod(%q, &%s::%s),\n", name, *f.Ident, name, *f.Ident))
-		}
-	}
-	for _, f := range processedMethods {
-		if g.conf.IsMethodWrapped(name, *f.Ident) {
-			g.writeIndent(sb, 2)
-			sb.WriteString(fmt.Sprintf("%s::InstanceMethod(%q, &%s::%s),\n", name, *f.Ident, name, *f.Ident))
-		}
-	}
-	if class.FieldDecl != nil {
-		for _, f := range *class.FieldDecl {
-			if f.Ident != nil && g.conf.IsFieldWrapped(name, *f.Ident) {
-				g.writeIndent(sb, 2)
-				sb.WriteString(fmt.Sprintf("%s::InstanceMethod(%q, &%s::%s),\n", name, *f.Ident, name, *f.Ident))
-			}
-		}
-	}
-	if v, ok := g.conf.ClassOpts[name]; ok {
-		for _, f := range v.ForcedMethods {
-			g.writeIndent(sb, 2)
-			sb.WriteString(fmt.Sprintf("%s::InstanceMethod(%q, &%s::%s),\n", name, f.Name, name, f.Name))
-		}
-	}
-
-	g.writeIndent(sb, 1)
-	sb.WriteString("});\n")
-	g.writeIndent(sb, 1)
-	sb.WriteString("constructor = new Napi::FunctionReference();\n")
-	g.writeIndent(sb, 1)
-	sb.WriteString("*constructor = Napi::Persistent(func);\n")
-	g.writeIndent(sb, 1)
-	sb.WriteString("return func;\n")
 	sb.WriteString("}\n\n")
 }
 
@@ -655,6 +561,11 @@ func (g *PackageGenerator) writeBindings(sb *strings.Builder, classes map[string
 		if c.Decl != nil {
 			g.writeClassDeleter(sb, c, name)
 			g.writeClassExternalizer(sb, c, name)
+			if c.FieldDecl != nil {
+				for _, f := range *c.FieldDecl {
+					g.writeClassField(sb, f, name, classes)
+				}
+			}
 		}
 	}
 
@@ -673,6 +584,21 @@ func (g *PackageGenerator) writeBindings(sb *strings.Builder, classes map[string
 	// writes NAPI `Init` function (init NAPI exports)
 	sb.WriteString("// NAPI exports\n")
 	sb.WriteString("Napi::Object Init(Napi::Env env, Napi::Object exports) {\n")
+	for name, c := range classes {
+		if c.Decl != nil {
+			g.writeClassDeleter(sb, c, name)
+			g.writeClassExternalizer(sb, c, name)
+			if c.FieldDecl != nil {
+				for _, f := range *c.FieldDecl {
+					g.writeIndent(sb, 1)
+					if f.Ident != nil {
+						parsedName := ("_" + *f.Ident)
+						sb.WriteString(fmt.Sprintf("exports.Set(Napi::String::New(env, %q), Napi::Function::New(env, %s));\n", parsedName, parsedName))
+					}
+				}
+			}
+		}
+	}
 	for _, f := range methods {
 		g.writeIndent(sb, 1)
 		parsedName := ("_" + *f.Ident)
