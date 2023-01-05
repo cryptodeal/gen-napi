@@ -83,7 +83,8 @@ func (g *PackageGenerator) WriteEnvImports(classes map[string]*CPPClass, methods
 					if i > 0 {
 						sb.WriteString(",\n")
 					}
-					sb.WriteString(m.Name)
+					g.writeIndent(sb, 1)
+					sb.WriteString(fmt.Sprintf("_%s", m.Name))
 				}
 			}
 		}
