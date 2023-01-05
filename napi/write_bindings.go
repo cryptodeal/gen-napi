@@ -449,7 +449,7 @@ func (g *PackageGenerator) writeBindings(sb *strings.Builder, classes map[string
 			}
 			if v, ok := g.conf.ClassOpts[name]; ok && len(v.ForcedMethods) > 0 {
 				for _, f := range v.ForcedMethods {
-					sb.WriteString(f.FnBody)
+					sb.WriteString(strings.Replace(f.FnBody, f.Name, "_"+f.Name, 1))
 				}
 			}
 		}
