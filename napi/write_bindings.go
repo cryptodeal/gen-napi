@@ -427,106 +427,108 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 }
 
 func (g *PackageGenerator) writeClassField(sb *strings.Builder, f *CPPFieldDecl, className string, classes map[string]*CPPClass) {
-	lower_caser := cases.Lower(language.AmericanEnglish)
-	upper_caser := cases.Upper(language.AmericanEnglish)
+	if f.Ident != nil {
+		lower_caser := cases.Lower(language.AmericanEnglish)
+		upper_caser := cases.Upper(language.AmericanEnglish)
 
-	var returnType string
-	isVoid := false
-	if f.Returns != nil && *f.Returns.FullType != "void" {
-		returnType = *f.Returns.FullType
-	} else {
-		isVoid = true
-	}
-	if isVoid {
-		sb.WriteString("void ")
-	} else {
-		sb.WriteString("Napi::Value ")
-	}
-	sb.WriteString(fmt.Sprintf("_%s(const Napi::CallbackInfo& info) {\n", *f.Ident))
-	g.writeIndent(sb, 1)
-	sb.WriteString("Napi::Env env = info.Env();\n")
-	if f.Args != nil {
-		argCount := len(*f.Args)
-		if argCount > 0 {
-			g.writeIndent(sb, 1)
-			sb.WriteString(fmt.Sprintf("if (info.Length() != %d) {\n", argCount))
-			g.writeIndent(sb, 2)
-			sb.WriteString(fmt.Sprintf("Napi::TypeError::New(info.Env(), %q).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects exactly %d args", *f.Ident, argCount)))
-			g.writeIndent(sb, 2)
-			sb.WriteString("return env.Null();\n")
-			g.writeIndent(sb, 1)
-			sb.WriteString("}\n")
+		var returnType string
+		isVoid := false
+		if f.Returns != nil && *f.Returns.FullType != "void" {
+			returnType = *f.Returns.FullType
+		} else {
+			isVoid = true
 		}
-	}
-
-	if f.Args != nil {
-		for i, arg := range *f.Args {
-			typeHandler, isObject := CPPTypeToTS(*arg.Type)
-			if v, ok := g.conf.TypeMappings[*arg.Type]; ok {
+		if isVoid {
+			sb.WriteString("void ")
+		} else {
+			sb.WriteString("Napi::Value ")
+		}
+		sb.WriteString(fmt.Sprintf("_%s(const Napi::CallbackInfo& info) {\n", *f.Ident))
+		g.writeIndent(sb, 1)
+		sb.WriteString("Napi::Env env = info.Env();\n")
+		if f.Args != nil {
+			argCount := len(*f.Args)
+			if argCount > 0 {
 				g.writeIndent(sb, 1)
-				sb.WriteString(fmt.Sprintf("if (!info[%d].Is%s()) {\n", i, v.NapiType))
+				sb.WriteString(fmt.Sprintf("if (info.Length() != %d) {\n", argCount))
 				g.writeIndent(sb, 2)
-				sb.WriteString(fmt.Sprintf("Napi::TypeError::New(info.Env(), %q).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects args[%d] to be typeof `%s`", *f.Ident, i, typeHandler)))
+				sb.WriteString(fmt.Sprintf("Napi::TypeError::New(info.Env(), %q).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects exactly %d args", *f.Ident, argCount)))
 				g.writeIndent(sb, 2)
 				sb.WriteString("return env.Null();\n")
 				g.writeIndent(sb, 1)
 				sb.WriteString("}\n")
+			}
+		}
+
+		if f.Args != nil {
+			for i, arg := range *f.Args {
+				typeHandler, isObject := CPPTypeToTS(*arg.Type)
+				if v, ok := g.conf.TypeMappings[*arg.Type]; ok {
+					g.writeIndent(sb, 1)
+					sb.WriteString(fmt.Sprintf("if (!info[%d].Is%s()) {\n", i, v.NapiType))
+					g.writeIndent(sb, 2)
+					sb.WriteString(fmt.Sprintf("Napi::TypeError::New(info.Env(), %q).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects args[%d] to be typeof `%s`", *f.Ident, i, typeHandler)))
+					g.writeIndent(sb, 2)
+					sb.WriteString("return env.Null();\n")
+					g.writeIndent(sb, 1)
+					sb.WriteString("}\n")
+					g.writeIndent(sb, 1)
+					sb.WriteString(fmt.Sprintf("auto %s = static_cast<%s>(info[%d].As<Napi::%s>().%s());\n", *arg.Ident, v.CastsTo, i, v.NapiType, v.CastNapi))
+				} else if isObject {
+					// TODO: handle
+				} else {
+					// TODO: handle
+				}
+			}
+		}
+		g.writeIndent(sb, 1)
+		if f.Returns != nil && *f.Returns.FullType != "void" {
+			sb.WriteString("auto _res = ")
+			returnType = *f.Returns.FullType
+		}
+		sb.WriteString(fmt.Sprintf("this->_%s->%s(", lower_caser.String(className), *f.Ident))
+		if f.Args != nil {
+			for i, arg := range *f.Args {
+				if i > 0 {
+					sb.WriteString(", ")
+				}
+				if _, ok := g.conf.TypeMappings[*arg.Type]; ok {
+					sb.WriteString(fmt.Sprintf("%s::%s(%s)", *g.NameSpace, *arg.Type, *arg.Ident))
+				} else if isClass(*arg.Type, classes) {
+					sb.WriteString(fmt.Sprintf("*(%s->_%s)", *arg.Ident, lower_caser.String(*arg.Type)))
+				} else {
+					sb.WriteString(*arg.Ident)
+				}
+			}
+		}
+		sb.WriteString(");\n")
+		if f.Returns != nil && *f.Returns.FullType != "void" {
+			jsType, isObject := CPPTypeToTS(returnType)
+			if g.conf.TypeHasHandler(returnType) != nil {
+				t := g.conf.TypeHasHandler(returnType)
 				g.writeIndent(sb, 1)
-				sb.WriteString(fmt.Sprintf("auto %s = static_cast<%s>(info[%d].As<Napi::%s>().%s());\n", *arg.Ident, v.CastsTo, i, v.NapiType, v.CastNapi))
-			} else if isObject {
-				// TODO: handle
-			} else {
-				// TODO: handle
-			}
-		}
-	}
-	g.writeIndent(sb, 1)
-	if f.Returns != nil && *f.Returns.FullType != "void" {
-		sb.WriteString("auto _res = ")
-		returnType = *f.Returns.FullType
-	}
-	sb.WriteString(fmt.Sprintf("this->_%s->%s(", lower_caser.String(className), *f.Ident))
-	if f.Args != nil {
-		for i, arg := range *f.Args {
-			if i > 0 {
-				sb.WriteString(", ")
-			}
-			if _, ok := g.conf.TypeMappings[*arg.Type]; ok {
-				sb.WriteString(fmt.Sprintf("%s::%s(%s)", *g.NameSpace, *arg.Type, *arg.Ident))
-			} else if isClass(*arg.Type, classes) {
-				sb.WriteString(fmt.Sprintf("*(%s->_%s)", *arg.Ident, lower_caser.String(*arg.Type)))
-			} else {
-				sb.WriteString(*arg.Ident)
-			}
-		}
-	}
-	sb.WriteString(");\n")
-	if f.Returns != nil && *f.Returns.FullType != "void" {
-		jsType, isObject := CPPTypeToTS(returnType)
-		if g.conf.TypeHasHandler(returnType) != nil {
-			t := g.conf.TypeHasHandler(returnType)
-			g.writeIndent(sb, 1)
-			sb.WriteString(strings.ReplaceAll(t.Handler, "/val/", "_res"))
-			g.writeIndent(sb, 1)
-			sb.WriteString(fmt.Sprintf("return %s;\n", t.OutVar))
-		} else if isObject && isClass(returnType, classes) {
-			if v, ok := g.conf.GlobalTypeOutTransforms[returnType]; ok {
+				sb.WriteString(strings.ReplaceAll(t.Handler, "/val/", "_res"))
 				g.writeIndent(sb, 1)
-				sb.WriteString(strings.ReplaceAll(v, "/return/", "_res"))
+				sb.WriteString(fmt.Sprintf("return %s;\n", t.OutVar))
+			} else if isObject && isClass(returnType, classes) {
+				if v, ok := g.conf.GlobalTypeOutTransforms[returnType]; ok {
+					g.writeIndent(sb, 1)
+					sb.WriteString(strings.ReplaceAll(v, "/return/", "_res"))
+				}
+				g.writeIndent(sb, 1)
+				sb.WriteString(fmt.Sprintf("auto* out = new %s::%s(_res);\n", *g.NameSpace, returnType))
+				g.writeIndent(sb, 1)
+				sb.WriteString(fmt.Sprintf("Napi::External<%s::%s> _external_out = Externalize%s(env, out);", *g.NameSpace, returnType, returnType))
+				g.writeIndent(sb, 1)
+				g.writeIndent(sb, 1)
+				sb.WriteString("return _external_out;\n")
+			} else {
+				napiHandler := upper_caser.String(jsType[0:1]) + jsType[1:]
+				sb.WriteString(fmt.Sprintf("return Napi::%s::New(env, %s);\n", napiHandler, "_res"))
 			}
-			g.writeIndent(sb, 1)
-			sb.WriteString(fmt.Sprintf("auto* out = new %s::%s(_res);\n", *g.NameSpace, returnType))
-			g.writeIndent(sb, 1)
-			sb.WriteString(fmt.Sprintf("Napi::External<%s::%s> _external_out = Externalize%s(env, out);", *g.NameSpace, returnType, returnType))
-			g.writeIndent(sb, 1)
-			g.writeIndent(sb, 1)
-			sb.WriteString("return _external_out;\n")
-		} else {
-			napiHandler := upper_caser.String(jsType[0:1]) + jsType[1:]
-			sb.WriteString(fmt.Sprintf("return Napi::%s::New(env, %s);\n", napiHandler, "_res"))
 		}
+		sb.WriteString("}\n\n")
 	}
-	sb.WriteString("}\n\n")
 }
 
 func (g *PackageGenerator) writeClassDeleter(sb *strings.Builder, class *CPPClass, name string) {
