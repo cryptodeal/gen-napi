@@ -212,7 +212,6 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 	}
 
 	obj_name := ""
-	obj_type := ""
 	outType := *m.Returns
 	for i, arg := range *m.Overloads[0] {
 		if i >= expected_count {
@@ -229,7 +228,6 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 			sb.WriteString(strings.ReplaceAll(v, "/arg/", fmt.Sprintf("info[%d]", i)))
 		} else if isClass(*arg.Type, classes) {
 			obj_name = *arg.Ident
-			obj_type = *arg.Type
 		} else if strings.Contains(*arg.Type, "std::vector") {
 			g.writeIndent(sb, 2)
 			tmpType := *arg.Type
