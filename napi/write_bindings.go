@@ -213,7 +213,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 
 	outType := *m.Returns
 	for i, arg := range *m.Overloads[0] {
-		if i >= expected_count {
+		if i > expected_count {
 			break
 		}
 		if v, ok := g.conf.MethodTransforms[*m.Ident].ArgTransforms[*arg.Ident]; ok && strings.Contains(v, "/arg_") {
