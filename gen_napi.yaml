@@ -666,13 +666,14 @@ packages:
           }
     class_opts:
       Tensor:
-        finalizer_transform: |
+        ext_finalizer_transform: |
           if (/this/->hasAdapter()) {
             g_bytes_used -= /this/->bytes();
           }
         constructor: |
           Tensor::Tensor(const Napi::CallbackInfo& info) : ObjectWrap(info) {
             Napi::Env env = info.Env();
+            Napi::HandleScope scope(env);
             // throw error if number of args passed to constructor is not 1
             if (info.Length() != 1) {
               Napi::TypeError::New(env,
