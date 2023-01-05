@@ -76,12 +76,25 @@ func (g *PackageGenerator) WriteEnvExports(classes map[string]*CPPClass, methods
 func (g *PackageGenerator) WriteEnvImports(classes map[string]*CPPClass, methods map[string]*CPPMethod, processedMethods map[string]*CPPMethod) string {
 	sb := new(strings.Builder)
 	sb.WriteString("const {\n")
+	for name, c := range classes {
+		if c.Decl != nil {
+			if v, ok := g.conf.ClassOpts[name]; ok && len(v.ForcedMethods) > 0 {
+				for i, m := range v.ForcedMethods {
+					if i > 0 {
+						sb.WriteString(",\n")
+					}
+					sb.WriteString(m.Name)
+				}
+			}
+		}
+	}
 	used := []string{}
 	for name, m := range methods {
 		if !g.conf.IsMethodIgnored(*m.Ident) {
 			used = append(used, name)
 		}
 	}
+
 	used_len := len(used)
 	for i, name := range used {
 		if i == 0 {
@@ -97,6 +110,7 @@ func (g *PackageGenerator) WriteEnvImports(classes map[string]*CPPClass, methods
 			sb.WriteString(",\n")
 		}
 	}
+
 	used = []string{}
 	for name, m := range processedMethods {
 		if !g.conf.IsMethodIgnored(*m.Ident) {
