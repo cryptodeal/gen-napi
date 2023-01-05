@@ -451,9 +451,8 @@ packages:
           for (size_t i = 0; i < len; ++i) {
             Napi::Value temp = arr[i];
             if (temp.External()) {
-              Napi::Object tensor_obj = temp.As<Napi::External>();
-                fl::Tensor* tensor = static_cast<fl::Tensor>(temp.As<Napi::External>().Data());
-                out.emplace_back(*(tensor));
+              fl::Tensor* tensor = static_cast<fl::Tensor>(temp.As<Napi::External>().Data());
+              out.emplace_back(*(tensor));
             } else {
               Napi::TypeError::New(env, "jsTensorArrayArg requires `Tensor[]`")
                     .ThrowAsJavaScriptException();
@@ -615,9 +614,8 @@ packages:
             t = fl::rand(fl::Shape(shape));
             g_bytes_used += t.bytes();
             auto* tensor = new fl::Tensor(t);
-            Napi::External<fl::Tensor> wrapped = ExternalizeTensor<fl::Tensor>(env, tensor);
-            Napi::Value wrappedTensor = Tensor::constructor->New({wrapped});
-            return wrappedTensor;
+            Napi::External<fl::Tensor> wrapped = ExternalizeTensor(env, tensor);
+            return wrapped;
           }
       - name: 'randn'
         ts_return_type: 'Tensor'
@@ -637,9 +635,8 @@ packages:
             t = fl::randn(fl::Shape(shape));
             g_bytes_used += t.bytes();
             auto* tensor = new fl::Tensor(t);
-            Napi::External<fl::Tensor> wrapped = ExternalizeTensor<fl::Tensor>(env, tensor);
-            Napi::Value wrappedTensor = Tensor::constructor->New({wrapped});
-            return wrappedTensor;
+            Napi::External<fl::Tensor> wrapped = ExternalizeTensor(env, tensor);
+            return wrapped;
           }
     type_handlers:
       dtype:
