@@ -1,3 +1,4 @@
+const { Tensor } = require('./test/js/tensor.cjs')
 const sm = require('./test/js/index.cjs')
 sm.init()
 function genRand() {
@@ -14,7 +15,7 @@ const test = async () => {
   for (let i = 0; i < 10000; ++i) {
     // console.log('bytes: ', Number(sm.bytesUsed()))
     const a = sm.rand([128])
-    const b = new sm.Tensor(genRand())
+    const b = new Tensor(genRand())
     m += a.add(b).mean([], false).toFloat32Scalar()
   }
   const t1 = performance.now() / 1e3
