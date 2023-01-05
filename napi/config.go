@@ -48,9 +48,7 @@ type FnOpts struct {
 type ClassOpts struct {
 	Fields            []FnOpts `yaml:"fields"`
 	ExternalFinalizer string   `yaml:"ext_finalizer_transform"`
-	Methods           []FnOpts `yaml:"methods"`
 	ForcedMethods     []FnOpts `yaml:"forced_methods"`
-	Constructor       string   `yaml:"constructor"`
 }
 
 type JSWrapperOpts struct {
@@ -122,17 +120,6 @@ func (c Config) PackageConfig(packagePath string) *PackageConfig {
 	}
 	log.Fatalf("Config not found for package %s", packagePath)
 	return nil
-}
-
-func (c PackageConfig) IsMethodWrapped(className string, fnName string) bool {
-	if v, ok := c.ClassOpts[className]; ok {
-		for _, m := range v.Methods {
-			if strings.EqualFold(m.Name, fnName) {
-				return true
-			}
-		}
-	}
-	return false
 }
 
 func (c PackageConfig) IsEnvTS() bool {

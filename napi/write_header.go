@@ -43,18 +43,6 @@ func (g *PackageGenerator) writeHeader(sb *strings.Builder, classes map[string]*
 					}
 				}
 			}
-			for _, f := range methods {
-				if g.conf.IsMethodWrapped(class, *f.Ident) && strings.EqualFold(class, *f.Returns) {
-					g.writeIndent(sb, 2)
-					sb.WriteString(fmt.Sprintf("Napi::Value %s(const Napi::CallbackInfo&);\n", *f.Ident))
-				}
-			}
-			for _, f := range prepocessedMethods {
-				if g.conf.IsMethodWrapped(class, *f.Ident) && strings.EqualFold(class, *f.Returns) {
-					g.writeIndent(sb, 2)
-					sb.WriteString(fmt.Sprintf("Napi::Value %s(const Napi::CallbackInfo&);\n", *f.Ident))
-				}
-			}
 			if v, ok := g.conf.ClassOpts[class]; ok {
 				for _, f := range v.ForcedMethods {
 					g.writeIndent(sb, 2)

@@ -38,7 +38,6 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 	}
 	g.writeIndent(sb, 1)
 	sb.WriteString("Napi::Env env = info.Env();\n")
-	hasObject := false
 	// if len(m.Overloads) == 1 {
 	var expected_count int
 	if v, ok := g.conf.MethodTransforms[*m.Ident]; ok {
@@ -158,11 +157,10 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 						sb.WriteString(";\n")
 					}
 				} else if isClass(*arg.Type, classes) {
-					hasObject = true
 					g.writeIndent(sb, 1)
-					sb.WriteString(fmt.Sprintf("if (!info[%d].IsObject()) {\n", argIdx))
+					sb.WriteString(fmt.Sprintf("if (!info[%d].IsExternal()) {\n", argIdx))
 					g.writeIndent(sb, 2)
-					sb.WriteString(fmt.Sprintf("Napi::TypeError::New(info.Env(), %q).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects args[%d] to be instanceof `%s`", *m.Ident, argIdx, *arg.Type)))
+					sb.WriteString(fmt.Sprintf("Napi::TypeError::New(info.Env(), %q).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects args[%d] to be `Napi::External<%s::%s>` `%s`", *m.Ident, argIdx, *g.NameSpace, *m.Ident, *arg.Type)))
 					g.writeIndent(sb, 2)
 					sb.WriteString("return env.Null();\n")
 					g.writeIndent(sb, 1)
@@ -189,7 +187,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 					sb.WriteString(fmt.Sprintf("for (auto i = 0; i < len_%s; ++i) {\n", *arg.Ident))
 					g.writeIndent(sb, 2)
 					if isObject {
-						sb.WriteString(fmt.Sprintf("if (!info[%d].As<Napi::Array>().Get(i).IsObject()) {\n", argIdx))
+						sb.WriteString(fmt.Sprintf("if (!info[%d].As<Napi::Array>().Get(i).IsExternal()) {\n", argIdx))
 					} else {
 						sb.WriteString(fmt.Sprintf("if (!info[%d].As<Napi::Array>().Get(i).Is%s()) {\n", argIdx, upper_caser.String(tsType[0:1])+tsType[1:]))
 					}
@@ -211,7 +209,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 					if strings.Contains(v.TSType, "Array") || strings.Contains(v.TSType, "[]") {
 						sb.WriteString(fmt.Sprintf("if (!info[%d].IsArray()) {\n", argIdx))
 					} else if strings.Contains(v.TSType, "any") || strings.Contains(v.TSType, "object") || strings.Contains(v.TSType, "Record<") || strings.Contains(v.TSType, "Map<") {
-						sb.WriteString(fmt.Sprintf("if (!info[%d].IsObject()) {\n", argIdx))
+						sb.WriteString(fmt.Sprintf("if (!info[%d].IsExternal()) {\n", argIdx))
 					} else if strings.Contains(v.TSType, "string") {
 						sb.WriteString(fmt.Sprintf("if (!info[%d].IsString()) {\n", argIdx))
 					} else if strings.Contains(v.TSType, "number") {
@@ -237,185 +235,102 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 		}
 	}
 
-	// handle casting objects to `Napi::ObjectWrap<Class>`
-	if hasObject {
-		g.writeIndent(sb, 1)
-		sb.WriteString("if (")
-		for i, arg := range *m.Overloads[0] {
+	obj_name := ""
+	obj_type := ""
+	for i, arg := range *m.Overloads[0] {
+		if i > expected_count {
+			break
+		}
+		if v, ok := g.conf.MethodTransforms[*m.Ident].ArgTransforms[*arg.Ident]; ok && strings.Contains(v, "/arg_") {
+			g.writeIndent(sb, 2)
+			if strings.Contains(v, "/arg_") {
+				for j, val := range *m.Overloads[0] {
+					if wrappedClass != nil && j == 0 {
+						v = strings.ReplaceAll(v, "/arg_%d/", "this")
+					} else {
+						v = strings.ReplaceAll(v, fmt.Sprintf("/arg_%d/", j), *val.Ident)
+					}
+				}
+			}
+			// TODO: this might need better handling for class wrappers
+			sb.WriteString(strings.ReplaceAll(v, "/arg/", fmt.Sprintf("info[%d]", i)))
+		} else if isClass(*arg.Type, classes) {
 			if wrappedClass != nil && i == 0 {
 				continue
 			}
+			obj_name = *arg.Ident
+			obj_type = *arg.Type
+			g.writeIndent(sb, 2)
+			sb.WriteString(fmt.Sprintf("%s* %s = Napi::ObjectWrap<%s>::Unwrap(%s_obj);\n", *arg.Type, *arg.Ident, *arg.Type, *arg.Ident))
+		} else if strings.Contains(*arg.Type, "std::vector") {
+			g.writeIndent(sb, 2)
+			tmpType := *arg.Type
+			sb.WriteString(fmt.Sprintf("auto axes = jsArrayArg<%s>(info[%d].As<Napi::Array>(), g_row_major, %s->_%s->ndim(), env);\n", tmpType[strings.Index(*arg.Type, "<")+1:strings.Index(*arg.Type, ">")], i, obj_name, lower_caser.String(obj_type)))
+		} else {
+			fmt.Println("TODO: handle type ", *arg.Type)
+		}
+	}
+	g.writeIndent(sb, 2)
+	sb.WriteString(fmt.Sprintf("%s::%s _res;\n", *g.NameSpace, obj_type))
+	if v, ok := g.conf.MethodTransforms[*m.Ident]; ok && v.ReturnTransforms != "" {
+		parsed_transform := strings.ReplaceAll(v.ReturnTransforms, "/return/", "_res")
+		for i, arg := range *m.Overloads[0] {
+			fmtd_arg := ""
 			if isClass(*arg.Type, classes) {
-				if (wrappedClass == nil && i > 0) || i > 1 {
-					sb.WriteString(" && ")
+				if wrappedClass != nil && i == 0 {
+					fmtd_arg = fmt.Sprintf("*(this->_%s)", lower_caser.String(*arg.Type))
+				} else {
+					fmtd_arg = fmt.Sprintf("*(%s->_%s)", *arg.Ident, lower_caser.String(*arg.Type))
 				}
-				sb.WriteString(fmt.Sprintf("%s_obj.InstanceOf(%s::constructor->Value())", *arg.Ident, *arg.Type))
+			} else {
+				fmtd_arg = *arg.Ident
+			}
+			parsed_transform = strings.ReplaceAll(parsed_transform, fmt.Sprintf("/arg_%d/", i), fmtd_arg)
+		}
+		transformed_lines := strings.Split(parsed_transform, "\n")
+		length := len(transformed_lines)
+		for i, line := range transformed_lines {
+			g.writeIndent(sb, 2)
+			if i == length-1 {
+				sb.WriteString(line)
+			} else {
+				sb.WriteString(fmt.Sprintf("%s\n", line))
 			}
 		}
-		sb.WriteString(") {\n")
-		obj_name := ""
-		obj_type := ""
+	} else {
+		g.writeIndent(sb, 2)
+		sb.WriteString(fmt.Sprintf("_res = %s::%s(", *g.NameSpace, *m.Ident))
 		for i, arg := range *m.Overloads[0] {
-			argIdx := i
-			if wrappedClass != nil {
-				argIdx--
+			if i > 0 {
+				sb.WriteString(", ")
 			}
-			if i > expected_count {
-				break
-			}
-			if v, ok := g.conf.MethodTransforms[*m.Ident].ArgTransforms[*arg.Ident]; ok && strings.Contains(v, "/arg_") {
-				g.writeIndent(sb, 2)
-				if strings.Contains(v, "/arg_") {
-					for j, val := range *m.Overloads[0] {
-						if wrappedClass != nil && j == 0 {
-							v = strings.ReplaceAll(v, "/arg_%d/", "this")
-						} else {
-							v = strings.ReplaceAll(v, fmt.Sprintf("/arg_%d/", j), *val.Ident)
-						}
-					}
-				}
-				// TODO: this might need better handling for class wrappers
-				sb.WriteString(strings.ReplaceAll(v, "/arg/", fmt.Sprintf("info[%d]", argIdx)))
+			if _, ok := g.conf.TypeMappings[*arg.Type]; ok {
+				sb.WriteString(fmt.Sprintf("%s::%s(%s)", *g.NameSpace, *arg.Type, *arg.Ident))
 			} else if isClass(*arg.Type, classes) {
 				if wrappedClass != nil && i == 0 {
-					continue
+					sb.WriteString(fmt.Sprintf("*(this->_%s)", lower_caser.String(*arg.Type)))
+
+				} else {
+					sb.WriteString(fmt.Sprintf("*(%s->_%s)", *arg.Ident, lower_caser.String(*arg.Type)))
+
 				}
-				obj_name = *arg.Ident
-				obj_type = *arg.Type
-				g.writeIndent(sb, 2)
-				sb.WriteString(fmt.Sprintf("%s* %s = Napi::ObjectWrap<%s>::Unwrap(%s_obj);\n", *arg.Type, *arg.Ident, *arg.Type, *arg.Ident))
-			} else if strings.Contains(*arg.Type, "std::vector") {
-				g.writeIndent(sb, 2)
-				tmpType := *arg.Type
-				sb.WriteString(fmt.Sprintf("auto axes = jsArrayArg<%s>(info[%d].As<Napi::Array>(), g_row_major, %s->_%s->ndim(), env);\n", tmpType[strings.Index(*arg.Type, "<")+1:strings.Index(*arg.Type, ">")], i, obj_name, lower_caser.String(obj_type)))
 			} else {
-				fmt.Println("TODO: handle type ", *arg.Type)
+				sb.WriteString(*arg.Ident)
 			}
 		}
-		g.writeIndent(sb, 2)
-		sb.WriteString(fmt.Sprintf("%s::%s _res;\n", *g.NameSpace, obj_type))
-		if v, ok := g.conf.MethodTransforms[*m.Ident]; ok && v.ReturnTransforms != "" {
-			parsed_transform := strings.ReplaceAll(v.ReturnTransforms, "/return/", "_res")
-			for i, arg := range *m.Overloads[0] {
-				fmtd_arg := ""
-				if isClass(*arg.Type, classes) {
-					if wrappedClass != nil && i == 0 {
-						fmtd_arg = fmt.Sprintf("*(this->_%s)", lower_caser.String(*arg.Type))
-					} else {
-						fmtd_arg = fmt.Sprintf("*(%s->_%s)", *arg.Ident, lower_caser.String(*arg.Type))
-					}
-				} else {
-					fmtd_arg = *arg.Ident
-				}
-				parsed_transform = strings.ReplaceAll(parsed_transform, fmt.Sprintf("/arg_%d/", i), fmtd_arg)
-			}
-			transformed_lines := strings.Split(parsed_transform, "\n")
-			length := len(transformed_lines)
-			for i, line := range transformed_lines {
-				g.writeIndent(sb, 2)
-				if i == length-1 {
-					sb.WriteString(line)
-				} else {
-					sb.WriteString(fmt.Sprintf("%s\n", line))
-				}
-			}
-		} else {
-			g.writeIndent(sb, 2)
-			sb.WriteString(fmt.Sprintf("_res = %s::%s(", *g.NameSpace, *m.Ident))
-			for i, arg := range *m.Overloads[0] {
-				if i > 0 {
-					sb.WriteString(", ")
-				}
-				if _, ok := g.conf.TypeMappings[*arg.Type]; ok {
-					sb.WriteString(fmt.Sprintf("%s::%s(%s)", *g.NameSpace, *arg.Type, *arg.Ident))
-				} else if isClass(*arg.Type, classes) {
-					if wrappedClass != nil && i == 0 {
-						sb.WriteString(fmt.Sprintf("*(this->_%s)", lower_caser.String(*arg.Type)))
-
-					} else {
-						sb.WriteString(fmt.Sprintf("*(%s->_%s)", *arg.Ident, lower_caser.String(*arg.Type)))
-
-					}
-				} else {
-					sb.WriteString(*arg.Ident)
-				}
-			}
-			sb.WriteString(");\n")
-		}
-		if v, ok := g.conf.GlobalTypeOutTransforms[*m.Returns]; ok {
-			g.writeIndent(sb, 2)
-			sb.WriteString(strings.ReplaceAll(v, "/return/", "_res"))
-		}
-		g.writeIndent(sb, 2)
-		sb.WriteString(fmt.Sprintf("auto* out = new %s::%s(_res);\n", *g.NameSpace, obj_type))
-		g.writeIndent(sb, 2)
-		sb.WriteString(fmt.Sprintf("Napi::External<%s::%s> _external_out = Externalize%s(env, out);\n", *g.NameSpace, obj_type, obj_type))
-		g.writeIndent(sb, 2)
-		sb.WriteString("return _external_out;\n")
-		g.writeIndent(sb, 1)
-		sb.WriteString("}\n")
-		g.writeIndent(sb, 1)
-		sb.WriteString("return env.Null();\n")
-	} else {
-		g.writeIndent(sb, 1)
-		sb.WriteString(fmt.Sprintf("%s::%s _res;\n", *g.NameSpace, *m.Returns))
-		if v, ok := g.conf.MethodTransforms[*m.Ident]; ok && v.ReturnTransforms != "" {
-			parsed_transform := strings.ReplaceAll(v.ReturnTransforms, "/return/", "_res")
-			for i, arg := range *m.Overloads[0] {
-				fmtd_arg := ""
-				if isClass(*arg.Type, classes) {
-					if wrappedClass != nil && i == 0 {
-						fmtd_arg = fmt.Sprintf("*(this->_%s)", lower_caser.String(*arg.Type))
-					} else {
-						fmtd_arg = fmt.Sprintf("*(%s->_%s)", *arg.Ident, lower_caser.String(*arg.Type))
-					}
-				} else {
-					fmtd_arg = *arg.Ident
-				}
-				parsed_transform = strings.ReplaceAll(parsed_transform, fmt.Sprintf("/arg_%d/", i), fmtd_arg)
-			}
-			transformed_lines := strings.Split(parsed_transform, "\n")
-			length := len(transformed_lines)
-			for i, line := range transformed_lines {
-				g.writeIndent(sb, 1)
-				if i == length-1 {
-					sb.WriteString(line)
-				} else {
-					sb.WriteString(fmt.Sprintf("%s\n", line))
-				}
-			}
-		} else {
-			g.writeIndent(sb, 1)
-			sb.WriteString(fmt.Sprintf("_res = %s::%s(", *g.NameSpace, *m.Ident))
-			for i, arg := range *m.Overloads[0] {
-				if i > 0 {
-					sb.WriteString(", ")
-				}
-				if _, ok := g.conf.TypeMappings[*arg.Type]; ok {
-					sb.WriteString(fmt.Sprintf("%s::%s(%s)", *g.NameSpace, *arg.Type, *arg.Ident))
-				} else if isClass(*arg.Type, classes) {
-					if wrappedClass != nil && i == 0 {
-						sb.WriteString(fmt.Sprintf("*(this->_%s)", lower_caser.String(*arg.Type)))
-					} else {
-						sb.WriteString(fmt.Sprintf("*(%s->_%s)", *arg.Ident, lower_caser.String(*arg.Type)))
-					}
-				} else {
-					sb.WriteString(*arg.Ident)
-				}
-			}
-			sb.WriteString(");\n")
-		}
-		if v, ok := g.conf.GlobalTypeOutTransforms[*m.Returns]; ok {
-			g.writeIndent(sb, 1)
-			sb.WriteString(strings.ReplaceAll(v, "/return/", "_res"))
-		}
-		g.writeIndent(sb, 1)
-		sb.WriteString(fmt.Sprintf("auto* out = new %s::%s(_res);\n", *g.NameSpace, *m.Returns))
-		g.writeIndent(sb, 1)
-		sb.WriteString(fmt.Sprintf("Napi::External<%s::%s> _external_out = Externalize%s(env, out);\n", *g.NameSpace, *m.Returns, *m.Returns))
-		g.writeIndent(sb, 1)
-		sb.WriteString("return _external_out;\n")
+		sb.WriteString(");\n")
 	}
+	if v, ok := g.conf.GlobalTypeOutTransforms[*m.Returns]; ok {
+		g.writeIndent(sb, 2)
+		sb.WriteString(strings.ReplaceAll(v, "/return/", "_res"))
+	}
+	g.writeIndent(sb, 2)
+	sb.WriteString(fmt.Sprintf("auto* out = new %s::%s(_res);\n", *g.NameSpace, obj_type))
+	g.writeIndent(sb, 2)
+	sb.WriteString(fmt.Sprintf("Napi::External<%s::%s> _external_out = Externalize%s(env, out);\n", *g.NameSpace, obj_type, obj_type))
+	g.writeIndent(sb, 2)
+	sb.WriteString("return _external_out;\n")
+
 	/* TODO: Handle cases w multiple overloads
 	} else {
 		// TODO: handle cases w multiple overloads

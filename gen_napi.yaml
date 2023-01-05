@@ -670,6 +670,20 @@ packages:
           if (/this/->hasAdapter()) {
             g_bytes_used -= /this/->bytes();
           }
+        fields:
+          - name: 'copy'
+          - name: 'shape'
+          - name: 'elements'
+          - name: 'ndim'
+          - name: 'isEmpty'
+          - name: 'bytes'
+          - name: 'strides'
+          - name: 'astype'
+          - name: 'type'
+          - name: 'isSparse'
+          - name: 'flatten'
+          - name: 'asContiguousTensor'
+          - name: 'isContiguous'
         forced_methods:
           - name: 'toFloat32Array'
             ts_return_type: 'Float32Array'
