@@ -219,8 +219,8 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 		if v, ok := g.conf.MethodTransforms[*m.Ident].ArgTransforms[*arg.Ident]; ok && strings.Contains(v, "/arg_") {
 			g.writeIndent(sb, 2)
 			if strings.Contains(v, "/arg_") {
-				for j := range *m.Overloads[0] {
-					v = strings.ReplaceAll(v, fmt.Sprintf("/arg_%d/", j), *arg.Ident)
+				for j, val := range *m.Overloads[0] {
+					v = strings.ReplaceAll(v, fmt.Sprintf("/arg_%d/", j), *val.Ident)
 				}
 			}
 			// TODO: this might need better handling for class wrappers
