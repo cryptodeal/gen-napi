@@ -300,7 +300,6 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 
 func (g *PackageGenerator) writeClassField(sb *strings.Builder, f *CPPFieldDecl, className string, classes map[string]*CPPClass) {
 	if f.Ident != nil && g.conf.IsFieldWrapped(className, *f.Ident) {
-		lower_caser := cases.Lower(language.AmericanEnglish)
 		upper_caser := cases.Upper(language.AmericanEnglish)
 
 		var returnType string
@@ -367,7 +366,7 @@ func (g *PackageGenerator) writeClassField(sb *strings.Builder, f *CPPFieldDecl,
 			sb.WriteString("auto _res = ")
 			returnType = *f.Returns.FullType
 		}
-		sb.WriteString(fmt.Sprintf("_tmp_external->_%s->%s(", lower_caser.String(className), *f.Ident))
+		sb.WriteString(fmt.Sprintf("_tmp_external->%s(", *f.Ident))
 		if f.Args != nil {
 			for i, arg := range *f.Args {
 				if i > 0 {
