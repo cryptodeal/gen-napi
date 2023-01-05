@@ -450,8 +450,8 @@ packages:
           out.reserve(len);
           for (size_t i = 0; i < len; ++i) {
             Napi::Value temp = arr[i];
-            if (temp.External()) {
-              fl::Tensor* tensor = static_cast<fl::Tensor>(temp.As<Napi::External>().Data());
+            if (temp.IsExternal()) {
+              fl::Tensor* tensor = static_cast<fl::Tensor*>(temp.As<Napi::External<fl::Tensor>>().Data());
               out.emplace_back(*(tensor));
             } else {
               Napi::TypeError::New(env, "jsTensorArrayArg requires `Tensor[]`")
@@ -648,7 +648,7 @@ packages:
         out_type: 'Napi::TypedArrayOf<int64_t>'
         out_var: '_out'
         handler: |
-          const size_t length = static_cast<const size_t>(this->ndim());
+          const size_t length = static_cast<const size_t>(info[0].As<Napi::External<fl::Tensor>>().Data()->ndim());
           Napi::TypedArrayOf<int64_t> _out =
               Napi::TypedArrayOf<int64_t>::New(env, length, napi_bigint64_array);
           const int out_len = static_cast<int>(length);
