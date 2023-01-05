@@ -150,7 +150,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 					sb.WriteString("}\n")
 					if _, ok := g.conf.MethodTransforms[*m.Ident].ArgTransforms[*arg.Ident]; !ok {
 						g.writeIndent(sb, 1)
-						sb.WriteString(fmt.Sprintf("%s::%s* %s = static_cast<%s::%s>(info[%d].As<Napi::External>().Data());\n", *g.NameSpace, *arg.Type, *arg.Ident, *g.NameSpace, *arg.Type, i))
+						sb.WriteString(fmt.Sprintf("%s::%s* %s = static_cast<%s::%s>(info[%d].As<Napi::External<%s::%s>>().Data());\n", *g.NameSpace, *arg.Type, *arg.Ident, *g.NameSpace, *arg.Type, i, *g.NameSpace, *arg.Type))
 					}
 				} else if strings.Contains(*arg.Type, "std::vector") {
 					argType := *arg.Type
@@ -339,7 +339,7 @@ func (g *PackageGenerator) writeClassField(sb *strings.Builder, f *CPPFieldDecl,
 		g.writeIndent(sb, 1)
 		sb.WriteString("}\n")
 		g.writeIndent(sb, 1)
-		sb.WriteString(fmt.Sprintf("%s::%s* _tmp_external = static_cast<%s::%s*>(info[%d].As<Napi::External>().Data());\n", *g.NameSpace, className, *g.NameSpace, className, 0))
+		sb.WriteString(fmt.Sprintf("%s::%s* _tmp_external = static_cast<%s::%s*>(info[%d].As<Napi::External<%s::%s>>().Data());\n", *g.NameSpace, className, *g.NameSpace, className, 0, *g.NameSpace, className))
 		if f.Args != nil {
 			for i, arg := range *f.Args {
 				typeHandler, isObject := CPPTypeToTS(*arg.Type)
