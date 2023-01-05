@@ -52,6 +52,7 @@ packages:
     global_type_out_transforms:
       Tensor: |
         g_bytes_used += /return/.bytes();
+        Napi::MemoryManagement::AdjustExternalMemory(env, /return/.bytes());
     method_transforms:
       arange:
         arg_count: 3

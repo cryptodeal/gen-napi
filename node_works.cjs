@@ -21,7 +21,7 @@ const test = async () => {
   const t1 = performance.now() / 1e3
   console.log(t1 - t0, 'seconds to calculate', m)
   m = null
-  await new Promise((r) => setTimeout(r, 2000))
+  bun.gc(true)
   console.log('bytes: ', Number(sm.bytesUsed()))
 }
 test()
