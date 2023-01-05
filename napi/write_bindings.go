@@ -340,7 +340,7 @@ func (g *PackageGenerator) writeClassField(sb *strings.Builder, f *CPPFieldDecl,
 		g.writeIndent(sb, 1)
 		sb.WriteString("}\n")
 		g.writeIndent(sb, 1)
-		sb.WriteString(fmt.Sprintf("%s::%s* _tmp_external = *static_cast<%s::%s>(info[%d].As<Napi::External>().Data());\n", *g.NameSpace, className, *g.NameSpace, className, 0))
+		sb.WriteString(fmt.Sprintf("%s::%s* _tmp_external = static_cast<%s::%s*>(info[%d].As<Napi::External>().Data());\n", *g.NameSpace, className, *g.NameSpace, className, 0))
 		if f.Args != nil {
 			for i, arg := range *f.Args {
 				typeHandler, isObject := CPPTypeToTS(*arg.Type)
