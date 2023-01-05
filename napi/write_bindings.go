@@ -447,6 +447,11 @@ func (g *PackageGenerator) writeBindings(sb *strings.Builder, classes map[string
 					g.writeClassField(sb, f, name, classes)
 				}
 			}
+			if v, ok := g.conf.ClassOpts[name]; ok && len(v.ForcedMethods) > 0 {
+				for _, f := range v.ForcedMethods {
+					sb.WriteString(f.FnBody)
+				}
+			}
 		}
 	}
 
@@ -475,6 +480,13 @@ func (g *PackageGenerator) writeBindings(sb *strings.Builder, classes map[string
 						parsedName := ("_" + *f.Ident)
 						sb.WriteString(fmt.Sprintf("exports.Set(Napi::String::New(env, %q), Napi::Function::New(env, %s));\n", parsedName, parsedName))
 					}
+				}
+			}
+			if v, ok := g.conf.ClassOpts[name]; ok && len(v.ForcedMethods) > 0 {
+				for _, f := range v.ForcedMethods {
+					g.writeIndent(sb, 1)
+					parsedName := ("_" + f.Name)
+					sb.WriteString(fmt.Sprintf("exports.Set(Napi::String::New(env, %q), Napi::Function::New(env, %s));\n", parsedName, parsedName))
 				}
 			}
 		}
