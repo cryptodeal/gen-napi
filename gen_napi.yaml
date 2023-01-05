@@ -20,8 +20,8 @@ packages:
         ts: 'number'
         napi: 'Number'
     js_wrapper_opts:
-      addon_path: 'build/Release/flashlight_napi_bindings.node'
-      wrapper_out_path: 'test/js/index.ts'
+      addon_path: 'build/Release/shumai_bindings.node'
+      wrapper_out_path: 'test/js/index.cjs'
     ignored_methods:
       - 'scalar'
       - 'pad'
@@ -406,7 +406,7 @@ packages:
           out.reserve(len);
           for (auto i = 0; i < len; ++i) {
             const auto idx = reverse ? len - i - 1 : i;
-            auto v = static_cast<const int64_t*>(ptr)[idx];
+            auto v = reinterpret_cast<const int64_t*>(ptr)[idx];
             if (invert && v < 0) {
               v = -v - 1;
             } else if (invert) {
@@ -484,8 +484,8 @@ packages:
           std::vector<T> out;
           out.reserve(len);
           for (auto i = 0; i < len; ++i) {
-            auto ptrAsInt = static_cast<const int64_t*>(ptr)[i];
-            auto ptr = static_cast<T*>(ptrAsInt);
+            auto ptrAsInt = reinterpret_cast<const int64_t*>(ptr)[i];
+            auto ptr = reinterpret_cast<T*>(ptrAsInt);
             out.emplace_back(*ptr);
           }
           return out;
@@ -620,13 +620,7 @@ packages:
             t = fl::rand(fl::Shape(shape));
             g_bytes_used += t.bytes();
             auto* tensor = new fl::Tensor(t);
-            auto wrapped = Napi::External<fl::Tensor>::New(env, tensor, [](Napi::Env env, void* ptr) {
-              auto* val = static_cast<fl::Tensor*>(ptr);
-              if (val->hasAdapter()) {
-                g_bytes_used -= val->bytes();
-              }
-              delete val;
-            });
+            Napi::External<fl::Tensor> wrapped = ExternalizeTensor<fl::Tensor>(env, tensor);
             Napi::Value wrappedTensor = Tensor::constructor->New({wrapped});
             return wrappedTensor;
           }
@@ -648,13 +642,7 @@ packages:
             t = fl::randn(fl::Shape(shape));
             g_bytes_used += t.bytes();
             auto* tensor = new fl::Tensor(t);
-            auto wrapped = Napi::External<fl::Tensor>::New(env, tensor, [](Napi::Env env, void* ptr) {
-              auto* val = static_cast<fl::Tensor*>(ptr);
-              if (val->hasAdapter()) {
-                g_bytes_used -= val->bytes();
-              }
-              delete val;
-            });
+            Napi::External<fl::Tensor> wrapped = ExternalizeTensor<fl::Tensor>(env, tensor);
             Napi::Value wrappedTensor = Tensor::constructor->New({wrapped});
             return wrappedTensor;
           }
@@ -728,13 +716,7 @@ packages:
                   auto* t = new fl::Tensor(
                       fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
                   g_bytes_used += t->bytes();
-                  Napi::External<fl::Tensor> wrapped = Napi::External<fl::Tensor>::New(env, t, [](Napi::Env env, void* ptr) {
-                    auto* val = static_cast<fl::Tensor*>(ptr);
-                    if (val->hasAdapter()) {
-                      g_bytes_used -= val->bytes();
-                    }
-                    delete val;
-                  });
+                  Napi::External<fl::Tensor> wrapped = ExternalizeTensor<fl::Tensor>(env, t);
                   this->_tensor = wrapped.Data();
                   return;
                 }
@@ -745,30 +727,18 @@ packages:
                   auto* t = new fl::Tensor(
                       fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
                   g_bytes_used += t->bytes();
-                  Napi::External<fl::Tensor> wrapped = Napi::External<fl::Tensor>::New(env, t, [](Napi::Env env, void* ptr) {
-                    auto* val = static_cast<fl::Tensor*>(ptr);
-                    if (val->hasAdapter()) {
-                      g_bytes_used -= val->bytes();
-                    }
-                    delete val;
-                  });
+                  Napi::External<fl::Tensor> wrapped = ExternalizeTensor<fl::Tensor>(env, t);
                   this->_tensor = wrapped.Data();
                   return;
                 }
                 case napi_int8_array: {
                   Napi::TypedArrayOf<int8_t> int8_array =
                       underlying.As<Napi::TypedArrayOf<int8_t>>();
-                  char* ptr = static_cast<char*>(int8_array.Data());
+                  char* ptr = reinterpret_cast<char*>(int8_array.Data());
                   auto* t = new fl::Tensor(
                       fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
                   g_bytes_used += t->bytes();
-                  Napi::External<fl::Tensor> wrapped = Napi::External<fl::Tensor>::New(env, t, [](Napi::Env env, void* ptr) {
-                    auto* val = static_cast<fl::Tensor*>(ptr);
-                    if (val->hasAdapter()) {
-                      g_bytes_used -= val->bytes();
-                    }
-                    delete val;
-                  });
+                  Napi::External<fl::Tensor> wrapped = ExternalizeTensor<fl::Tensor>(env, t);
                   this->_tensor = wrapped.Data();
                   return;
                 }
@@ -779,13 +749,7 @@ packages:
                   auto* t = new fl::Tensor(
                       fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
                   g_bytes_used += t->bytes();
-                  Napi::External<fl::Tensor> wrapped = Napi::External<fl::Tensor>::New(env, t, [](Napi::Env env, void* ptr) {
-                    auto* val = static_cast<fl::Tensor*>(ptr);
-                    if (val->hasAdapter()) {
-                      g_bytes_used -= val->bytes();
-                    }
-                    delete val;
-                  });
+                  Napi::External<fl::Tensor> wrapped = ExternalizeTensor<fl::Tensor>(env, t);
                   this->_tensor = wrapped.Data();
                   return;
                 }
@@ -796,13 +760,7 @@ packages:
                   auto* t = new fl::Tensor(
                       fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
                   g_bytes_used += t->bytes();
-                  Napi::External<fl::Tensor> wrapped = Napi::External<fl::Tensor>::New(env, t, [](Napi::Env env, void* ptr) {
-                    auto* val = static_cast<fl::Tensor*>(ptr);
-                    if (val->hasAdapter()) {
-                      g_bytes_used -= val->bytes();
-                    }
-                    delete val;
-                  });
+                  Napi::External<fl::Tensor> wrapped = ExternalizeTensor<fl::Tensor>(env, t);
                   this->_tensor = wrapped.Data();
                   return;
                 }
@@ -813,13 +771,7 @@ packages:
                   auto* t = new fl::Tensor(
                       fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
                   g_bytes_used += t->bytes();
-                  Napi::External<fl::Tensor> wrapped = Napi::External<fl::Tensor>::New(env, t, [](Napi::Env env, void* ptr) {
-                    auto* val = static_cast<fl::Tensor*>(ptr);
-                    if (val->hasAdapter()) {
-                      g_bytes_used -= val->bytes();
-                    }
-                    delete val;
-                  });
+                  Napi::External<fl::Tensor> wrapped = ExternalizeTensor<fl::Tensor>(env, t);
                   this->_tensor = wrapped.Data();
                   return;
                 }
@@ -830,13 +782,7 @@ packages:
                   auto* t = new fl::Tensor(
                       fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
                   g_bytes_used += t->bytes();
-                  Napi::External<fl::Tensor> wrapped = Napi::External<fl::Tensor>::New(env, t, [](Napi::Env env, void* ptr) {
-                    auto* val = static_cast<fl::Tensor*>(ptr);
-                    if (val->hasAdapter()) {
-                      g_bytes_used -= val->bytes();
-                    }
-                    delete val;
-                  });
+                  Napi::External<fl::Tensor> wrapped = ExternalizeTensor<fl::Tensor>(env, t);
                   this->_tensor = wrapped.Data();
                   return;
                 }
@@ -847,13 +793,7 @@ packages:
                   auto* t = new fl::Tensor(
                       fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
                   g_bytes_used += t->bytes();
-                  Napi::External<fl::Tensor> wrapped = Napi::External<fl::Tensor>::New(env, t, [](Napi::Env env, void* ptr) {
-                    auto* val = static_cast<fl::Tensor*>(ptr);
-                    if (val->hasAdapter()) {
-                      g_bytes_used -= val->bytes();
-                    }
-                    delete val;
-                  });
+                  Napi::External<fl::Tensor> wrapped = ExternalizeTensor<fl::Tensor>(env, t);
                   this->_tensor = wrapped.Data();
                   return;
                 }
@@ -864,13 +804,7 @@ packages:
                   auto* t = new fl::Tensor(
                       fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
                   g_bytes_used += t->bytes();
-                  Napi::External<fl::Tensor> wrapped = Napi::External<fl::Tensor>::New(env, t, [](Napi::Env env, void* ptr) {
-                    auto* val = static_cast<fl::Tensor*>(ptr);
-                    if (val->hasAdapter()) {
-                      g_bytes_used -= val->bytes();
-                    }
-                    delete val;
-                  });
+                  Napi::External<fl::Tensor> wrapped = ExternalizeTensor<fl::Tensor>(env, t);
                   this->_tensor = wrapped.Data();
                   return;
                 }
@@ -881,13 +815,7 @@ packages:
                   auto* t = new fl::Tensor(
                       fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
                   g_bytes_used += t->bytes();
-                  Napi::External<fl::Tensor> wrapped = Napi::External<fl::Tensor>::New(env, t, [](Napi::Env env, void* ptr) {
-                    auto* val = static_cast<fl::Tensor*>(ptr);
-                    if (val->hasAdapter()) {
-                      g_bytes_used -= val->bytes();
-                    }
-                    delete val;
-                  });
+                  Napi::External<fl::Tensor> wrapped = ExternalizeTensor<fl::Tensor>(env, t);
                   this->_tensor = wrapped.Data();
                   return;
                 }
@@ -908,13 +836,7 @@ packages:
               auto shape = arrayArg<long long>(ptr, 1, g_row_major, false);
               auto* t = new fl::Tensor(fl::Shape(shape));
               g_bytes_used += t->bytes();
-              Napi::External<fl::Tensor> wrapped = Napi::External<fl::Tensor>::New(env, t, [](Napi::Env env, void* ptr) {
-                auto* val = static_cast<fl::Tensor*>(ptr);
-                if (val->hasAdapter()) {
-                  g_bytes_used -= val->bytes();
-                }
-                delete val;
-              });
+              Napi::External<fl::Tensor> wrapped = ExternalizeTensor<fl::Tensor>(env, t);
               this->_tensor = wrapped.Data();
               return;
             }

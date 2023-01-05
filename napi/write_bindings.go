@@ -349,16 +349,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 		g.writeIndent(sb, 2)
 		sb.WriteString(fmt.Sprintf("auto* out = new %s::%s(_res);\n", *g.NameSpace, obj_type))
 		g.writeIndent(sb, 2)
-		sb.WriteString(fmt.Sprintf("Napi::External<%s::%s> _wrapped = Napi::External<%s::%s>::New(env, out, [](Napi::Env env, void* ptr) {\n", *g.NameSpace, obj_type, *g.NameSpace, obj_type))
-		g.writeIndent(sb, 3)
-		sb.WriteString(fmt.Sprintf("auto* val = static_cast<%s::%s*>(ptr);\n", *g.NameSpace, obj_type))
-		if v, ok := g.conf.ClassOpts[obj_type]; ok && v.ExternalFinalizer != "" {
-			sb.WriteString(strings.ReplaceAll(v.ExternalFinalizer, "/this/", "val"))
-		}
-		g.writeIndent(sb, 2)
-		sb.WriteString("delete val;\n")
-		g.writeIndent(sb, 1)
-		sb.WriteString("});\n")
+		sb.WriteString(fmt.Sprintf("Napi::External<%s::%s> _wrapped = Externalize%s(env, out);\n", *g.NameSpace, obj_type, obj_type))
 		g.writeIndent(sb, 2)
 		sb.WriteString(fmt.Sprintf("Napi::Value wrapped_out = %s::constructor->New({_wrapped});\n", obj_type))
 		g.writeIndent(sb, 2)
@@ -423,16 +414,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 		g.writeIndent(sb, 1)
 		sb.WriteString(fmt.Sprintf("auto* out = new %s::%s(_res);\n", *g.NameSpace, *m.Returns))
 		g.writeIndent(sb, 1)
-		sb.WriteString(fmt.Sprintf("Napi::External<%s::%s> _wrapped = Napi::External<%s::%s>::New(env, out, [](Napi::Env env, void* ptr) {\n", *g.NameSpace, *m.Returns, *g.NameSpace, *m.Returns))
-		g.writeIndent(sb, 2)
-		sb.WriteString(fmt.Sprintf("auto* val = static_cast<%s::%s*>(ptr);\n", *g.NameSpace, *m.Returns))
-		if v, ok := g.conf.ClassOpts[*m.Returns]; ok && v.ExternalFinalizer != "" {
-			sb.WriteString(strings.ReplaceAll(v.ExternalFinalizer, "/this/", "val"))
-		}
-		g.writeIndent(sb, 2)
-		sb.WriteString("delete val;\n")
-		g.writeIndent(sb, 1)
-		sb.WriteString("});\n")
+		sb.WriteString(fmt.Sprintf("Napi::External<%s::%s> _wrapped = Externalize%s(env, out);\n", *g.NameSpace, *m.Returns, *m.Returns))
 		g.writeIndent(sb, 1)
 		sb.WriteString(fmt.Sprintf("Napi::Value wrapped_out = %s::constructor->New({_wrapped});\n", *m.Returns))
 		g.writeIndent(sb, 1)
@@ -539,16 +521,7 @@ func (g *PackageGenerator) writeClassField(sb *strings.Builder, f *CPPFieldDecl,
 			g.writeIndent(sb, 1)
 			sb.WriteString(fmt.Sprintf("auto* out = new %s::%s(_res);\n", *g.NameSpace, returnType))
 			g.writeIndent(sb, 1)
-			sb.WriteString(fmt.Sprintf("Napi::External<%s::%s> _wrapped = Napi::External<%s::%s>::New(env, out, [](Napi::Env env, void* ptr) {\n", *g.NameSpace, returnType, *g.NameSpace, returnType))
-			g.writeIndent(sb, 2)
-			sb.WriteString(fmt.Sprintf("auto* val = static_cast<%s::%s*>(ptr);\n", *g.NameSpace, returnType))
-			if v, ok := g.conf.ClassOpts[returnType]; ok && v.ExternalFinalizer != "" {
-				sb.WriteString(strings.ReplaceAll(v.ExternalFinalizer, "/this/", "val"))
-			}
-			g.writeIndent(sb, 2)
-			sb.WriteString("delete val;\n")
-			g.writeIndent(sb, 1)
-			sb.WriteString("});\n")
+			sb.WriteString(fmt.Sprintf("Napi::External<%s::%s> _wrapped = Externalize%s(env, out);", *g.NameSpace, returnType, returnType))
 			g.writeIndent(sb, 1)
 			sb.WriteString(fmt.Sprintf("Napi::Value wrapped_out = %s::constructor->New({_wrapped});\n", returnType))
 			g.writeIndent(sb, 1)
@@ -650,6 +623,25 @@ func (g *PackageGenerator) writeClass(sb *strings.Builder, class *CPPClass, clas
 	sb.WriteString("}\n\n")
 }
 
+func (g *PackageGenerator) writeClassDeleter(sb *strings.Builder, class *CPPClass, name string) {
+	sb.WriteString(fmt.Sprintf("static inline void Delete%s(Napi::Env env, void* ptr) {\n", name))
+	g.writeIndent(sb, 1)
+	sb.WriteString(fmt.Sprintf("auto* val = static_cast<%s::%s*>(ptr);\n", *g.NameSpace, name))
+	if v, ok := g.conf.ClassOpts[name]; ok && v.ExternalFinalizer != "" {
+		sb.WriteString(strings.ReplaceAll(v.ExternalFinalizer, "/this/", "val"))
+	}
+	g.writeIndent(sb, 1)
+	sb.WriteString("delete val;\n")
+	sb.WriteString("}\n\n")
+}
+
+func (g *PackageGenerator) writeClassExternalizer(sb *strings.Builder, class *CPPClass, name string) {
+	sb.WriteString(fmt.Sprintf("static inline Napi::External<%s::%s> Externalize%s(Napi::Env env, %s::%s* ptr) {\n", *g.NameSpace, name, name, *g.NameSpace, name))
+	g.writeIndent(sb, 1)
+	sb.WriteString(fmt.Sprintf("return Napi::External<%s::%s>::New(env, ptr, Delete%s);\n", *g.NameSpace, name, name))
+	sb.WriteString("}\n\n")
+}
+
 // makes calls to functions that write bindings
 func (g *PackageGenerator) writeBindings(sb *strings.Builder, classes map[string]*CPPClass, methods map[string]*CPPMethod, processedMethods map[string]*CPPMethod) {
 	sb.WriteString(fmt.Sprintf("#include %q\n", filepath.Base(g.conf.ResolvedHeaderOutPath(filepath.Dir(*g.Path)))))
@@ -670,6 +662,8 @@ func (g *PackageGenerator) writeBindings(sb *strings.Builder, classes map[string
 
 	for name, c := range classes {
 		if c.Decl != nil {
+			g.writeClassDeleter(sb, c, name)
+			g.writeClassExternalizer(sb, c, name)
 			g.writeClass(sb, c, classes, name, methods, processedMethods)
 		}
 	}
