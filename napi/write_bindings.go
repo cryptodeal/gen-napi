@@ -213,8 +213,9 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 
 	obj_name := ""
 	obj_type := ""
+	outType := *m.Returns
 	for i, arg := range *m.Overloads[0] {
-		if i > expected_count {
+		if i >= expected_count {
 			break
 		}
 		if v, ok := g.conf.MethodTransforms[*m.Ident].ArgTransforms[*arg.Ident]; ok && strings.Contains(v, "/arg_") {
@@ -238,7 +239,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 		}
 	}
 	g.writeIndent(sb, 2)
-	sb.WriteString(fmt.Sprintf("%s::%s _res;\n", *g.NameSpace, obj_type))
+	sb.WriteString(fmt.Sprintf("%s::%s _res;\n", *g.NameSpace, outType))
 	if v, ok := g.conf.MethodTransforms[*m.Ident]; ok && v.ReturnTransforms != "" {
 		parsed_transform := strings.ReplaceAll(v.ReturnTransforms, "/return/", "_res")
 		for i, arg := range *m.Overloads[0] {
@@ -282,9 +283,9 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 		sb.WriteString(strings.ReplaceAll(v, "/return/", "_res"))
 	}
 	g.writeIndent(sb, 2)
-	sb.WriteString(fmt.Sprintf("auto* out = new %s::%s(_res);\n", *g.NameSpace, obj_type))
+	sb.WriteString(fmt.Sprintf("auto* out = new %s::%s(_res);\n", *g.NameSpace, outType))
 	g.writeIndent(sb, 2)
-	sb.WriteString(fmt.Sprintf("Napi::External<%s::%s> _external_out = Externalize%s(env, out);\n", *g.NameSpace, obj_type, obj_type))
+	sb.WriteString(fmt.Sprintf("Napi::External<%s::%s> _external_out = Externalize%s(env, out);\n", *g.NameSpace, outType, outType))
 	g.writeIndent(sb, 2)
 	sb.WriteString("return _external_out;\n")
 

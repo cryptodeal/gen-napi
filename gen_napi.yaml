@@ -338,6 +338,7 @@ packages:
             int64_t dim = /arg/.As<Napi::Number>().Int64Value();
       iota:
         arg_count: 2
+        ts_return_type: 'Tensor'
         return_transforms: |
           /return/ = fl::iota(fl::Shape(/arg_0/), fl::Shape(/arg_1/));
         arg_transforms:
