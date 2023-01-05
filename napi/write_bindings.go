@@ -160,14 +160,14 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 					g.writeIndent(sb, 1)
 					sb.WriteString(fmt.Sprintf("if (!info[%d].IsExternal()) {\n", argIdx))
 					g.writeIndent(sb, 2)
-					sb.WriteString(fmt.Sprintf("Napi::TypeError::New(info.Env(), %q).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects args[%d] to be `Napi::External<%s::%s>` `%s`", *m.Ident, argIdx, *g.NameSpace, *m.Ident, *arg.Type)))
+					sb.WriteString(fmt.Sprintf("Napi::TypeError::New(info.Env(), %q).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects args[%d] to be `Napi::External<%s::%s>` `%s`", *m.Ident, argIdx, *g.NameSpace, *m.Returns, *arg.Type)))
 					g.writeIndent(sb, 2)
 					sb.WriteString("return env.Null();\n")
 					g.writeIndent(sb, 1)
 					sb.WriteString("}\n")
 					if _, ok := g.conf.MethodTransforms[*m.Ident].ArgTransforms[*arg.Ident]; !ok {
 						g.writeIndent(sb, 1)
-						sb.WriteString(fmt.Sprintf("Napi::Object %s_obj = info[%d].As<Napi::Object>();\n", *arg.Ident, argIdx))
+						sb.WriteString(fmt.Sprintf("%s::%s* %s = static_cast<%s::%s>(info[%d].As<Napi::External>().Data());\n", *g.NameSpace, *arg.Type, *g.NameSpace, *arg.Type, *arg.Ident, argIdx))
 					}
 				} else if strings.Contains(*arg.Type, "std::vector") {
 					argType := *arg.Type
@@ -260,8 +260,6 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 			}
 			obj_name = *arg.Ident
 			obj_type = *arg.Type
-			g.writeIndent(sb, 2)
-			sb.WriteString(fmt.Sprintf("%s* %s = Napi::ObjectWrap<%s>::Unwrap(%s_obj);\n", *arg.Type, *arg.Ident, *arg.Type, *arg.Ident))
 		} else if strings.Contains(*arg.Type, "std::vector") {
 			g.writeIndent(sb, 2)
 			tmpType := *arg.Type
