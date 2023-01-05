@@ -449,19 +449,13 @@ packages:
           out.reserve(len);
           for (size_t i = 0; i < len; ++i) {
             Napi::Value temp = arr[i];
-            if (temp.IsObject()) {
-              Napi::Object tensor_obj = temp.As<Napi::Object>();
-              if (tensor_obj.InstanceOf(Tensor::constructor->Value())) {
-                Tensor* tensor = Napi::ObjectWrap<Tensor>::Unwrap(tensor_obj);
+            if (temp.External()) {
+              Napi::Object tensor_obj = temp.As<Napi::External>();
+                fl::Tensor* tensor = static_cast<fl::Tensor>(temp.As<Napi::External>().Data());
                 out.emplace_back(*(tensor->_tensor));
-              } else {
-                Napi::TypeError::New(env, "jsTensorArrayArg requires `Tensor[]`")
-                    .ThrowAsJavaScriptException();
-                return out;
-              }
             } else {
               Napi::TypeError::New(env, "jsTensorArrayArg requires `Tensor[]`")
-                  .ThrowAsJavaScriptException();
+                    .ThrowAsJavaScriptException();
               return out;
             }
           }
