@@ -651,6 +651,13 @@ func (g *PackageGenerator) writeBindings(sb *strings.Builder, classes map[string
 	g.writeGlobalVars(sb)
 	g.writeHelpers(sb)
 
+	for name, c := range classes {
+		if c.Decl != nil {
+			g.writeClassDeleter(sb, c, name)
+			g.writeClassExternalizer(sb, c, name)
+		}
+	}
+
 	sb.WriteString("// exported functions\n")
 	for _, f := range methods {
 		g.writeMethod(sb, f, classes, nil)
@@ -662,8 +669,6 @@ func (g *PackageGenerator) writeBindings(sb *strings.Builder, classes map[string
 
 	for name, c := range classes {
 		if c.Decl != nil {
-			g.writeClassDeleter(sb, c, name)
-			g.writeClassExternalizer(sb, c, name)
 			g.writeClass(sb, c, classes, name, methods, processedMethods)
 		}
 	}
