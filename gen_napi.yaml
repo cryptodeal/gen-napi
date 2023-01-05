@@ -406,7 +406,7 @@ packages:
           out.reserve(len);
           for (auto i = 0; i < len; ++i) {
             const auto idx = reverse ? len - i - 1 : i;
-            auto v = reinterpret_cast<const int64_t*>(ptr)[idx];
+            auto v = static_cast<const int64_t*>(ptr)[idx];
             if (invert && v < 0) {
               v = -v - 1;
             } else if (invert) {
@@ -484,8 +484,8 @@ packages:
           std::vector<T> out;
           out.reserve(len);
           for (auto i = 0; i < len; ++i) {
-            auto ptrAsInt = reinterpret_cast<const int64_t*>(ptr)[i];
-            auto ptr = reinterpret_cast<T*>(ptrAsInt);
+            auto ptrAsInt = static_cast<const int64_t*>(ptr)[i];
+            auto ptr = static_cast<T*>(ptrAsInt);
             out.emplace_back(*ptr);
           }
           return out;
@@ -729,7 +729,7 @@ packages:
                       fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
                   g_bytes_used += t->bytes();
                   Napi::External<fl::Tensor> wrapped = Napi::External<fl::Tensor>::New(env, t, [](Napi::Env env, void* ptr) {
-                    auto* val = reinterpret_cast<fl::Tensor*>(ptr);
+                    auto* val = static_cast<fl::Tensor*>(ptr);
                     if (val->hasAdapter()) {
                       g_bytes_used -= val->bytes();
                     }
@@ -746,7 +746,7 @@ packages:
                       fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
                   g_bytes_used += t->bytes();
                   Napi::External<fl::Tensor> wrapped = Napi::External<fl::Tensor>::New(env, t, [](Napi::Env env, void* ptr) {
-                    auto* val = reinterpret_cast<fl::Tensor*>(ptr);
+                    auto* val = static_cast<fl::Tensor*>(ptr);
                     if (val->hasAdapter()) {
                       g_bytes_used -= val->bytes();
                     }
@@ -758,12 +758,12 @@ packages:
                 case napi_int8_array: {
                   Napi::TypedArrayOf<int8_t> int8_array =
                       underlying.As<Napi::TypedArrayOf<int8_t>>();
-                  char* ptr = reinterpret_cast<char*>(int8_array.Data());
+                  char* ptr = static_cast<char*>(int8_array.Data());
                   auto* t = new fl::Tensor(
                       fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
                   g_bytes_used += t->bytes();
                   Napi::External<fl::Tensor> wrapped = Napi::External<fl::Tensor>::New(env, t, [](Napi::Env env, void* ptr) {
-                    auto* val = reinterpret_cast<fl::Tensor*>(ptr);
+                    auto* val = static_cast<fl::Tensor*>(ptr);
                     if (val->hasAdapter()) {
                       g_bytes_used -= val->bytes();
                     }
@@ -780,7 +780,7 @@ packages:
                       fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
                   g_bytes_used += t->bytes();
                   Napi::External<fl::Tensor> wrapped = Napi::External<fl::Tensor>::New(env, t, [](Napi::Env env, void* ptr) {
-                    auto* val = reinterpret_cast<fl::Tensor*>(ptr);
+                    auto* val = static_cast<fl::Tensor*>(ptr);
                     if (val->hasAdapter()) {
                       g_bytes_used -= val->bytes();
                     }
@@ -797,7 +797,7 @@ packages:
                       fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
                   g_bytes_used += t->bytes();
                   Napi::External<fl::Tensor> wrapped = Napi::External<fl::Tensor>::New(env, t, [](Napi::Env env, void* ptr) {
-                    auto* val = reinterpret_cast<fl::Tensor*>(ptr);
+                    auto* val = static_cast<fl::Tensor*>(ptr);
                     if (val->hasAdapter()) {
                       g_bytes_used -= val->bytes();
                     }
@@ -814,7 +814,7 @@ packages:
                       fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
                   g_bytes_used += t->bytes();
                   Napi::External<fl::Tensor> wrapped = Napi::External<fl::Tensor>::New(env, t, [](Napi::Env env, void* ptr) {
-                    auto* val = reinterpret_cast<fl::Tensor*>(ptr);
+                    auto* val = static_cast<fl::Tensor*>(ptr);
                     if (val->hasAdapter()) {
                       g_bytes_used -= val->bytes();
                     }
@@ -831,7 +831,7 @@ packages:
                       fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
                   g_bytes_used += t->bytes();
                   Napi::External<fl::Tensor> wrapped = Napi::External<fl::Tensor>::New(env, t, [](Napi::Env env, void* ptr) {
-                    auto* val = reinterpret_cast<fl::Tensor*>(ptr);
+                    auto* val = static_cast<fl::Tensor*>(ptr);
                     if (val->hasAdapter()) {
                       g_bytes_used -= val->bytes();
                     }
@@ -848,7 +848,7 @@ packages:
                       fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
                   g_bytes_used += t->bytes();
                   Napi::External<fl::Tensor> wrapped = Napi::External<fl::Tensor>::New(env, t, [](Napi::Env env, void* ptr) {
-                    auto* val = reinterpret_cast<fl::Tensor*>(ptr);
+                    auto* val = static_cast<fl::Tensor*>(ptr);
                     if (val->hasAdapter()) {
                       g_bytes_used -= val->bytes();
                     }
@@ -865,7 +865,7 @@ packages:
                       fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
                   g_bytes_used += t->bytes();
                   Napi::External<fl::Tensor> wrapped = Napi::External<fl::Tensor>::New(env, t, [](Napi::Env env, void* ptr) {
-                    auto* val = reinterpret_cast<fl::Tensor*>(ptr);
+                    auto* val = static_cast<fl::Tensor*>(ptr);
                     if (val->hasAdapter()) {
                       g_bytes_used -= val->bytes();
                     }
@@ -882,7 +882,7 @@ packages:
                       fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
                   g_bytes_used += t->bytes();
                   Napi::External<fl::Tensor> wrapped = Napi::External<fl::Tensor>::New(env, t, [](Napi::Env env, void* ptr) {
-                    auto* val = reinterpret_cast<fl::Tensor*>(ptr);
+                    auto* val = static_cast<fl::Tensor*>(ptr);
                     if (val->hasAdapter()) {
                       g_bytes_used -= val->bytes();
                     }
@@ -909,7 +909,7 @@ packages:
               auto* t = new fl::Tensor(fl::Shape(shape));
               g_bytes_used += t->bytes();
               Napi::External<fl::Tensor> wrapped = Napi::External<fl::Tensor>::New(env, t, [](Napi::Env env, void* ptr) {
-                auto* val = reinterpret_cast<fl::Tensor*>(ptr);
+                auto* val = static_cast<fl::Tensor*>(ptr);
                 if (val->hasAdapter()) {
                   g_bytes_used -= val->bytes();
                 }
@@ -1216,7 +1216,7 @@ packages:
             is_void: true
             body: |
               void Tensor::dispose(const Napi::CallbackInfo& info) {
-                auto& tensor = *reinterpret_cast<fl::Tensor*>(this->_tensor);
+                auto& tensor = *static_cast<fl::Tensor*>(this->_tensor);
                 g_bytes_used -= tensor.bytes();
                 fl::detail::releaseAdapterUnsafe(tensor);
               }
