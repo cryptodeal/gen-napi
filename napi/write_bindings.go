@@ -430,6 +430,9 @@ func (g *PackageGenerator) writeClassExternalizer(sb *strings.Builder, class *CP
 
 // makes calls to functions that write bindings
 func (g *PackageGenerator) writeBindings(sb *strings.Builder, classes map[string]*CPPClass, methods map[string]*CPPMethod, processedMethods map[string]*CPPMethod) {
+	sb.WriteString("#pragma once\n")
+	sb.WriteString("#include <napi.h>\n")
+	g.writeHeaderFrontmatter(sb)
 	g.writeBindingsFrontmatter(sb)
 	sb.WriteString("using namespace Napi;\n")
 	g.writeFileSourceHeader(sb, *g.Path)
