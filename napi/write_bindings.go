@@ -211,6 +211,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 		}
 	}
 
+	obj_name := ""
 	outType := *m.Returns
 	for i, arg := range *m.Overloads[0] {
 		if i > expected_count {
@@ -226,10 +227,11 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 			// TODO: this might need better handling for class wrappers
 			sb.WriteString(strings.ReplaceAll(v, "/arg/", fmt.Sprintf("info[%d]", i)))
 		} else if isClass(*arg.Type, classes) {
+			obj_name = *arg.Ident
 		} else if strings.Contains(*arg.Type, "std::vector") {
 			g.writeIndent(sb, 2)
 			tmpType := *arg.Type
-			sb.WriteString(fmt.Sprintf("auto axes = jsArrayArg<%s>(info[%d].As<Napi::Array>(), g_row_major, %s->ndim(), env);\n", tmpType[strings.Index(*arg.Type, "<")+1:strings.Index(*arg.Type, ">")], i, *arg.Ident))
+			sb.WriteString(fmt.Sprintf("auto axes = jsArrayArg<%s>(info[%d].As<Napi::Array>(), g_row_major, %s->ndim(), env);\n", tmpType[strings.Index(*arg.Type, "<")+1:strings.Index(*arg.Type, ">")], i, obj_name))
 		} else {
 			fmt.Println("TODO: handle type ", *arg.Type)
 		}
