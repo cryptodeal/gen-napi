@@ -53,6 +53,7 @@ type ClassOpts struct {
 
 type JSWrapperOpts struct {
 	AddonPath      string `yaml:"addon_path"`
+	FrontMatter    string `yaml:"front_matter"`
 	WrapperOutPath string `yaml:"wrapper_out_path"`
 	// specifies whether gen JS/TS wrapper code
 	EnvType string `yaml:"env_type"`

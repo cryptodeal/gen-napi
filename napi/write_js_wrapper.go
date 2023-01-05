@@ -6,6 +6,7 @@ import (
 )
 
 func (g *PackageGenerator) WriteEnvWrapper(sb *strings.Builder, classes map[string]*CPPClass, methods map[string]*CPPMethod, processedMethods map[string]*CPPMethod) {
+	sb.WriteString(g.conf.JSWrapperOpts.FrontMatter)
 	sb.WriteString(g.WriteEnvImports(classes, methods, processedMethods))
 	sb.WriteString(g.WriteEnvWrappedFns(methods, processedMethods, classes))
 	if !g.conf.IsEnvTS() {
@@ -28,9 +29,6 @@ func (g *PackageGenerator) WriteEnvExports(classes map[string]*CPPClass, methods
 	}
 	used_len := len(used)
 	for i, name := range used {
-		if i == 0 {
-			sb.WriteString(",\n")
-		}
 		g.writeIndent(sb, 1)
 		sb.WriteString(name)
 		if i < used_len-1 {
