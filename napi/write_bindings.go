@@ -427,7 +427,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 }
 
 func (g *PackageGenerator) writeClassField(sb *strings.Builder, f *CPPFieldDecl, className string, classes map[string]*CPPClass) {
-	if f.Ident != nil {
+	if f.Ident != nil && g.conf.IsFieldWrapped(className, *f.Ident) {
 		lower_caser := cases.Lower(language.AmericanEnglish)
 		upper_caser := cases.Upper(language.AmericanEnglish)
 
@@ -592,8 +592,8 @@ func (g *PackageGenerator) writeBindings(sb *strings.Builder, classes map[string
 			g.writeClassExternalizer(sb, c, name)
 			if c.FieldDecl != nil {
 				for _, f := range *c.FieldDecl {
-					g.writeIndent(sb, 1)
-					if f.Ident != nil {
+					if f.Ident != nil && g.conf.IsFieldWrapped(name, *f.Ident) {
+						g.writeIndent(sb, 1)
 						parsedName := ("_" + *f.Ident)
 						sb.WriteString(fmt.Sprintf("exports.Set(Napi::String::New(env, %q), Napi::Function::New(env, %s));\n", parsedName, parsedName))
 					}
