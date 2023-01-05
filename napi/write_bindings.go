@@ -318,28 +318,37 @@ func (g *PackageGenerator) writeClassField(sb *strings.Builder, f *CPPFieldDecl,
 		sb.WriteString(fmt.Sprintf("_%s(const Napi::CallbackInfo& info) {\n", *f.Ident))
 		g.writeIndent(sb, 1)
 		sb.WriteString("Napi::Env env = info.Env();\n")
+		argCount := 1
 		if f.Args != nil {
-			argCount := len(*f.Args)
-			if argCount > 0 {
-				g.writeIndent(sb, 1)
-				sb.WriteString(fmt.Sprintf("if (info.Length() != %d) {\n", argCount))
-				g.writeIndent(sb, 2)
-				sb.WriteString(fmt.Sprintf("Napi::TypeError::New(info.Env(), %q).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects exactly %d args", *f.Ident, argCount)))
-				g.writeIndent(sb, 2)
-				sb.WriteString("return env.Null();\n")
-				g.writeIndent(sb, 1)
-				sb.WriteString("}\n")
-			}
+			argCount += len(*f.Args)
 		}
+		g.writeIndent(sb, 1)
+		sb.WriteString(fmt.Sprintf("if (info.Length() != %d) {\n", argCount))
+		g.writeIndent(sb, 2)
+		sb.WriteString(fmt.Sprintf("Napi::TypeError::New(info.Env(), %q).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects exactly %d args", *f.Ident, argCount)))
+		g.writeIndent(sb, 2)
+		sb.WriteString("return env.Null();\n")
+		g.writeIndent(sb, 1)
+		sb.WriteString("}\n")
 
+		g.writeIndent(sb, 1)
+		sb.WriteString(fmt.Sprintf("if (!info[%d].IsExternal()) {\n", 0))
+		g.writeIndent(sb, 2)
+		sb.WriteString(fmt.Sprintf("Napi::TypeError::New(info.Env(), %q).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects args[%d] to be typeof `%s`", *f.Ident, 0, className)))
+		g.writeIndent(sb, 2)
+		sb.WriteString("return env.Null();\n")
+		g.writeIndent(sb, 1)
+		sb.WriteString("}\n")
+		g.writeIndent(sb, 1)
+		sb.WriteString(fmt.Sprintf("%s::%s* _tmp_external = *static_cast<%s::%s>(info[%d].As<Napi::External>().Data());\n", *g.NameSpace, className, *g.NameSpace, className, 0))
 		if f.Args != nil {
 			for i, arg := range *f.Args {
 				typeHandler, isObject := CPPTypeToTS(*arg.Type)
 				if v, ok := g.conf.TypeMappings[*arg.Type]; ok {
 					g.writeIndent(sb, 1)
-					sb.WriteString(fmt.Sprintf("if (!info[%d].Is%s()) {\n", i, v.NapiType))
+					sb.WriteString(fmt.Sprintf("if (!info[%d].Is%s()) {\n", i+1, v.NapiType))
 					g.writeIndent(sb, 2)
-					sb.WriteString(fmt.Sprintf("Napi::TypeError::New(info.Env(), %q).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects args[%d] to be typeof `%s`", *f.Ident, i, typeHandler)))
+					sb.WriteString(fmt.Sprintf("Napi::TypeError::New(info.Env(), %q).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects args[%d] to be typeof `%s`", *f.Ident, i+1, typeHandler)))
 					g.writeIndent(sb, 2)
 					sb.WriteString("return env.Null();\n")
 					g.writeIndent(sb, 1)
@@ -358,7 +367,7 @@ func (g *PackageGenerator) writeClassField(sb *strings.Builder, f *CPPFieldDecl,
 			sb.WriteString("auto _res = ")
 			returnType = *f.Returns.FullType
 		}
-		sb.WriteString(fmt.Sprintf("this->_%s->%s(", lower_caser.String(className), *f.Ident))
+		sb.WriteString(fmt.Sprintf("_tmp_external->_%s->%s(", lower_caser.String(className), *f.Ident))
 		if f.Args != nil {
 			for i, arg := range *f.Args {
 				if i > 0 {
