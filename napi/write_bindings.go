@@ -349,9 +349,9 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 		g.writeIndent(sb, 2)
 		sb.WriteString(fmt.Sprintf("auto* out = new %s::%s(_res);\n", *g.NameSpace, obj_type))
 		g.writeIndent(sb, 2)
-		sb.WriteString(fmt.Sprintf("auto _wrapped = Napi::External<%s::%s>::New(env, out, [](Napi::Env env, void* ptr) {\n", *g.NameSpace, obj_type))
+		sb.WriteString(fmt.Sprintf("Napi::External<%s::%s> _wrapped = Napi::External<%s::%s>::New(env, out, [](Napi::Env env, void* ptr) {\n", *g.NameSpace, obj_type, *g.NameSpace, obj_type))
 		g.writeIndent(sb, 3)
-		sb.WriteString(fmt.Sprintf("auto* val = static_cast<%s::%s*>(ptr);\n", *g.NameSpace, obj_type))
+		sb.WriteString(fmt.Sprintf("auto* val = reinterpret_cast<%s::%s*>(ptr);\n", *g.NameSpace, obj_type))
 		if v, ok := g.conf.ClassOpts[obj_type]; ok && v.ExternalFinalizer != "" {
 			sb.WriteString(strings.ReplaceAll(v.ExternalFinalizer, "/this/", "val"))
 		}
@@ -423,9 +423,9 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 		g.writeIndent(sb, 1)
 		sb.WriteString(fmt.Sprintf("auto* out = new %s::%s(_res);\n", *g.NameSpace, *m.Returns))
 		g.writeIndent(sb, 1)
-		sb.WriteString(fmt.Sprintf("auto _wrapped = Napi::External<%s::%s>::New(env, out, [](Napi::Env env, void* ptr) {\n", *g.NameSpace, *m.Returns))
+		sb.WriteString(fmt.Sprintf("Napi::External<%s::%s> _wrapped = Napi::External<%s::%s>::New(env, out, [](Napi::Env env, void* ptr) {\n", *g.NameSpace, *m.Returns, *g.NameSpace, *m.Returns))
 		g.writeIndent(sb, 2)
-		sb.WriteString(fmt.Sprintf("auto* val = static_cast<%s::%s*>(ptr);\n", *g.NameSpace, *m.Returns))
+		sb.WriteString(fmt.Sprintf("auto* val = reinterpret_cast<%s::%s*>(ptr);\n", *g.NameSpace, *m.Returns))
 		if v, ok := g.conf.ClassOpts[*m.Returns]; ok && v.ExternalFinalizer != "" {
 			sb.WriteString(strings.ReplaceAll(v.ExternalFinalizer, "/this/", "val"))
 		}
@@ -539,9 +539,9 @@ func (g *PackageGenerator) writeClassField(sb *strings.Builder, f *CPPFieldDecl,
 			g.writeIndent(sb, 1)
 			sb.WriteString(fmt.Sprintf("auto* out = new %s::%s(_res);\n", *g.NameSpace, returnType))
 			g.writeIndent(sb, 1)
-			sb.WriteString(fmt.Sprintf("auto _wrapped = Napi::External<%s::%s>::New(env, out, [](Napi::Env env, void* ptr) {\n", *g.NameSpace, returnType))
+			sb.WriteString(fmt.Sprintf("Napi::External<%s::%s> _wrapped = Napi::External<%s::%s>::New(env, out, [](Napi::Env env, void* ptr) {\n", *g.NameSpace, returnType, *g.NameSpace, returnType))
 			g.writeIndent(sb, 2)
-			sb.WriteString(fmt.Sprintf("auto* val = static_cast<%s::%s*>(ptr);\n", *g.NameSpace, returnType))
+			sb.WriteString(fmt.Sprintf("auto* val = reinterpret_cast<%s::%s*>(ptr);\n", *g.NameSpace, returnType))
 			if v, ok := g.conf.ClassOpts[returnType]; ok && v.ExternalFinalizer != "" {
 				sb.WriteString(strings.ReplaceAll(v.ExternalFinalizer, "/this/", "val"))
 			}
