@@ -168,7 +168,7 @@ packages:
           /return/ = fl::reshape(/return/, shape);
         arg_transforms:
           axis: |
-            auto axis = axisArg(/arg/.As<Napi::Number>().Uint32Value(), g_row_major, /arg_0/->_tensor->ndim());
+            auto axis = axisArg(/arg/.As<Napi::Number>().Uint32Value(), g_row_major, /arg_0/->ndim());
       argmax:
         arg_count: 3
         return_transforms: |
@@ -189,7 +189,7 @@ packages:
           /return/ = fl::reshape(/return/, shape);
         arg_transforms:
           axis: |
-            auto axis = axisArg(/arg/.As<Napi::Number>().Uint32Value(), g_row_major, /arg_0/->_tensor->ndim());
+            auto axis = axisArg(/arg/.As<Napi::Number>().Uint32Value(), g_row_major, /arg_0/->ndim());
       countNonzero:
         arg_count: 3
         return_transforms: |
@@ -392,7 +392,7 @@ packages:
         arg_count: 2
         arg_transforms:
           axes: |
-            auto axes = jsArrayArg<long long>(/arg/.As<Napi::Array>(), g_row_major, /arg_0/->_tensor->ndim(), env);
+            auto axes = jsArrayArg<long long>(/arg/.As<Napi::Array>(), g_row_major, /arg_0/->ndim(), env);
       reshape:
         arg_count: 2
         arg_transforms:
@@ -452,7 +452,7 @@ packages:
             if (temp.External()) {
               Napi::Object tensor_obj = temp.As<Napi::External>();
                 fl::Tensor* tensor = static_cast<fl::Tensor>(temp.As<Napi::External>().Data());
-                out.emplace_back(*(tensor->_tensor));
+                out.emplace_back(*(tensor));
             } else {
               Napi::TypeError::New(env, "jsTensorArrayArg requires `Tensor[]`")
                     .ThrowAsJavaScriptException();
@@ -650,7 +650,7 @@ packages:
         out_type: 'Napi::TypedArrayOf<int64_t>'
         out_var: '_out'
         handler: |
-          const size_t length = static_cast<const size_t>(this->_tensor->ndim());
+          const size_t length = static_cast<const size_t>(this->ndim());
           Napi::TypedArrayOf<int64_t> _out =
               Napi::TypedArrayOf<int64_t>::New(env, length, napi_bigint64_array);
           const int out_len = static_cast<int>(length);
@@ -684,9 +684,9 @@ packages:
             body: |
               Napi::Value Tensor::toFloat32Array(const Napi::CallbackInfo& info) {
                 Napi::Env env = info.Env();
-                size_t elemLen = static_cast<size_t>(this->_tensor->elements());
+                size_t elemLen = static_cast<size_t>(this->elements());
                 size_t byteLen = elemLen * sizeof(float);
-                void* ptr = this->_tensor->astype(fl::dtype::f32).host<float>();
+                void* ptr = this->astype(fl::dtype::f32).host<float>();
                 Napi::ArrayBuffer buff = Napi::ArrayBuffer::New(env, ptr, byteLen);
                 Napi::TypedArrayOf<float> out = Napi::TypedArrayOf<float>::New(env, elemLen, buff, 0, napi_float32_array);
                 return out;
@@ -696,9 +696,9 @@ packages:
             body: |
               Napi::Value Tensor::toFloat64Array(const Napi::CallbackInfo& info) {
                 Napi::Env env = info.Env();
-                size_t elemLen = static_cast<size_t>(this->_tensor->elements());
+                size_t elemLen = static_cast<size_t>(this->elements());
                 size_t byteLen = elemLen * sizeof(double);
-                void* ptr = this->_tensor->astype(fl::dtype::f64).host<double>();
+                void* ptr = this->astype(fl::dtype::f64).host<double>();
                 Napi::ArrayBuffer buff = Napi::ArrayBuffer::New(env, ptr, byteLen);
                 Napi::TypedArrayOf<double> out = Napi::TypedArrayOf<double>::New(env, elemLen, buff, 0, napi_float64_array);
                 return out;
@@ -708,9 +708,9 @@ packages:
             body: |
               Napi::Value Tensor::toBoolInt8Array(const Napi::CallbackInfo& info) {
                 Napi::Env env = info.Env();
-                size_t elemLen = static_cast<size_t>(this->_tensor->elements());
+                size_t elemLen = static_cast<size_t>(this->elements());
                 size_t byteLen = elemLen * sizeof(int8_t);
-                void* ptr = this->_tensor->astype(fl::dtype::b8).host<int>();
+                void* ptr = this->astype(fl::dtype::b8).host<int>();
                 Napi::ArrayBuffer buff = Napi::ArrayBuffer::New(env, ptr, byteLen);
                 Napi::TypedArrayOf<int8_t> out = Napi::TypedArrayOf<int8_t>::New(env, elemLen, buff, 0, napi_int8_array);
                 return out;
@@ -720,9 +720,9 @@ packages:
             body: |
               Napi::Value Tensor::toInt16Array(const Napi::CallbackInfo& info) {
                 Napi::Env env = info.Env();
-                size_t elemLen = static_cast<size_t>(this->_tensor->elements());
+                size_t elemLen = static_cast<size_t>(this->elements());
                 size_t byteLen = elemLen * sizeof(int16_t);
-                void* ptr = this->_tensor->astype(fl::dtype::s16).host<int>();
+                void* ptr = this->astype(fl::dtype::s16).host<int>();
                 Napi::ArrayBuffer buff = Napi::ArrayBuffer::New(env, ptr, byteLen);
                 Napi::TypedArrayOf<int16_t> out = Napi::TypedArrayOf<int16_t>::New(env, elemLen, buff, 0, napi_int16_array);
                 return out;
@@ -732,9 +732,9 @@ packages:
             body: |
               Napi::Value Tensor::toInt32Array(const Napi::CallbackInfo& info) {
                 Napi::Env env = info.Env();
-                size_t elemLen = static_cast<size_t>(this->_tensor->elements());
+                size_t elemLen = static_cast<size_t>(this->elements());
                 size_t byteLen = elemLen * sizeof(int32_t);
-                void* ptr = this->_tensor->astype(fl::dtype::s32).host<int>();
+                void* ptr = this->astype(fl::dtype::s32).host<int>();
                 Napi::ArrayBuffer buff = Napi::ArrayBuffer::New(env, ptr, byteLen);
                 Napi::TypedArrayOf<int32_t> out = Napi::TypedArrayOf<int32_t>::New(env, elemLen, buff, 0, napi_int32_array);
                 return out;
@@ -762,7 +762,7 @@ packages:
                 }
                 Napi::String str = info[0].As<Napi::String>();
                 std::string filename = str.Utf8Value();
-                fl::save(filename, *(this->_tensor));
+                fl::save(filename, *(this));
                 return;
               }
           - name: 'toInt64Array'
@@ -770,9 +770,9 @@ packages:
             body: |
               Napi::Value Tensor::toInt64Array(const Napi::CallbackInfo& info) {
                 Napi::Env env = info.Env();
-                size_t elemLen = static_cast<size_t>(this->_tensor->elements());
+                size_t elemLen = static_cast<size_t>(this->elements());
                 size_t byteLen = elemLen * sizeof(int64_t);
-                void* ptr = this->_tensor->astype(fl::dtype::s64).host<int>();
+                void* ptr = this->astype(fl::dtype::s64).host<int>();
                 Napi::ArrayBuffer buff = Napi::ArrayBuffer::New(env, ptr, byteLen);
                 Napi::TypedArrayOf<int64_t> out = Napi::TypedArrayOf<int64_t>::New(env, elemLen, buff, 0, napi_bigint64_array);
                 return out;
@@ -782,9 +782,9 @@ packages:
             body: |
               Napi::Value Tensor::toUint8Array(const Napi::CallbackInfo& info) {
                 Napi::Env env = info.Env();
-                size_t elemLen = static_cast<size_t>(this->_tensor->elements());
+                size_t elemLen = static_cast<size_t>(this->elements());
                 size_t byteLen = elemLen * sizeof(uint8_t);
-                void* ptr = this->_tensor->astype(fl::dtype::u8).host<unsigned>();
+                void* ptr = this->astype(fl::dtype::u8).host<unsigned>();
                 Napi::ArrayBuffer buff = Napi::ArrayBuffer::New(env, ptr, byteLen);
                 Napi::TypedArrayOf<uint8_t> out = Napi::TypedArrayOf<uint8_t>::New(env, elemLen, buff, 0, napi_uint8_array);
                 return out;
@@ -794,9 +794,9 @@ packages:
             body: |
               Napi::Value Tensor::toUint16Array(const Napi::CallbackInfo& info) {
                 Napi::Env env = info.Env();
-                size_t elemLen = static_cast<size_t>(this->_tensor->elements());
+                size_t elemLen = static_cast<size_t>(this->elements());
                 size_t byteLen = elemLen * sizeof(uint16_t);
-                void* ptr = this->_tensor->astype(fl::dtype::u16).host<unsigned>();
+                void* ptr = this->astype(fl::dtype::u16).host<unsigned>();
                 Napi::ArrayBuffer buff = Napi::ArrayBuffer::New(env, ptr, byteLen);
                 Napi::TypedArrayOf<uint16_t> out = Napi::TypedArrayOf<uint16_t>::New(env, elemLen, buff, 0, napi_uint16_array);
                 return out;
@@ -806,9 +806,9 @@ packages:
             body: |
               Napi::Value Tensor::toUint32Array(const Napi::CallbackInfo& info) {
                 Napi::Env env = info.Env();
-                size_t elemLen = static_cast<size_t>(this->_tensor->elements());
+                size_t elemLen = static_cast<size_t>(this->elements());
                 size_t byteLen = elemLen * sizeof(uint32_t);
-                void* ptr = this->_tensor->astype(fl::dtype::u32).host<unsigned>();
+                void* ptr = this->astype(fl::dtype::u32).host<unsigned>();
                 Napi::ArrayBuffer buff = Napi::ArrayBuffer::New(env, ptr, byteLen);
                 Napi::TypedArrayOf<uint32_t> out = Napi::TypedArrayOf<uint32_t>::New(env, elemLen, buff, 0, napi_uint32_array);
                 return out;
@@ -818,9 +818,9 @@ packages:
             body: |
               Napi::Value Tensor::toUint64Array(const Napi::CallbackInfo& info) {
                 Napi::Env env = info.Env();
-                size_t elemLen = static_cast<size_t>(this->_tensor->elements());
+                size_t elemLen = static_cast<size_t>(this->elements());
                 size_t byteLen = elemLen * sizeof(uint64_t);
-                void* ptr = this->_tensor->astype(fl::dtype::u64).host<unsigned>();
+                void* ptr = this->astype(fl::dtype::u64).host<unsigned>();
                 Napi::ArrayBuffer buff = Napi::ArrayBuffer::New(env, ptr, byteLen);
                 Napi::TypedArrayOf<uint64_t> out = Napi::TypedArrayOf<uint64_t>::New(env, elemLen, buff, 0, napi_biguint64_array);
                 return out;
@@ -829,73 +829,73 @@ packages:
             ts_return_type: 'number'
             body: |
               Napi::Value Tensor::toFloat32Scalar(const Napi::CallbackInfo& info) {
-                return Napi::Number::New(info.Env(), this->_tensor->asScalar<float>());
+                return Napi::Number::New(info.Env(), this->asScalar<float>());
               }
           - name: 'toFloat64Scalar'
             ts_return_type: 'number'
             body: |
               Napi::Value Tensor::toFloat64Scalar(const Napi::CallbackInfo& info) {
-                return Napi::Number::New(info.Env(), this->_tensor->asScalar<double>());
+                return Napi::Number::New(info.Env(), this->asScalar<double>());
               }
           - name: 'toBoolInt8Scalar'
             ts_return_type: 'number'
             body: |
               Napi::Value Tensor::toBoolInt8Scalar(const Napi::CallbackInfo& info) {
-                return Napi::Number::New(info.Env(), this->_tensor->asScalar<char>());
+                return Napi::Number::New(info.Env(), this->asScalar<char>());
               }
           - name: 'toInt16Scalar'
             ts_return_type: 'number'
             body: |
               Napi::Value Tensor::toInt16Scalar(const Napi::CallbackInfo& info) {
-                return Napi::Number::New(info.Env(), this->_tensor->asScalar<int16_t>());
+                return Napi::Number::New(info.Env(), this->asScalar<int16_t>());
               }
           - name: 'toInt32Scalar'
             ts_return_type: 'number'
             body: |
               Napi::Value Tensor::toInt32Scalar(const Napi::CallbackInfo& info) {
-                return Napi::Number::New(info.Env(), this->_tensor->asScalar<int32_t>());
+                return Napi::Number::New(info.Env(), this->asScalar<int32_t>());
               }
           - name: 'toInt64Scalar'
             ts_return_type: 'bigint'
             body: |
               Napi::Value Tensor::toInt64Scalar(const Napi::CallbackInfo& info) {
-                return Napi::BigInt::New(info.Env(), static_cast<int64_t>(this->_tensor->asScalar<int64_t>()));
+                return Napi::BigInt::New(info.Env(), static_cast<int64_t>(this->asScalar<int64_t>()));
               }
           - name: 'toUint8Scalar'
             ts_return_type: 'number'
             body: |
               Napi::Value Tensor::toUint8Scalar(const Napi::CallbackInfo& info) {
-                return Napi::Number::New(info.Env(), this->_tensor->asScalar<uint8_t>());
+                return Napi::Number::New(info.Env(), this->asScalar<uint8_t>());
               }
           - name: 'toUint16Scalar'
             ts_return_type: 'number'
             body: |
               Napi::Value Tensor::toUint16Scalar(const Napi::CallbackInfo& info) {
-                return Napi::Number::New(info.Env(), this->_tensor->asScalar<uint16_t>());
+                return Napi::Number::New(info.Env(), this->asScalar<uint16_t>());
               }
           - name: 'toUint32Scalar'
             ts_return_type: 'number'
             body: |
               Napi::Value Tensor::toUint32Scalar(const Napi::CallbackInfo& info) {
-                return Napi::Number::New(info.Env(), this->_tensor->asScalar<uint32_t>());
+                return Napi::Number::New(info.Env(), this->asScalar<uint32_t>());
               }
           - name: 'toUint64Scalar'
             ts_return_type: 'bigint'
             body: |
               Napi::Value Tensor::toUint64Scalar(const Napi::CallbackInfo& info) {
-                return Napi::BigInt::New(info.Env(), static_cast<int64_t>(this->_tensor->asScalar<uint64_t>()));
+                return Napi::BigInt::New(info.Env(), static_cast<int64_t>(this->asScalar<uint64_t>()));
               }
           - name: 'eval'
             is_void: true
             body: |
               void Tensor::eval(const Napi::CallbackInfo& info) {
-                fl::eval(*(this->_tensor));
+                fl::eval(*(this));
               }
           - name: 'dispose'
             is_void: true
             body: |
               void Tensor::dispose(const Napi::CallbackInfo& info) {
-                auto& tensor = *static_cast<fl::Tensor*>(this->_tensor);
+                auto& tensor = *static_cast<fl::Tensor*>(this);
                 g_bytes_used -= tensor.bytes();
                 fl::detail::releaseAdapterUnsafe(tensor);
               }
