@@ -217,6 +217,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 		if i > expected_count {
 			break
 		}
+		tmpType := *arg.Type
 		if v, ok := g.conf.MethodTransforms[*m.Ident].ArgTransforms[*arg.Ident]; ok && strings.Contains(v, "/arg_") {
 			g.writeIndent(sb, 2)
 			if strings.Contains(v, "/arg_") {
@@ -228,9 +229,8 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 			sb.WriteString(strings.ReplaceAll(v, "/arg/", fmt.Sprintf("info[%d]", i)))
 		} else if isClass(*arg.Type, classes) {
 			obj_name = *arg.Ident
-		} else if strings.Contains(*arg.Type, "std::vector") {
+		} else if strings.Contains(*arg.Type, "std::vector") && !strings.EqualFold(tmpType[strings.Index(*arg.Type, "<")+1:strings.Index(*arg.Type, ">")], *m.Returns) {
 			g.writeIndent(sb, 2)
-			tmpType := *arg.Type
 			sb.WriteString(fmt.Sprintf("auto axes = jsArrayArg<%s>(info[%d].As<Napi::Array>(), g_row_major, %s->ndim(), env);\n", tmpType[strings.Index(*arg.Type, "<")+1:strings.Index(*arg.Type, ">")], i, obj_name))
 		} else {
 			fmt.Println("TODO: handle type ", *arg.Type)
@@ -462,13 +462,12 @@ func (g *PackageGenerator) writeBindings(sb *strings.Builder, classes map[string
 	for _, f := range g.conf.GlobalForcedMethods {
 		sb.WriteString(fmt.Sprintf("%s\n", strings.Replace(f.FnBody, f.Name, "_"+f.Name, 1)))
 	}
+
 	// writes NAPI `Init` function (init NAPI exports)
 	sb.WriteString("// NAPI exports\n")
 	sb.WriteString("Napi::Object Init(Napi::Env env, Napi::Object exports) {\n")
 	for name, c := range classes {
 		if c.Decl != nil {
-			g.writeClassDeleter(sb, c, name)
-			g.writeClassExternalizer(sb, c, name)
 			if c.FieldDecl != nil {
 				for _, f := range *c.FieldDecl {
 					if f.Ident != nil && g.conf.IsFieldWrapped(name, *f.Ident) {
