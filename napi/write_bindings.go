@@ -667,25 +667,12 @@ func (g *PackageGenerator) writeBindings(sb *strings.Builder, classes map[string
 		g.writeMethod(sb, f, classes, nil)
 	}
 
-	for name, c := range classes {
-		if c.Decl != nil {
-			g.writeClass(sb, c, classes, name, methods, processedMethods)
-		}
-	}
-
 	for _, f := range g.conf.GlobalForcedMethods {
 		sb.WriteString(fmt.Sprintf("%s\n", strings.Replace(f.FnBody, f.Name, "_"+f.Name, 1)))
 	}
 	// writes NAPI `Init` function (init NAPI exports)
 	sb.WriteString("// NAPI exports\n")
 	sb.WriteString("Napi::Object Init(Napi::Env env, Napi::Object exports) {\n")
-	for name, c := range classes {
-		if c.Decl != nil {
-			g.writeIndent(sb, 1)
-			parsedName := ("_" + name)
-			sb.WriteString(fmt.Sprintf("exports.Set(Napi::String::New(env, %q), %s::GetClass(env));\n", parsedName, name))
-		}
-	}
 	for _, f := range methods {
 		g.writeIndent(sb, 1)
 		parsedName := ("_" + *f.Ident)

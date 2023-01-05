@@ -93,7 +93,7 @@ func (g *TSGo) Generate() error {
 			Input:     &input,
 		}
 		g.packageGenerators[*napiGen.Path] = napiGen
-		bindings, header, env_wrapper, err := napiGen.Generate()
+		bindings, env_wrapper, err := napiGen.Generate()
 		if err != nil {
 			return err
 		}
@@ -114,11 +114,6 @@ func (g *TSGo) Generate() error {
 		outPath = napiGen.conf.ResolvedHeaderOutPath(filepath.Dir(napiConfig.Path))
 		cmd_str = append(cmd_str, outPath)
 		err = os.MkdirAll(filepath.Dir(outPath), os.ModePerm)
-		if err != nil {
-			return nil
-		}
-
-		err = os.WriteFile(outPath, []byte(header), os.ModePerm)
 		if err != nil {
 			return nil
 		}

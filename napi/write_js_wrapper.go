@@ -7,11 +7,6 @@ import (
 
 func (g *PackageGenerator) WriteEnvWrapper(sb *strings.Builder, classes map[string]*CPPClass, methods map[string]*CPPMethod, processedMethods map[string]*CPPMethod) {
 	sb.WriteString(g.WriteEnvImports(classes, methods, processedMethods))
-	for name, c := range classes {
-		if c.Decl != nil {
-			sb.WriteString(g.WriteEnvClassWrapper(name, c, methods, processedMethods))
-		}
-	}
 	sb.WriteString(g.WriteEnvWrappedFns(methods, processedMethods, classes))
 	if !g.conf.IsEnvTS() {
 		sb.WriteString(g.WriteEnvExports(classes, methods, processedMethods))
