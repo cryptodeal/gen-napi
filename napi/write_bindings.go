@@ -149,7 +149,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 					sb.WriteString("}\n")
 					if _, ok := g.conf.MethodTransforms[*m.Ident].ArgTransforms[*arg.Ident]; !ok {
 						g.writeIndent(sb, 1)
-						sb.WriteString(fmt.Sprintf("%s::%s* %s = UnExternalize<%s::%s*>(info[%d]);\n", *g.NameSpace, *arg.Type, *arg.Ident, *g.NameSpace, *arg.Type, i))
+						sb.WriteString(fmt.Sprintf("%s::%s* %s = UnExternalize<%s::%s>(info[%d]);\n", *g.NameSpace, *arg.Type, *arg.Ident, *g.NameSpace, *arg.Type, i))
 					}
 				} else if strings.Contains(*arg.Type, "std::vector") {
 					argType := *arg.Type
@@ -338,7 +338,7 @@ func (g *PackageGenerator) writeClassField(sb *strings.Builder, f *CPPFieldDecl,
 		g.writeIndent(sb, 1)
 		sb.WriteString("}\n")
 		g.writeIndent(sb, 1)
-		sb.WriteString(fmt.Sprintf("%s::%s* _tmp_external = UnExternalize<%s::%s*>(info[%d]);\n", *g.NameSpace, className, *g.NameSpace, className, 0))
+		sb.WriteString(fmt.Sprintf("%s::%s* _tmp_external = UnExternalize<%s::%s>(info[%d]);\n", *g.NameSpace, className, *g.NameSpace, className, 0))
 		if f.Args != nil {
 			for i, arg := range *f.Args {
 				typeHandler, isObject := CPPTypeToTS(*arg.Type)
