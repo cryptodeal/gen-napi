@@ -42,14 +42,17 @@ func (g *PackageGenerator) writeHelpers(w *strings.Builder, classes map[string]*
 					g.writeClassUnExternalizer(w)
 					hasUnexternalizer = true
 				}
+
 				if c.FieldDecl != nil {
 					for _, f := range *c.FieldDecl {
 						g.writeClassField(w, f, name, classes)
 					}
 				}
+
 				if v, ok := g.conf.ClassOpts[name]; ok && len(v.ForcedMethods) > 0 {
 					for _, f := range v.ForcedMethods {
 						w.WriteString(strings.Replace(f.FnBody, f.Name, "_"+f.Name, 1))
+						w.WriteByte('\n')
 					}
 				}
 			}
