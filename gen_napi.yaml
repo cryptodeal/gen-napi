@@ -50,8 +50,9 @@ packages:
       static std::atomic<bool> g_row_major = true;
     global_type_out_transforms:
       Tensor: |
-        g_bytes_used += /return/.bytes();
-        Napi::MemoryManagement::AdjustExternalMemory(env, /return/.bytes());
+        auto _out_byte_count = static_cast<int64_t>(/return/.bytes());
+        g_bytes_used += _out_byte_count;
+        Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
     method_transforms:
       arange:
         arg_count: 3
@@ -491,7 +492,9 @@ packages:
             fl::Tensor tensor;
             fl::load(filename, tensor);
             auto* t = new fl::Tensor(tensor);
-            g_bytes_used += t->bytes();
+            auto _out_bytes_used = static_cast<int64_t>(t->bytes());
+            g_bytes_used += _out_bytes_used;
+            Napi::MemoryManagement::AdjustExternalMemory(env, _out_bytes_used);
             return t;
           } catch (std::exception const& e) {
             Napi::TypeError::New(env, e.what()).ThrowAsJavaScriptException();
@@ -613,8 +616,9 @@ packages:
                 jsArrayArg<long long>(info[0].As<Napi::Array>(), g_row_major, false, env);
             fl::Tensor t;
             t = fl::rand(fl::Shape(shape));
-            g_bytes_used += t.bytes();
-            Napi::MemoryManagement::AdjustExternalMemory(env, t.bytes());
+            auto _out_bytes_used = static_cast<int64_t>(t.bytes());
+            g_bytes_used += _out_bytes_used;
+            Napi::MemoryManagement::AdjustExternalMemory(env, _out_bytes_used);
             auto* tensor = new fl::Tensor(t);
             Napi::External<fl::Tensor> wrapped = ExternalizeTensor(env, tensor);
             return wrapped;
@@ -635,8 +639,9 @@ packages:
                 jsArrayArg<long long>(info[0].As<Napi::Array>(), g_row_major, false, env);
             fl::Tensor t;
             t = fl::randn(fl::Shape(shape));
-            g_bytes_used += t.bytes();
-            Napi::MemoryManagement::AdjustExternalMemory(env, t.bytes());
+            auto _out_bytes_used = static_cast<int64_t>(t.bytes());
+            g_bytes_used += _out_bytes_used;
+            Napi::MemoryManagement::AdjustExternalMemory(env, _out_bytes_used);
             auto* tensor = new fl::Tensor(t);
             Napi::External<fl::Tensor> wrapped = ExternalizeTensor(env, tensor);
             return wrapped;
@@ -663,8 +668,9 @@ packages:
       Tensor:
         ext_finalizer_transform: |
           if (/this/->hasAdapter()) {
-            g_bytes_used -= /this/->bytes();
-            Napi::MemoryManagement::AdjustExternalMemory(env, /this/->bytes());
+            auto byte_count = static_cast<int64_t>(/this/->bytes());
+            g_bytes_used -= byte_count;
+            Napi::MemoryManagement::AdjustExternalMemory(env, -byte_count);
           }
         fields:
           - name: 'copy'
@@ -1152,8 +1158,9 @@ packages:
                       .ThrowAsJavaScriptException();
                 }
                 fl::Tensor& t = *UnExternalize<fl::Tensor>(info[0]);
-                g_bytes_used -= t.bytes();
-                Napi::MemoryManagement::AdjustExternalMemory(env, -t.bytes());
+                auto byte_count = static_cast<int64_t>(t.bytes());
+                g_bytes_used -= byte_count;
+                Napi::MemoryManagement::AdjustExternalMemory(env, -byte_count);
                 fl::detail::releaseAdapterUnsafe(t);
               }
           - name: 'tensorFromFloat32Array'
@@ -1186,8 +1193,9 @@ packages:
                 float* ptr = float_array.Data();
                 auto* t = new fl::Tensor(
                     fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
-                g_bytes_used += t->bytes();
-                Napi::MemoryManagement::AdjustExternalMemory(env, t->bytes());
+                auto _out_bytes_used = static_cast<int64_t>(t->bytes());
+                g_bytes_used += _out_bytes_used;
+                Napi::MemoryManagement::AdjustExternalMemory(env, _out_bytes_used);
                 Napi::External<fl::Tensor> wrapped = ExternalizeTensor(env, t);
                 return wrapped;
               }
@@ -1221,8 +1229,9 @@ packages:
                 double* ptr = double_array.Data();
                 auto* t = new fl::Tensor(
                     fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
-                g_bytes_used += t->bytes();
-                Napi::MemoryManagement::AdjustExternalMemory(env, t->bytes());
+                auto _out_bytes_used = static_cast<int64_t>(t->bytes());
+                g_bytes_used += _out_bytes_used;
+                Napi::MemoryManagement::AdjustExternalMemory(env, _out_bytes_used);
                 Napi::External<fl::Tensor> wrapped = ExternalizeTensor(env, t);
                 return wrapped;
               }
@@ -1256,8 +1265,9 @@ packages:
                 char* ptr = reinterpret_cast<char*>(int8_array.Data());
                 auto* t = new fl::Tensor(
                     fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
-                g_bytes_used += t->bytes();
-                Napi::MemoryManagement::AdjustExternalMemory(env, t->bytes());
+                auto _out_bytes_used = static_cast<int64_t>(t->bytes());
+                g_bytes_used += _out_bytes_used;
+                Napi::MemoryManagement::AdjustExternalMemory(env, _out_bytes_used);
                 Napi::External<fl::Tensor> wrapped = ExternalizeTensor(env, t);
                 return wrapped;
               }
@@ -1291,8 +1301,9 @@ packages:
                 int16_t* ptr = int16_array.Data();
                 auto* t = new fl::Tensor(
                     fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
-                g_bytes_used += t->bytes();
-                Napi::MemoryManagement::AdjustExternalMemory(env, t->bytes());
+                auto _out_bytes_used = static_cast<int64_t>(t->bytes());
+                g_bytes_used += _out_bytes_used;
+                Napi::MemoryManagement::AdjustExternalMemory(env, _out_bytes_used);
                 Napi::External<fl::Tensor> wrapped = ExternalizeTensor(env, t);
                 return wrapped;
               }
@@ -1326,8 +1337,9 @@ packages:
                 int32_t* ptr = int32_array.Data();
                 auto* t = new fl::Tensor(
                     fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
-                g_bytes_used += t->bytes();
-                Napi::MemoryManagement::AdjustExternalMemory(env, t->bytes());
+                auto _out_bytes_used = static_cast<int64_t>(t->bytes());
+                g_bytes_used += _out_bytes_used;
+                Napi::MemoryManagement::AdjustExternalMemory(env, _out_bytes_used);
                 Napi::External<fl::Tensor> wrapped = ExternalizeTensor(env, t);
                 return wrapped;
               }
@@ -1361,8 +1373,9 @@ packages:
                 int64_t* ptr = int64_array.Data();
                 auto* t = new fl::Tensor(
                     fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
-                g_bytes_used += t->bytes();
-                Napi::MemoryManagement::AdjustExternalMemory(env, t->bytes());
+                auto _out_bytes_used = static_cast<int64_t>(t->bytes());
+                g_bytes_used += _out_bytes_used;
+                Napi::MemoryManagement::AdjustExternalMemory(env, _out_bytes_used);
                 Napi::External<fl::Tensor> wrapped = ExternalizeTensor(env, t);
                 return wrapped;
               }
@@ -1396,8 +1409,9 @@ packages:
                 uint8_t* ptr = uint8_array.Data();
                 auto* t = new fl::Tensor(
                     fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
-                g_bytes_used += t->bytes();
-                Napi::MemoryManagement::AdjustExternalMemory(env, t->bytes());
+                auto _out_bytes_used = static_cast<int64_t>(t->bytes());
+                g_bytes_used += _out_bytes_used;
+                Napi::MemoryManagement::AdjustExternalMemory(env, _out_bytes_used);
                 Napi::External<fl::Tensor> wrapped = ExternalizeTensor(env, t);
                 return wrapped;
               }
@@ -1431,8 +1445,9 @@ packages:
                 uint16_t* ptr = uint16_array.Data();
                 auto* t = new fl::Tensor(
                     fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
-                g_bytes_used += t->bytes();
-                Napi::MemoryManagement::AdjustExternalMemory(env, t->bytes());
+                auto _out_bytes_used = static_cast<int64_t>(t->bytes());
+                g_bytes_used += _out_bytes_used;
+                Napi::MemoryManagement::AdjustExternalMemory(env, _out_bytes_used);
                 Napi::External<fl::Tensor> wrapped = ExternalizeTensor(env, t);
                 return wrapped;
               }
@@ -1466,8 +1481,9 @@ packages:
                 uint32_t* ptr = uint32_array.Data();
                 auto* t = new fl::Tensor(
                     fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
-                g_bytes_used += t->bytes();
-                Napi::MemoryManagement::AdjustExternalMemory(env, t->bytes());
+                auto _out_bytes_used = static_cast<int64_t>(t->bytes());
+                g_bytes_used += _out_bytes_used;
+                Napi::MemoryManagement::AdjustExternalMemory(env, _out_bytes_used);
                 Napi::External<fl::Tensor> wrapped = ExternalizeTensor(env, t);
                 return wrapped;
               }
@@ -1501,8 +1517,9 @@ packages:
                 uint64_t* ptr = int64_array.Data();
                 auto* t = new fl::Tensor(
                     fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
-                g_bytes_used += t->bytes();
-                Napi::MemoryManagement::AdjustExternalMemory(env, t->bytes());
+                auto _out_bytes_used = static_cast<int64_t>(t->bytes());
+                g_bytes_used += _out_bytes_used;
+                Napi::MemoryManagement::AdjustExternalMemory(env, _out_bytes_used);
                 Napi::External<fl::Tensor> wrapped = ExternalizeTensor(env, t);
                 return wrapped;
               }
