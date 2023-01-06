@@ -1153,9 +1153,10 @@ packages:
                 fl::detail::releaseAdapterUnsafe(t);
               }
           - name: 'tensorFromFloat32Array'
+            ts_return_type: 'Tensor'
             args:
-              - name: 'tensor'
-                ts_type: 'Tensor'
+              - name: 'arr'
+                ts_type: 'Float32Array'
             body: |
               static Napi::Value tensorFromFloat32Array(const Napi::CallbackInfo& info) {
                 Napi::Env env = info.Env();
@@ -1186,9 +1187,10 @@ packages:
                 return wrapped;
               }
           - name: 'tensorFromFloat64Array'
+            ts_return_type: 'Tensor'
             args:
-              - name: 'tensor'
-                ts_type: 'Tensor'
+              - name: 'arr'
+                ts_type: 'Float64Array'
             body: |
               static Napi::Value tensorFromFloat64Array(const Napi::CallbackInfo& info) {
                 Napi::Env env = info.Env();
@@ -1219,9 +1221,10 @@ packages:
                 return wrapped;
               }
           - name: 'tensorFromBoolInt8Array'
+            ts_return_type: 'Tensor'
             args:
-              - name: 'tensor'
-                ts_type: 'Tensor'
+              - name: 'arr'
+                ts_type: 'Int8Array'
             body: |
               static Napi::Value tensorFromBoolInt8Array(const Napi::CallbackInfo& info) {
                 Napi::Env env = info.Env();
@@ -1252,9 +1255,10 @@ packages:
                 return wrapped;
               }
           - name: 'tensorFromInt16Array'
+            ts_return_type: 'Tensor'
             args:
-              - name: 'tensor'
-                ts_type: 'Tensor'
+              - name: 'arr'
+                ts_type: 'Int16Array'
             body: |
               static Napi::Value tensorFromInt16Array(const Napi::CallbackInfo& info) {
                 Napi::Env env = info.Env();
@@ -1285,9 +1289,10 @@ packages:
                 return wrapped;
               }
           - name: 'tensorFromInt32Array'
+            ts_return_type: 'Tensor'
             args:
-              - name: 'tensor'
-                ts_type: 'Tensor'
+              - name: 'arr'
+                ts_type: 'Int32Array'
             body: |
               static Napi::Value tensorFromInt32Array(const Napi::CallbackInfo& info) {
                 Napi::Env env = info.Env();
@@ -1318,9 +1323,10 @@ packages:
                 return wrapped;
               }
           - name: 'tensorFromInt64Array'
+            ts_return_type: 'Tensor'
             args:
-              - name: 'tensor'
-                ts_type: 'Tensor'
+              - name: 'arr'
+                ts_type: 'BigInt64Array'
             body: |
               static Napi::Value tensorFromInt64Array(const Napi::CallbackInfo& info) {
                 Napi::Env env = info.Env();
@@ -1351,9 +1357,10 @@ packages:
                 return wrapped;
               }
           - name: 'tensorFromUint8Array'
+            ts_return_type: 'Tensor'
             args:
-              - name: 'tensor'
-                ts_type: 'Tensor'
+              - name: 'arr'
+                ts_type: 'Uint8Array'
             body: |
               static Napi::Value tensorFromUint8Array(const Napi::CallbackInfo& info) {
                 Napi::Env env = info.Env();
@@ -1384,9 +1391,10 @@ packages:
                 return wrapped;
               }
           - name: 'tensorFromUint16Array'
+            ts_return_type: 'Tensor'
             args:
-              - name: 'tensor'
-                ts_type: 'Tensor'
+              - name: 'arr'
+                ts_type: 'Uint16Array'
             body: |
               static Napi::Value tensorFromUint16Array(const Napi::CallbackInfo& info) {
                 Napi::Env env = info.Env();
@@ -1418,8 +1426,9 @@ packages:
               }
           - name: 'tensorFromUint32Array'
             args:
-              - name: 'tensor'
-                ts_type: 'Tensor'
+              - name: 'arr'
+                ts_type: 'Uint32Array'
+            ts_return_type: 'Tensor'
             body: |
               static Napi::Value tensorFromUint32Array(const Napi::CallbackInfo& info) {
                 Napi::Env env = info.Env();
@@ -1451,8 +1460,9 @@ packages:
               }
           - name: 'tensorFromUint64Array'
             args:
-              - name: 'tensor'
-                ts_type: 'Tensor'
+              - name: 'arr'
+                ts_type: 'BigUint64Array'
+            ts_return_type: 'Tensor'
             body: |
               static Napi::Value tensorFromUint64Array(const Napi::CallbackInfo& info) {
                 Napi::Env env = info.Env();

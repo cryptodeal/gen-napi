@@ -5,6 +5,16 @@ import (
 	"strings"
 )
 
+func isInvalidName(name string) bool {
+	invalid := []string{"var", "eval"}
+	for _, n := range invalid {
+		if strings.EqualFold(name, n) {
+			return true
+		}
+	}
+	return false
+}
+
 func (g *PackageGenerator) WriteEnvWrapper(sb *strings.Builder, classes map[string]*CPPClass, methods map[string]*CPPMethod, processedMethods map[string]*CPPMethod) {
 	sb.WriteString(g.conf.JSWrapperOpts.FrontMatter)
 	sb.WriteString(g.WriteEnvImports(classes, methods, processedMethods))
@@ -20,7 +30,7 @@ func (g *PackageGenerator) WriteEnvExports(classes map[string]*CPPClass, methods
 	used := []string{}
 	for name, m := range methods {
 		if !g.conf.IsMethodIgnored(*m.Ident) {
-			if name == "var" {
+			if isInvalidName(name) {
 				used = append(used, "_"+name)
 			} else {
 				used = append(used, name)
@@ -38,7 +48,7 @@ func (g *PackageGenerator) WriteEnvExports(classes map[string]*CPPClass, methods
 	used = []string{}
 	for name, m := range processedMethods {
 		if !g.conf.IsMethodIgnored(*m.Ident) {
-			if name == "var" {
+			if isInvalidName(name) {
 				used = append(used, "_"+name)
 			} else {
 				used = append(used, name)
@@ -100,7 +110,7 @@ func (g *PackageGenerator) WriteEnvImports(classes map[string]*CPPClass, methods
 			sb.WriteString(",\n")
 		}
 		g.writeIndent(sb, 1)
-		if name == "var" {
+		if isInvalidName(name) {
 			sb.WriteString(fmt.Sprintf("_%s: __%s", name, name))
 		} else {
 			sb.WriteString(fmt.Sprintf("_%s", name))
@@ -122,7 +132,7 @@ func (g *PackageGenerator) WriteEnvImports(classes map[string]*CPPClass, methods
 			sb.WriteString(",\n")
 		}
 		g.writeIndent(sb, 1)
-		if name == "var" {
+		if isInvalidName(name) {
 			sb.WriteString(fmt.Sprintf("_%s: __%s", name, name))
 		} else {
 			sb.WriteString(fmt.Sprintf("_%s", name))
@@ -137,7 +147,7 @@ func (g *PackageGenerator) WriteEnvImports(classes map[string]*CPPClass, methods
 			sb.WriteString(",\n")
 		}
 		g.writeIndent(sb, 1)
-		if m.Name == "var" {
+		if isInvalidName(m.Name) {
 			sb.WriteString(fmt.Sprintf("_%s: __%s", m.Name, m.Name))
 		} else {
 			sb.WriteString(fmt.Sprintf("_%s", m.Name))
@@ -157,7 +167,7 @@ func (g *PackageGenerator) WriteEnvWrappedFns(methods map[string]*CPPMethod, pro
 			if g.conf.IsEnvTS() {
 				sb.WriteString("export ")
 			}
-			if *m.Ident == "var" {
+			if isInvalidName(*m.Ident) {
 				sb.WriteString(fmt.Sprintf("const %s = (", "_"+*m.Ident))
 			} else {
 				sb.WriteString(fmt.Sprintf("const %s = (", *m.Ident))
@@ -199,7 +209,7 @@ func (g *PackageGenerator) WriteEnvWrappedFns(methods map[string]*CPPMethod, pro
 			if isClass(tsType, classes) {
 				sb.WriteString(fmt.Sprintf("new %s(", tsType))
 			}
-			if *m.Ident == "var" {
+			if isInvalidName(*m.Ident) {
 				sb.WriteString(fmt.Sprintf("__%s(", *m.Ident))
 			} else {
 				sb.WriteString(fmt.Sprintf("_%s(", *m.Ident))
@@ -231,7 +241,7 @@ func (g *PackageGenerator) WriteEnvWrappedFns(methods map[string]*CPPMethod, pro
 					if g.conf.IsEnvTS() {
 						sb.WriteString("export ")
 					}
-					if m.Name == "var" {
+					if isInvalidName(m.Name) {
 						sb.WriteString(fmt.Sprintf("const %s = (", "_"+m.Name))
 					} else {
 						sb.WriteString(fmt.Sprintf("const %s = (", m.Name))
@@ -259,7 +269,7 @@ func (g *PackageGenerator) WriteEnvWrappedFns(methods map[string]*CPPMethod, pro
 					if isClass(m.TSReturnType, classes) {
 						sb.WriteString(fmt.Sprintf("new %s(", m.TSReturnType))
 					}
-					if m.Name == "var" {
+					if isInvalidName(m.Name) {
 						sb.WriteString(fmt.Sprintf("__%s(", m.Name))
 					} else {
 						sb.WriteString(fmt.Sprintf("_%s(", m.Name))
@@ -286,7 +296,7 @@ func (g *PackageGenerator) WriteEnvWrappedFns(methods map[string]*CPPMethod, pro
 				if g.conf.IsEnvTS() {
 					sb.WriteString("export ")
 				}
-				if *m.Ident == "var" {
+				if isInvalidName(*m.Ident) {
 					sb.WriteString(fmt.Sprintf("const %s = (", "_"+*m.Ident))
 				} else {
 					sb.WriteString(fmt.Sprintf("const %s = (", *m.Ident))
@@ -320,7 +330,7 @@ func (g *PackageGenerator) WriteEnvWrappedFns(methods map[string]*CPPMethod, pro
 				if isClass(tsType, classes) {
 					sb.WriteString(fmt.Sprintf("new %s(", tsType))
 				}
-				if *m.Ident == "var" {
+				if isInvalidName(*m.Ident) {
 					sb.WriteString(fmt.Sprintf("__%s(", *m.Ident))
 				} else {
 					sb.WriteString(fmt.Sprintf("_%s(", *m.Ident))
@@ -347,7 +357,7 @@ func (g *PackageGenerator) WriteEnvWrappedFns(methods map[string]*CPPMethod, pro
 		if g.conf.IsEnvTS() {
 			sb.WriteString("export ")
 		}
-		if m.Name == "var" {
+		if isInvalidName(m.Name) {
 			sb.WriteString(fmt.Sprintf("const %s = (", "_"+m.Name))
 		} else {
 			sb.WriteString(fmt.Sprintf("const %s = (", m.Name))
@@ -375,7 +385,7 @@ func (g *PackageGenerator) WriteEnvWrappedFns(methods map[string]*CPPMethod, pro
 		if isClass(m.TSReturnType, classes) {
 			sb.WriteString(fmt.Sprintf("new %s(", m.TSReturnType))
 		}
-		if m.Name == "var" {
+		if isInvalidName(m.Name) {
 			sb.WriteString(fmt.Sprintf("__%s(", m.Name))
 		} else {
 			sb.WriteString(fmt.Sprintf("_%s(", m.Name))
