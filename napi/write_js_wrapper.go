@@ -92,7 +92,7 @@ func (g *PackageGenerator) WriteEnvImports(classes map[string]*CPPClass, methods
 						sb.WriteString(",\n")
 					}
 					g.writeIndent(sb, 1)
-					if isInvalidName(name) {
+					if isInvalidName(m.Name) {
 						sb.WriteString(fmt.Sprintf("_%s: __%s", m.Name, m.Name))
 					} else {
 						sb.WriteString(fmt.Sprintf("_%s", m.Name))
