@@ -111,15 +111,13 @@ func (g *TSGo) Generate() error {
 			return nil
 		}
 
-		outPath = napiGen.conf.ResolvedHeaderOutPath(filepath.Dir(napiConfig.Path))
-		cmd_str = append(cmd_str, outPath)
+		outPath = napiGen.conf.ResolvedWrapperOutPath(filepath.Dir(napiConfig.Path))
 		err = os.MkdirAll(filepath.Dir(outPath), os.ModePerm)
 		if err != nil {
 			return nil
 		}
 
-		outPath = napiGen.conf.ResolvedWrapperOutPath(filepath.Dir(napiConfig.Path))
-		err = os.MkdirAll(filepath.Dir(outPath), os.ModePerm)
+		err = os.WriteFile(outPath, []byte(env_wrapper), os.ModePerm)
 		if err != nil {
 			return nil
 		}
@@ -127,11 +125,6 @@ func (g *TSGo) Generate() error {
 		// programatically exec clang-format
 		cmd := exec.Command("clang-format", cmd_str...)
 		err = cmd.Run()
-		if err != nil {
-			return nil
-		}
-
-		err = os.WriteFile(outPath, []byte(env_wrapper), os.ModePerm)
 		if err != nil {
 			return nil
 		}
