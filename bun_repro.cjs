@@ -11,14 +11,15 @@ function genRand() {
 
 const t0 = performance.now() / 1e3
 let m = 0
-for (let i = 0; i < 10000; ++i) {
+for (let i = 0; i < 100000; ++i) {
   // console.log('bytes: ', Number(sm.bytesUsed()))
   const a = sm.rand([128])
-  const b = new Tensor(genRand())
+  const b = sm.rand([128])
+  //const b = new Tensor(genRand())
   m += a.add(b).mean([], false).toFloat32Scalar()
+  //console.log('bytes: ', Number(sm.bytesUsed()))
 }
 const t1 = performance.now() / 1e3
 console.log(t1 - t0, 'seconds to calculate', m)
 m = null
-Bun.gc(true)
 console.log('bytes: ', Number(sm.bytesUsed()))

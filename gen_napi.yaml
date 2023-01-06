@@ -21,7 +21,7 @@ packages:
       front_matter: |
         const { Tensor } = require('./tensor.cjs')
       addon_path: 'build/Release/shumai_bindings.node'
-      wrapper_out_path: 'test/js/index.cjs'
+      wrapper_out_path: 'test/js/index.ts'
     ignored_methods:
       - 'scalar'
       - 'pad'
