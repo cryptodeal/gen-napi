@@ -445,7 +445,7 @@ packages:
         }
       jsTensorArrayArg: |
         template <typename T>
-        std::vector<T> jsTensorArrayArg(Napi::Array arr, Napi::Env env) {
+        static inline std::vector<T> jsTensorArrayArg(Napi::Array arr, Napi::Env env) {
           std::vector<T> out;
           const size_t len = static_cast<size_t>(arr.Length());
           out.reserve(len);
@@ -463,7 +463,7 @@ packages:
           return out;
         }
       axisArg: |
-        uint32_t axisArg(int32_t axis, bool reverse, int ndim) {
+        static inline uint32_t axisArg(int32_t axis, bool reverse, int ndim) {
           if (!reverse) {
             return static_cast<uint32_t>(axis);
           }
@@ -475,7 +475,7 @@ packages:
         }
       ptrArrayArg: |
         template <typename T>
-        std::vector<T> ptrArrayArg(const void* ptr, int len) {
+        static inline std::vector<T> ptrArrayArg(const void* ptr, int len) {
           std::vector<T> out;
           out.reserve(len);
           for (auto i = 0; i < len; ++i) {
@@ -486,7 +486,7 @@ packages:
           return out;
         }
       load: |
-        fl::Tensor* load(std::string filename, Napi::Env env) {
+        static inline fl::Tensor* load(std::string filename, Napi::Env env) {
           try {
             fl::Tensor tensor;
             fl::load(filename, tensor);
@@ -614,6 +614,7 @@ packages:
             fl::Tensor t;
             t = fl::rand(fl::Shape(shape));
             g_bytes_used += t.bytes();
+            Napi::MemoryManagement::AdjustExternalMemory(env, t.bytes());
             auto* tensor = new fl::Tensor(t);
             Napi::External<fl::Tensor> wrapped = ExternalizeTensor(env, tensor);
             return wrapped;
@@ -635,6 +636,7 @@ packages:
             fl::Tensor t;
             t = fl::randn(fl::Shape(shape));
             g_bytes_used += t.bytes();
+            Napi::MemoryManagement::AdjustExternalMemory(env, t.bytes());
             auto* tensor = new fl::Tensor(t);
             Napi::External<fl::Tensor> wrapped = ExternalizeTensor(env, tensor);
             return wrapped;
@@ -662,6 +664,7 @@ packages:
         ext_finalizer_transform: |
           if (/this/->hasAdapter()) {
             g_bytes_used -= /this/->bytes();
+            Napi::MemoryManagement::AdjustExternalMemory(env, /this/->bytes());
           }
         fields:
           - name: 'copy'
@@ -684,7 +687,7 @@ packages:
                 ts_type: 'Tensor'
             ts_return_type: 'Float32Array'
             body: |
-              Napi::Value toFloat32Array(const Napi::CallbackInfo& info) {
+              static Napi::Value toFloat32Array(const Napi::CallbackInfo& info) {
                 Napi::Env env = info.Env();
                 if (!info[0].IsExternal()) {
                   Napi::TypeError::New(info.Env(),
@@ -707,7 +710,7 @@ packages:
                 ts_type: 'Tensor'
             ts_return_type: 'Float64Array'
             body: |
-              Napi::Value toFloat64Array(const Napi::CallbackInfo& info) {
+              static Napi::Value toFloat64Array(const Napi::CallbackInfo& info) {
                 Napi::Env env = info.Env();
                 if (!info[0].IsExternal()) {
                   Napi::TypeError::New(info.Env(),
@@ -730,53 +733,53 @@ packages:
                 ts_type: 'Tensor'
             ts_return_type: 'Int8Array'
             body: |
-              Napi::Value toBoolInt8Array(const Napi::CallbackInfo& info) {
-                Napi::Env env = info.Env();
-                if (!info[0].IsExternal()) {
-                  Napi::TypeError::New(info.Env(),
-                                      "`toBoolInt8Array` expects args[0] to be "
-                                      "`Napi::External<fl::Tensor>` `Tensor`")
-                      .ThrowAsJavaScriptException();
-                  return env.Null();
-                }
-                fl::Tensor* t = static_cast<fl::Tensor*>(info[0].As<Napi::External<fl::Tensor>>().Data());
-                size_t elemLen = static_cast<size_t>(t->elements());
-                size_t byteLen = elemLen * sizeof(int8_t);
-                void* ptr = t->astype(fl::dtype::b8).host<int>();
-                Napi::ArrayBuffer buff = Napi::ArrayBuffer::New(env, ptr, byteLen);
-                Napi::TypedArrayOf<int8_t> out = Napi::TypedArrayOf<int8_t>::New(env, elemLen, buff, 0, napi_int8_array);
-                return out;
-              }
+              static Napi::Value toBoolInt8Array(const Napi::CallbackInfo& info) {
+                 Napi::Env env = info.Env();
+                 if (!info[0].IsExternal()) {
+                   Napi::TypeError::New(info.Env(),
+                                       "`toBoolInt8Array` expects args[0] to be "
+                                       "`Napi::External<fl::Tensor>` `Tensor`")
+                       .ThrowAsJavaScriptException();
+                   return env.Null();
+                 }
+                 fl::Tensor* t = static_cast<fl::Tensor*>(info[0].As<Napi::External<fl::Tensor>>().Data());
+                 size_t elemLen = static_cast<size_t>(t->elements());
+                 size_t byteLen = elemLen * sizeof(int8_t);
+                 void* ptr = t->astype(fl::dtype::b8).host<int>();
+                 Napi::ArrayBuffer buff = Napi::ArrayBuffer::New(env, ptr, byteLen);
+                 Napi::TypedArrayOf<int8_t> out = Napi::TypedArrayOf<int8_t>::New(env, elemLen, buff, 0, napi_int8_array);
+                 return out;
+               }
           - name: 'toInt16Array'
             args:
               - name: 'tensor'
                 ts_type: 'Tensor'
             ts_return_type: 'Int16Array'
             body: |
-              Napi::Value toInt16Array(const Napi::CallbackInfo& info) {
-                Napi::Env env = info.Env();
-                if (!info[0].IsExternal()) {
-                  Napi::TypeError::New(info.Env(),
-                                      "`toInt16Array` expects args[0] to be "
-                                      "`Napi::External<fl::Tensor>` `Tensor`")
-                      .ThrowAsJavaScriptException();
-                  return env.Null();
-                }
-                fl::Tensor* t = static_cast<fl::Tensor*>(info[0].As<Napi::External<fl::Tensor>>().Data());
-                size_t elemLen = static_cast<size_t>(t->elements());
-                size_t byteLen = elemLen * sizeof(int16_t);
-                void* ptr = t->astype(fl::dtype::s16).host<int>();
-                Napi::ArrayBuffer buff = Napi::ArrayBuffer::New(env, ptr, byteLen);
-                Napi::TypedArrayOf<int16_t> out = Napi::TypedArrayOf<int16_t>::New(env, elemLen, buff, 0, napi_int16_array);
-                return out;
-              }
+              static  Napi::Value toInt16Array(const Napi::CallbackInfo& info) {
+                 Napi::Env env = info.Env();
+                 if (!info[0].IsExternal()) {
+                   Napi::TypeError::New(info.Env(),
+                                       "`toInt16Array` expects args[0] to be "
+                                       "`Napi::External<fl::Tensor>` `Tensor`")
+                       .ThrowAsJavaScriptException();
+                   return env.Null();
+                 }
+                 fl::Tensor* t = static_cast<fl::Tensor*>(info[0].As<Napi::External<fl::Tensor>>().Data());
+                 size_t elemLen = static_cast<size_t>(t->elements());
+                 size_t byteLen = elemLen * sizeof(int16_t);
+                 void* ptr = t->astype(fl::dtype::s16).host<int>();
+                 Napi::ArrayBuffer buff = Napi::ArrayBuffer::New(env, ptr, byteLen);
+                 Napi::TypedArrayOf<int16_t> out = Napi::TypedArrayOf<int16_t>::New(env, elemLen, buff, 0, napi_int16_array);
+                 return out;
+               }
           - name: 'toInt32Array'
             args:
               - name: 'tensor'
                 ts_type: 'Tensor'
             ts_return_type: 'Int32Array'
             body: |
-              Napi::Value toInt32Array(const Napi::CallbackInfo& info) {
+              static Napi::Value toInt32Array(const Napi::CallbackInfo& info) {
                 Napi::Env env = info.Env();
                 if (!info[0].IsExternal()) {
                   Napi::TypeError::New(info.Env(),
@@ -799,7 +802,7 @@ packages:
                 ts_type: 'string'
             is_void: true
             body: |
-              void save(const Napi::CallbackInfo& info) {
+              static void save(const Napi::CallbackInfo& info) {
                 Napi::Env env = info.Env();
                 if (info.Length() != 2) {
                   Napi::TypeError::New(env, "`save` expects exactly 2 args").ThrowAsJavaScriptException();
@@ -828,7 +831,7 @@ packages:
                 ts_type: 'Tensor'
             ts_return_type: 'BigInt64Array'
             body: |
-              Napi::Value toInt64Array(const Napi::CallbackInfo& info) {
+              static Napi::Value toInt64Array(const Napi::CallbackInfo& info) {
                 Napi::Env env = info.Env();
                 if (!info[0].IsExternal()) {
                   Napi::TypeError::New(info.Env(),
@@ -851,7 +854,7 @@ packages:
                 ts_type: 'Tensor'
             ts_return_type: 'Uint8Array'
             body: |
-              Napi::Value toUint8Array(const Napi::CallbackInfo& info) {
+              static Napi::Value toUint8Array(const Napi::CallbackInfo& info) {
                 Napi::Env env = info.Env();
                 if (!info[0].IsExternal()) {
                   Napi::TypeError::New(info.Env(),
@@ -874,7 +877,7 @@ packages:
                 ts_type: 'Tensor'
             ts_return_type: 'Uint16Array'
             body: |
-              Napi::Value toUint16Array(const Napi::CallbackInfo& info) {
+              static Napi::Value toUint16Array(const Napi::CallbackInfo& info) {
                 Napi::Env env = info.Env();
                 if (!info[0].IsExternal()) {
                   Napi::TypeError::New(info.Env(),
@@ -897,7 +900,7 @@ packages:
                 ts_type: 'Tensor'
             ts_return_type: 'Uint32Array'
             body: |
-              Napi::Value toUint32Array(const Napi::CallbackInfo& info) {
+              static Napi::Value toUint32Array(const Napi::CallbackInfo& info) {
                 Napi::Env env = info.Env();
                 if (!info[0].IsExternal()) {
                   Napi::TypeError::New(info.Env(),
@@ -920,7 +923,7 @@ packages:
                 ts_type: 'Tensor'
             ts_return_type: 'BigUint64Array'
             body: |
-              Napi::Value toUint64Array(const Napi::CallbackInfo& info) {
+              static Napi::Value toUint64Array(const Napi::CallbackInfo& info) {
                 Napi::Env env = info.Env();
                 if (!info[0].IsExternal()) {
                   Napi::TypeError::New(info.Env(),
@@ -1150,6 +1153,7 @@ packages:
                 }
                 fl::Tensor& t = *static_cast<fl::Tensor*>(info[0].As<Napi::External<fl::Tensor>>().Data());
                 g_bytes_used -= t.bytes();
+                Napi::MemoryManagement::AdjustExternalMemory(env, -t.bytes());
                 fl::detail::releaseAdapterUnsafe(t);
               }
           - name: 'tensorFromFloat32Array'
@@ -1183,6 +1187,7 @@ packages:
                 auto* t = new fl::Tensor(
                     fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
                 g_bytes_used += t->bytes();
+                Napi::MemoryManagement::AdjustExternalMemory(env, t->bytes());
                 Napi::External<fl::Tensor> wrapped = ExternalizeTensor(env, t);
                 return wrapped;
               }
@@ -1217,6 +1222,7 @@ packages:
                 auto* t = new fl::Tensor(
                     fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
                 g_bytes_used += t->bytes();
+                Napi::MemoryManagement::AdjustExternalMemory(env, t->bytes());
                 Napi::External<fl::Tensor> wrapped = ExternalizeTensor(env, t);
                 return wrapped;
               }
@@ -1251,6 +1257,7 @@ packages:
                 auto* t = new fl::Tensor(
                     fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
                 g_bytes_used += t->bytes();
+                Napi::MemoryManagement::AdjustExternalMemory(env, t->bytes());
                 Napi::External<fl::Tensor> wrapped = ExternalizeTensor(env, t);
                 return wrapped;
               }
@@ -1285,6 +1292,7 @@ packages:
                 auto* t = new fl::Tensor(
                     fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
                 g_bytes_used += t->bytes();
+                Napi::MemoryManagement::AdjustExternalMemory(env, t->bytes());
                 Napi::External<fl::Tensor> wrapped = ExternalizeTensor(env, t);
                 return wrapped;
               }
@@ -1319,6 +1327,7 @@ packages:
                 auto* t = new fl::Tensor(
                     fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
                 g_bytes_used += t->bytes();
+                Napi::MemoryManagement::AdjustExternalMemory(env, t->bytes());
                 Napi::External<fl::Tensor> wrapped = ExternalizeTensor(env, t);
                 return wrapped;
               }
@@ -1353,6 +1362,7 @@ packages:
                 auto* t = new fl::Tensor(
                     fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
                 g_bytes_used += t->bytes();
+                Napi::MemoryManagement::AdjustExternalMemory(env, t->bytes());
                 Napi::External<fl::Tensor> wrapped = ExternalizeTensor(env, t);
                 return wrapped;
               }
@@ -1387,6 +1397,7 @@ packages:
                 auto* t = new fl::Tensor(
                     fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
                 g_bytes_used += t->bytes();
+                Napi::MemoryManagement::AdjustExternalMemory(env, t->bytes());
                 Napi::External<fl::Tensor> wrapped = ExternalizeTensor(env, t);
                 return wrapped;
               }
@@ -1421,6 +1432,7 @@ packages:
                 auto* t = new fl::Tensor(
                     fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
                 g_bytes_used += t->bytes();
+                Napi::MemoryManagement::AdjustExternalMemory(env, t->bytes());
                 Napi::External<fl::Tensor> wrapped = ExternalizeTensor(env, t);
                 return wrapped;
               }
@@ -1455,6 +1467,7 @@ packages:
                 auto* t = new fl::Tensor(
                     fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
                 g_bytes_used += t->bytes();
+                Napi::MemoryManagement::AdjustExternalMemory(env, t->bytes());
                 Napi::External<fl::Tensor> wrapped = ExternalizeTensor(env, t);
                 return wrapped;
               }
@@ -1489,6 +1502,7 @@ packages:
                 auto* t = new fl::Tensor(
                     fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
                 g_bytes_used += t->bytes();
+                Napi::MemoryManagement::AdjustExternalMemory(env, t->bytes());
                 Napi::External<fl::Tensor> wrapped = ExternalizeTensor(env, t);
                 return wrapped;
               }

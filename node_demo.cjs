@@ -13,7 +13,7 @@ function genRand() {
 
 const t0 = performance.now() / 1e3
 let m = 0
-for (let i = 0; i < 10000; ++i) {
+for (let i = 0; i < 100000; ++i) {
   // console.log('bytes: ', Number(sm.bytesUsed()))
   const a = sm.rand([128])
   const b = new Tensor(genRand())
