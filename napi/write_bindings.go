@@ -48,7 +48,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 	if argCount > 0 {
 		sb.WriteString(fmt.Sprintf("if (info.Length() != %d) {\n", argCount))
 		g.writeIndent(sb, 2)
-		sb.WriteString(fmt.Sprintf("Napi::TypeError::New(info.Env(), %q).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects exactly %d args", *m.Ident, argCount)))
+		sb.WriteString(fmt.Sprintf("Napi::TypeError::New(env, %q).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects exactly %d args", *m.Ident, argCount)))
 		g.writeIndent(sb, 2)
 		sb.WriteString("return env.Null();\n")
 		g.writeIndent(sb, 1)
@@ -121,7 +121,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 					g.writeIndent(sb, 1)
 					sb.WriteString(fmt.Sprintf("if (!info[%d].%s()) {\n", i, napiTypeHandler))
 					g.writeIndent(sb, 2)
-					sb.WriteString(fmt.Sprintf("Napi::TypeError::New(info.Env(), %q).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects args[%d] to be typeof `%s`", *m.Ident, i, jsTypeEquivalent)))
+					sb.WriteString(fmt.Sprintf("Napi::TypeError::New(env, %q).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects args[%d] to be typeof `%s`", *m.Ident, i, jsTypeEquivalent)))
 					g.writeIndent(sb, 2)
 					sb.WriteString("return env.Null();\n")
 					g.writeIndent(sb, 1)
@@ -142,7 +142,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 					g.writeIndent(sb, 1)
 					sb.WriteString(fmt.Sprintf("if (!info[%d].IsExternal()) {\n", i))
 					g.writeIndent(sb, 2)
-					sb.WriteString(fmt.Sprintf("Napi::TypeError::New(info.Env(), %q).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects args[%d] to be `Napi::External<%s::%s>` `%s`", *m.Ident, i, *g.NameSpace, *m.Returns, *arg.Type)))
+					sb.WriteString(fmt.Sprintf("Napi::TypeError::New(env, %q).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects args[%d] to be `Napi::External<%s::%s>` `%s`", *m.Ident, i, *g.NameSpace, *m.Returns, *arg.Type)))
 					g.writeIndent(sb, 2)
 					sb.WriteString("return env.Null();\n")
 					g.writeIndent(sb, 1)
@@ -158,7 +158,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 					sb.WriteString(fmt.Sprintf("if (!info[%d].IsArray()) {\n", i))
 					g.writeIndent(sb, 2)
 					tsType, isObject := CPPTypeToTS(type_test)
-					sb.WriteString(fmt.Sprintf("Napi::TypeError::New(info.Env(), %q).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects args[%d] to be typeof `%s[]`", *m.Ident, i, tsType)))
+					sb.WriteString(fmt.Sprintf("Napi::TypeError::New(env, %q).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects args[%d] to be typeof `%s[]`", *m.Ident, i, tsType)))
 					g.writeIndent(sb, 2)
 					sb.WriteString("return env.Null();\n")
 					g.writeIndent(sb, 1)
@@ -174,7 +174,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 						sb.WriteString(fmt.Sprintf("if (!info[%d].As<Napi::Array>().Get(i).Is%s()) {\n", i, upper_caser.String(tsType[0:1])+tsType[1:]))
 					}
 					g.writeIndent(sb, 3)
-					sb.WriteString(fmt.Sprintf("Napi::TypeError::New(info.Env(), (%q + std::to_string(i) + %q)).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects args[%d][", *m.Ident, i), fmt.Sprintf("] to be typeof `%s`", tsType)))
+					sb.WriteString(fmt.Sprintf("Napi::TypeError::New(env, (%q + std::to_string(i) + %q)).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects args[%d][", *m.Ident, i), fmt.Sprintf("] to be typeof `%s`", tsType)))
 					g.writeIndent(sb, 3)
 					sb.WriteString("return env.Null();\n")
 					g.writeIndent(sb, 2)
@@ -194,7 +194,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 						sb.WriteString(fmt.Sprintf("if (!info[%d].IsNumber()) {\n", i))
 					}
 					g.writeIndent(sb, 2)
-					sb.WriteString(fmt.Sprintf("Napi::TypeError::New(info.Env(), %q).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects args[%d] to be typeof `%s`", *m.Ident, i, v.TSType)))
+					sb.WriteString(fmt.Sprintf("Napi::TypeError::New(env, %q).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects args[%d] to be typeof `%s`", *m.Ident, i, v.TSType)))
 					g.writeIndent(sb, 2)
 					sb.WriteString("return env.Null();\n")
 					g.writeIndent(sb, 1)
@@ -307,6 +307,7 @@ func (g *PackageGenerator) writeClassField(sb *strings.Builder, f *CPPFieldDecl,
 		} else {
 			isVoid = true
 		}
+		sb.WriteString("static ")
 		if isVoid {
 			sb.WriteString("void ")
 		} else {
@@ -322,7 +323,7 @@ func (g *PackageGenerator) writeClassField(sb *strings.Builder, f *CPPFieldDecl,
 		g.writeIndent(sb, 1)
 		sb.WriteString(fmt.Sprintf("if (info.Length() != %d) {\n", argCount))
 		g.writeIndent(sb, 2)
-		sb.WriteString(fmt.Sprintf("Napi::TypeError::New(info.Env(), %q).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects exactly %d args", *f.Ident, argCount)))
+		sb.WriteString(fmt.Sprintf("Napi::TypeError::New(env, %q).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects exactly %d args", *f.Ident, argCount)))
 		g.writeIndent(sb, 2)
 		sb.WriteString("return env.Null();\n")
 		g.writeIndent(sb, 1)
@@ -331,7 +332,7 @@ func (g *PackageGenerator) writeClassField(sb *strings.Builder, f *CPPFieldDecl,
 		g.writeIndent(sb, 1)
 		sb.WriteString(fmt.Sprintf("if (!info[%d].IsExternal()) {\n", 0))
 		g.writeIndent(sb, 2)
-		sb.WriteString(fmt.Sprintf("Napi::TypeError::New(info.Env(), %q).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects args[%d] to be typeof `%s`", *f.Ident, 0, className)))
+		sb.WriteString(fmt.Sprintf("Napi::TypeError::New(env, %q).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects args[%d] to be typeof `%s`", *f.Ident, 0, className)))
 		g.writeIndent(sb, 2)
 		sb.WriteString("return env.Null();\n")
 		g.writeIndent(sb, 1)
@@ -345,7 +346,7 @@ func (g *PackageGenerator) writeClassField(sb *strings.Builder, f *CPPFieldDecl,
 					g.writeIndent(sb, 1)
 					sb.WriteString(fmt.Sprintf("if (!info[%d].Is%s()) {\n", i+1, v.NapiType))
 					g.writeIndent(sb, 2)
-					sb.WriteString(fmt.Sprintf("Napi::TypeError::New(info.Env(), %q).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects args[%d] to be typeof `%s`", *f.Ident, i+1, typeHandler)))
+					sb.WriteString(fmt.Sprintf("Napi::TypeError::New(env, %q).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects args[%d] to be typeof `%s`", *f.Ident, i+1, typeHandler)))
 					g.writeIndent(sb, 2)
 					sb.WriteString("return env.Null();\n")
 					g.writeIndent(sb, 1)

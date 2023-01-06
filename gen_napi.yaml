@@ -57,15 +57,15 @@ packages:
         arg_count: 3
         arg_check_transforms: |
           if (!info[0].IsNumber()) {
-             Napi::TypeError::New(info.Env(), "`arange` expects args[0] to be typeof `number`").ThrowAsJavaScriptException();
+             Napi::TypeError::New(env, "`arange` expects args[0] to be typeof `number`").ThrowAsJavaScriptException();
              return env.Null();
            }
            if (!info[1].IsNumber()) {
-             Napi::TypeError::New(info.Env(),"`arange` expects args[1] to be typeof `number`").ThrowAsJavaScriptException();
+             Napi::TypeError::New(env,"`arange` expects args[1] to be typeof `number`").ThrowAsJavaScriptException();
              return env.Null();
            }
            if (!info[2].IsNumber()) {
-             Napi::TypeError::New(info.Env(), "`arange` expects args[2] to be typeof `number`").ThrowAsJavaScriptException();
+             Napi::TypeError::New(env, "`arange` expects args[2] to be typeof `number`").ThrowAsJavaScriptException();
              return env.Null();
            }
         return_transforms: |
@@ -603,7 +603,7 @@ packages:
           static Napi::Value rand(const Napi::CallbackInfo& info) {
             Napi::Env env = info.Env();
             if (info.Length() != 1 || !info[0].IsArray()) {
-              Napi::TypeError::New(info.Env(),
+              Napi::TypeError::New(env,
                                   "`rand` expects exactly 1 arg; "
                                   "(expected type `number[]`)...")
                   .ThrowAsJavaScriptException();
@@ -690,7 +690,7 @@ packages:
               static Napi::Value toFloat32Array(const Napi::CallbackInfo& info) {
                 Napi::Env env = info.Env();
                 if (!info[0].IsExternal()) {
-                  Napi::TypeError::New(info.Env(),
+                  Napi::TypeError::New(env,
                                       "`toFloat32Array` expects args[0] to be "
                                       "`Napi::External<fl::Tensor>` `Tensor`")
                       .ThrowAsJavaScriptException();
@@ -713,7 +713,7 @@ packages:
               static Napi::Value toFloat64Array(const Napi::CallbackInfo& info) {
                 Napi::Env env = info.Env();
                 if (!info[0].IsExternal()) {
-                  Napi::TypeError::New(info.Env(),
+                  Napi::TypeError::New(env,
                                       "`toFloat32Scalar` expects args[0] to be "
                                       "`Napi::External<fl::Tensor>` `Tensor`")
                       .ThrowAsJavaScriptException();
@@ -736,7 +736,7 @@ packages:
               static Napi::Value toBoolInt8Array(const Napi::CallbackInfo& info) {
                  Napi::Env env = info.Env();
                  if (!info[0].IsExternal()) {
-                   Napi::TypeError::New(info.Env(),
+                   Napi::TypeError::New(env,
                                        "`toBoolInt8Array` expects args[0] to be "
                                        "`Napi::External<fl::Tensor>` `Tensor`")
                        .ThrowAsJavaScriptException();
@@ -759,7 +759,7 @@ packages:
               static  Napi::Value toInt16Array(const Napi::CallbackInfo& info) {
                  Napi::Env env = info.Env();
                  if (!info[0].IsExternal()) {
-                   Napi::TypeError::New(info.Env(),
+                   Napi::TypeError::New(env,
                                        "`toInt16Array` expects args[0] to be "
                                        "`Napi::External<fl::Tensor>` `Tensor`")
                        .ThrowAsJavaScriptException();
@@ -782,7 +782,7 @@ packages:
               static Napi::Value toInt32Array(const Napi::CallbackInfo& info) {
                 Napi::Env env = info.Env();
                 if (!info[0].IsExternal()) {
-                  Napi::TypeError::New(info.Env(),
+                  Napi::TypeError::New(env,
                                       "`toInt32Array` expects args[0] to be "
                                       "`Napi::External<fl::Tensor>` `Tensor`")
                       .ThrowAsJavaScriptException();
@@ -809,7 +809,7 @@ packages:
                   return;
                 }
                 if (!info[0].IsExternal()) {
-                  Napi::TypeError::New(info.Env(),
+                  Napi::TypeError::New(env,
                                       "`toInt32Array` expects args[0] to be "
                                       "`Napi::External<fl::Tensor>` `Tensor`")
                       .ThrowAsJavaScriptException();
@@ -834,7 +834,7 @@ packages:
               static Napi::Value toInt64Array(const Napi::CallbackInfo& info) {
                 Napi::Env env = info.Env();
                 if (!info[0].IsExternal()) {
-                  Napi::TypeError::New(info.Env(),
+                  Napi::TypeError::New(env,
                                       "`toInt64Array` expects args[0] to be "
                                       "`Napi::External<fl::Tensor>` `Tensor`")
                       .ThrowAsJavaScriptException();
@@ -857,7 +857,7 @@ packages:
               static Napi::Value toUint8Array(const Napi::CallbackInfo& info) {
                 Napi::Env env = info.Env();
                 if (!info[0].IsExternal()) {
-                  Napi::TypeError::New(info.Env(),
+                  Napi::TypeError::New(env,
                                       "`Uint8Array` expects args[0] to be "
                                       "`Napi::External<fl::Tensor>` `Tensor`")
                       .ThrowAsJavaScriptException();
@@ -880,7 +880,7 @@ packages:
               static Napi::Value toUint16Array(const Napi::CallbackInfo& info) {
                 Napi::Env env = info.Env();
                 if (!info[0].IsExternal()) {
-                  Napi::TypeError::New(info.Env(),
+                  Napi::TypeError::New(env,
                                       "`toUint16Array` expects args[0] to be "
                                       "`Napi::External<fl::Tensor>` `Tensor`")
                       .ThrowAsJavaScriptException();
@@ -903,7 +903,7 @@ packages:
               static Napi::Value toUint32Array(const Napi::CallbackInfo& info) {
                 Napi::Env env = info.Env();
                 if (!info[0].IsExternal()) {
-                  Napi::TypeError::New(info.Env(),
+                  Napi::TypeError::New(env,
                                       "`toUint32Array` expects args[0] to be "
                                       "`Napi::External<fl::Tensor>` `Tensor`")
                       .ThrowAsJavaScriptException();
@@ -926,7 +926,7 @@ packages:
               static Napi::Value toUint64Array(const Napi::CallbackInfo& info) {
                 Napi::Env env = info.Env();
                 if (!info[0].IsExternal()) {
-                  Napi::TypeError::New(info.Env(),
+                  Napi::TypeError::New(env,
                                       "`toUint64Array` expects args[0] to be "
                                       "`Napi::External<fl::Tensor>` `Tensor`")
                       .ThrowAsJavaScriptException();
@@ -949,14 +949,14 @@ packages:
               static Napi::Value toFloat32Scalar(const Napi::CallbackInfo& info) {
                 Napi::Env env = info.Env();
                 if (!info[0].IsExternal()) {
-                  Napi::TypeError::New(info.Env(),
+                  Napi::TypeError::New(env,
                                       "`toFloat32Scalar` expects args[0] to be "
                                       "`Napi::External<fl::Tensor>` `Tensor`")
                       .ThrowAsJavaScriptException();
                   return env.Null();
                 }
                 fl::Tensor* t = static_cast<fl::Tensor*>(info[0].As<Napi::External<fl::Tensor>>().Data());
-                return Napi::Number::New(info.Env(), t->asScalar<float>());
+                return Napi::Number::New(env, t->asScalar<float>());
               }
           - name: 'toFloat64Scalar'
             args:
@@ -967,14 +967,14 @@ packages:
               static Napi::Value toFloat64Scalar(const Napi::CallbackInfo& info) {
                 Napi::Env env = info.Env();
                 if (!info[0].IsExternal()) {
-                  Napi::TypeError::New(info.Env(),
+                  Napi::TypeError::New(env,
                                       "`toFloat64Scalar` expects args[0] to be "
                                       "`Napi::External<fl::Tensor>` `Tensor`")
                       .ThrowAsJavaScriptException();
                   return env.Null();
                 }
                 fl::Tensor* t = static_cast<fl::Tensor*>(info[0].As<Napi::External<fl::Tensor>>().Data());
-                return Napi::Number::New(info.Env(), t->asScalar<double>());
+                return Napi::Number::New(env, t->asScalar<double>());
               }
           - name: 'toBoolInt8Scalar'
             args:
@@ -985,14 +985,14 @@ packages:
               static Napi::Value toBoolInt8Scalar(const Napi::CallbackInfo& info) {
                 Napi::Env env = info.Env();
                 if (!info[0].IsExternal()) {
-                  Napi::TypeError::New(info.Env(),
+                  Napi::TypeError::New(env,
                                       "`toBoolInt8Scalar` expects args[0] to be "
                                       "`Napi::External<fl::Tensor>` `Tensor`")
                       .ThrowAsJavaScriptException();
                   return env.Null();
                 }
                 fl::Tensor* t = static_cast<fl::Tensor*>(info[0].As<Napi::External<fl::Tensor>>().Data());
-                return Napi::Number::New(info.Env(), t->asScalar<char>());
+                return Napi::Number::New(env, t->asScalar<char>());
               }
           - name: 'toInt16Scalar'
             args:
@@ -1003,14 +1003,14 @@ packages:
               static Napi::Value toInt16Scalar(const Napi::CallbackInfo& info) {
                 Napi::Env env = info.Env();
                 if (!info[0].IsExternal()) {
-                  Napi::TypeError::New(info.Env(),
+                  Napi::TypeError::New(env,
                                       "`toInt16Scalar` expects args[0] to be "
                                       "`Napi::External<fl::Tensor>` `Tensor`")
                       .ThrowAsJavaScriptException();
                   return env.Null();
                 }
                 fl::Tensor* t = static_cast<fl::Tensor*>(info[0].As<Napi::External<fl::Tensor>>().Data());
-                return Napi::Number::New(info.Env(), t->asScalar<int16_t>());
+                return Napi::Number::New(env, t->asScalar<int16_t>());
               }
           - name: 'toInt32Scalar'
             args:
@@ -1021,14 +1021,14 @@ packages:
               static Napi::Value toInt32Scalar(const Napi::CallbackInfo& info) {
                 Napi::Env env = info.Env();
                 if (!info[0].IsExternal()) {
-                  Napi::TypeError::New(info.Env(),
+                  Napi::TypeError::New(env,
                                       "`toInt32Scalar` expects args[0] to be "
                                       "`Napi::External<fl::Tensor>` `Tensor`")
                       .ThrowAsJavaScriptException();
                   return env.Null();
                 }
                 fl::Tensor* t = static_cast<fl::Tensor*>(info[0].As<Napi::External<fl::Tensor>>().Data());
-                return Napi::Number::New(info.Env(), t->asScalar<int32_t>());
+                return Napi::Number::New(env, t->asScalar<int32_t>());
               }
           - name: 'toInt64Scalar'
             args:
@@ -1039,14 +1039,14 @@ packages:
               static Napi::Value toInt64Scalar(const Napi::CallbackInfo& info) {
                 Napi::Env env = info.Env();
                 if (!info[0].IsExternal()) {
-                  Napi::TypeError::New(info.Env(),
+                  Napi::TypeError::New(env,
                                       "`toInt64Scalar` expects args[0] to be "
                                       "`Napi::External<fl::Tensor>` `Tensor`")
                       .ThrowAsJavaScriptException();
                   return env.Null();
                 }
                 fl::Tensor* t = static_cast<fl::Tensor*>(info[0].As<Napi::External<fl::Tensor>>().Data());
-                return Napi::BigInt::New(info.Env(), t->asScalar<int64_t>());
+                return Napi::BigInt::New(env, t->asScalar<int64_t>());
               }
           - name: 'toUint8Scalar'
             args:
@@ -1057,14 +1057,14 @@ packages:
               static Napi::Value toUint8Scalar(const Napi::CallbackInfo& info) {
                 Napi::Env env = info.Env();
                 if (!info[0].IsExternal()) {
-                  Napi::TypeError::New(info.Env(),
+                  Napi::TypeError::New(env,
                                       "`toUint8Scalar` expects args[0] to be "
                                       "`Napi::External<fl::Tensor>` `Tensor`")
                       .ThrowAsJavaScriptException();
                   return env.Null();
                 }
                 fl::Tensor* t = static_cast<fl::Tensor*>(info[0].As<Napi::External<fl::Tensor>>().Data());
-                return Napi::Number::New(info.Env(), t->asScalar<uint8_t>());
+                return Napi::Number::New(env, t->asScalar<uint8_t>());
               }
           - name: 'toUint16Scalar'
             args:
@@ -1075,14 +1075,14 @@ packages:
               static Napi::Value toUint16Scalar(const Napi::CallbackInfo& info) {
                 Napi::Env env = info.Env();
                 if (!info[0].IsExternal()) {
-                  Napi::TypeError::New(info.Env(),
+                  Napi::TypeError::New(env,
                                       "`toUint16Scalar` expects args[0] to be "
                                       "`Napi::External<fl::Tensor>` `Tensor`")
                       .ThrowAsJavaScriptException();
                   return env.Null();
                 }
                 fl::Tensor* t = static_cast<fl::Tensor*>(info[0].As<Napi::External<fl::Tensor>>().Data());
-                return Napi::Number::New(info.Env(), t->asScalar<uint16_t>());
+                return Napi::Number::New(env, t->asScalar<uint16_t>());
               }
           - name: 'toUint32Scalar'
             args:
@@ -1093,14 +1093,14 @@ packages:
               static Napi::Value toUint32Scalar(const Napi::CallbackInfo& info) {
                 Napi::Env env = info.Env();
                 if (!info[0].IsExternal()) {
-                  Napi::TypeError::New(info.Env(),
+                  Napi::TypeError::New(env,
                                       "`toUint32Scalar` expects args[0] to be "
                                       "`Napi::External<fl::Tensor>` `Tensor`")
                       .ThrowAsJavaScriptException();
                   return env.Null();
                 }
                 fl::Tensor* t = static_cast<fl::Tensor*>(info[0].As<Napi::External<fl::Tensor>>().Data());
-                return Napi::Number::New(info.Env(), t->asScalar<uint32_t>());
+                return Napi::Number::New(env, t->asScalar<uint32_t>());
               }
           - name: 'toUint64Scalar'
             args:
@@ -1111,14 +1111,14 @@ packages:
               static Napi::Value toUint64Scalar(const Napi::CallbackInfo& info) {
                 Napi::Env env = info.Env();
                 if (!info[0].IsExternal()) {
-                  Napi::TypeError::New(info.Env(),
+                  Napi::TypeError::New(env,
                                       "`toUint64Scalar` expects args[0] to be "
                                       "`Napi::External<fl::Tensor>` `Tensor`")
                       .ThrowAsJavaScriptException();
                   return env.Null();
                 }
                 fl::Tensor* t = static_cast<fl::Tensor*>(info[0].As<Napi::External<fl::Tensor>>().Data());
-                return Napi::BigInt::New(info.Env(), t->asScalar<uint64_t>());
+                return Napi::BigInt::New(env, t->asScalar<uint64_t>());
               }
           - name: 'eval'
             args:
@@ -1129,7 +1129,7 @@ packages:
               void eval(const Napi::CallbackInfo& info) {
                 Napi::Env env = info.Env();
                 if (!info[0].IsExternal()) {
-                  Napi::TypeError::New(info.Env(),
+                  Napi::TypeError::New(env,
                                       "`toUint64Scalar` expects args[0] to be "
                                       "`Napi::External<fl::Tensor>` `Tensor`")
                       .ThrowAsJavaScriptException();
@@ -1146,7 +1146,7 @@ packages:
               void dispose(const Napi::CallbackInfo& info) {
                 Napi::Env env = info.Env();
                 if (!info[0].IsExternal()) {
-                  Napi::TypeError::New(info.Env(),
+                  Napi::TypeError::New(env,
                                       "`toUint64Scalar` expects args[0] to be "
                                       "`Napi::External<fl::Tensor>` `Tensor`")
                       .ThrowAsJavaScriptException();
