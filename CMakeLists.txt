@@ -9,7 +9,7 @@ find_package(flashlight CONFIG REQUIRED)
 
 # Enable strict handling of warnings
 add_definitions("-Wall -Wextra")
-add_definitions(-DNAPI_VERSION=8)
+add_definitions(-DNAPI_VERSION=7)
 
 include_directories(${CMAKE_JS_INC})
 file(GLOB SOURCE_FILES "test/out/*.cc")

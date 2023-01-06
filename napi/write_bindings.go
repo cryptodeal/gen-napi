@@ -149,7 +149,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 					sb.WriteString("}\n")
 					if _, ok := g.conf.MethodTransforms[*m.Ident].ArgTransforms[*arg.Ident]; !ok {
 						g.writeIndent(sb, 1)
-						sb.WriteString(fmt.Sprintf("%s::%s* %s = static_cast<%s::%s*>(info[%d].As<Napi::External<%s::%s>>().Data());\n", *g.NameSpace, *arg.Type, *arg.Ident, *g.NameSpace, *arg.Type, i, *g.NameSpace, *arg.Type))
+						sb.WriteString(fmt.Sprintf("%s::%s* %s = UnExternalize<%s::%s*>(info[%d]);\n", *g.NameSpace, *arg.Type, *arg.Ident, *g.NameSpace, *arg.Type, i))
 					}
 				} else if strings.Contains(*arg.Type, "std::vector") {
 					argType := *arg.Type
@@ -338,7 +338,7 @@ func (g *PackageGenerator) writeClassField(sb *strings.Builder, f *CPPFieldDecl,
 		g.writeIndent(sb, 1)
 		sb.WriteString("}\n")
 		g.writeIndent(sb, 1)
-		sb.WriteString(fmt.Sprintf("%s::%s* _tmp_external = static_cast<%s::%s*>(info[%d].As<Napi::External<%s::%s>>().Data());\n", *g.NameSpace, className, *g.NameSpace, className, 0, *g.NameSpace, className))
+		sb.WriteString(fmt.Sprintf("%s::%s* _tmp_external = UnExternalize<%s::%s*>(info[%d]);\n", *g.NameSpace, className, *g.NameSpace, className, 0))
 		if f.Args != nil {
 			for i, arg := range *f.Args {
 				typeHandler, isObject := CPPTypeToTS(*arg.Type)
@@ -429,6 +429,14 @@ func (g *PackageGenerator) writeClassExternalizer(sb *strings.Builder, class *CP
 	sb.WriteString("}\n\n")
 }
 
+func (g *PackageGenerator) writeClassUnExternalizer(sb *strings.Builder) {
+	sb.WriteString("template <typename T>\n")
+	sb.WriteString("static inline T* UnExternalize(Napi::Value val) {\n")
+	g.writeIndent(sb, 1)
+	sb.WriteString("return val.As<Napi::External<T>>().Data();\n")
+	sb.WriteString("}\n\n")
+}
+
 // makes calls to functions that write bindings
 func (g *PackageGenerator) writeBindings(sb *strings.Builder, classes map[string]*CPPClass, methods map[string]*CPPMethod, processedMethods map[string]*CPPMethod) {
 	sb.WriteString("#include <napi.h>\n")
@@ -438,10 +446,15 @@ func (g *PackageGenerator) writeBindings(sb *strings.Builder, classes map[string
 	g.writeGlobalVars(sb)
 	g.writeHelpers(sb)
 
+	hasUnexternalizer := false
 	for name, c := range classes {
 		if c.Decl != nil {
 			g.writeClassDeleter(sb, c, name)
 			g.writeClassExternalizer(sb, c, name)
+			if !hasUnexternalizer {
+				g.writeClassUnExternalizer(sb)
+				hasUnexternalizer = true
+			}
 			if c.FieldDecl != nil {
 				for _, f := range *c.FieldDecl {
 					g.writeClassField(sb, f, name, classes)

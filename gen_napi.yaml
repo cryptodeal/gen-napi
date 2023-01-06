@@ -403,7 +403,7 @@ packages:
     helper_funcs:
       arrayArg: |
         template <typename T>
-        std::vector<T> arrayArg(const void* ptr, int len, bool reverse, int invert) {
+        static inline std::vector<T> arrayArg(const void* ptr, int len, bool reverse, int invert) {
           std::vector<T> out;
           out.reserve(len);
           for (auto i = 0; i < len; ++i) {
@@ -420,7 +420,7 @@ packages:
         }
       jsArrayArg: |
         template <typename T>
-        std::vector<T> jsArrayArg(Napi::Array arr, bool reverse, int invert, Napi::Env env) {
+        static inline std::vector<T> jsArrayArg(Napi::Array arr, bool reverse, int invert, Napi::Env env) {
           std::vector<T> out;
           const size_t len = static_cast<size_t>(arr.Length());
           out.reserve(len);
@@ -452,7 +452,7 @@ packages:
           for (size_t i = 0; i < len; ++i) {
             Napi::Value temp = arr[i];
             if (temp.IsExternal()) {
-              fl::Tensor* tensor = static_cast<fl::Tensor*>(temp.As<Napi::External<fl::Tensor>>().Data());
+              fl::Tensor* tensor = UnExternalize<fl::Tensor>(temp);
               out.emplace_back(*(tensor));
             } else {
               Napi::TypeError::New(env, "jsTensorArrayArg requires `Tensor[]`")
@@ -651,7 +651,7 @@ packages:
         out_type: 'Napi::TypedArrayOf<int64_t>'
         out_var: '_out'
         handler: |
-          const size_t length = static_cast<const size_t>(info[0].As<Napi::External<fl::Tensor>>().Data()->ndim());
+          const size_t length = static_cast<const size_t>(UnExternalize<fl::Tensor>(info[0])->ndim());
           Napi::TypedArrayOf<int64_t> _out =
               Napi::TypedArrayOf<int64_t>::New(env, length, napi_bigint64_array);
           const int out_len = static_cast<int>(length);
@@ -696,7 +696,7 @@ packages:
                       .ThrowAsJavaScriptException();
                   return env.Null();
                 }
-                fl::Tensor* t = static_cast<fl::Tensor*>(info[0].As<Napi::External<fl::Tensor>>().Data());
+                fl::Tensor* t = UnExternalize<fl::Tensor>(info[0]);
                 size_t elemLen = static_cast<size_t>(t->elements());
                 size_t byteLen = elemLen * sizeof(float);
                 void* ptr = t->astype(fl::dtype::f32).host<float>();
@@ -719,7 +719,7 @@ packages:
                       .ThrowAsJavaScriptException();
                   return env.Null();
                 }
-                fl::Tensor* t = static_cast<fl::Tensor*>(info[0].As<Napi::External<fl::Tensor>>().Data());
+                fl::Tensor* t = UnExternalize<fl::Tensor>(info[0]);
                 size_t elemLen = static_cast<size_t>(t->elements());
                 size_t byteLen = elemLen * sizeof(double);
                 void* ptr = t->astype(fl::dtype::f64).host<double>();
@@ -742,7 +742,7 @@ packages:
                        .ThrowAsJavaScriptException();
                    return env.Null();
                  }
-                 fl::Tensor* t = static_cast<fl::Tensor*>(info[0].As<Napi::External<fl::Tensor>>().Data());
+                 fl::Tensor* t = UnExternalize<fl::Tensor>(info[0]);
                  size_t elemLen = static_cast<size_t>(t->elements());
                  size_t byteLen = elemLen * sizeof(int8_t);
                  void* ptr = t->astype(fl::dtype::b8).host<int>();
@@ -765,7 +765,7 @@ packages:
                        .ThrowAsJavaScriptException();
                    return env.Null();
                  }
-                 fl::Tensor* t = static_cast<fl::Tensor*>(info[0].As<Napi::External<fl::Tensor>>().Data());
+                 fl::Tensor* t = UnExternalize<fl::Tensor>(info[0]);
                  size_t elemLen = static_cast<size_t>(t->elements());
                  size_t byteLen = elemLen * sizeof(int16_t);
                  void* ptr = t->astype(fl::dtype::s16).host<int>();
@@ -788,7 +788,7 @@ packages:
                       .ThrowAsJavaScriptException();
                   return env.Null();
                 }
-                fl::Tensor* t = static_cast<fl::Tensor*>(info[0].As<Napi::External<fl::Tensor>>().Data());
+                fl::Tensor* t = UnExternalize<fl::Tensor>(info[0]);
                 size_t elemLen = static_cast<size_t>(t->elements());
                 size_t byteLen = elemLen * sizeof(int32_t);
                 void* ptr = t->astype(fl::dtype::s32).host<int>();
@@ -814,7 +814,7 @@ packages:
                                       "`Napi::External<fl::Tensor>` `Tensor`")
                       .ThrowAsJavaScriptException();
                 }
-                fl::Tensor* t = static_cast<fl::Tensor*>(info[0].As<Napi::External<fl::Tensor>>().Data());
+                fl::Tensor* t = UnExternalize<fl::Tensor>(info[0]);
                 if (!info[1].IsString()) {
                   Napi::TypeError::New(
                       env,
@@ -840,7 +840,7 @@ packages:
                       .ThrowAsJavaScriptException();
                   return env.Null();
                 }
-                fl::Tensor* t = static_cast<fl::Tensor*>(info[0].As<Napi::External<fl::Tensor>>().Data());
+                fl::Tensor* t = UnExternalize<fl::Tensor>(info[0]);
                 size_t elemLen = static_cast<size_t>(t->elements());
                 size_t byteLen = elemLen * sizeof(int64_t);
                 void* ptr = t->astype(fl::dtype::s64).host<int>();
@@ -863,7 +863,7 @@ packages:
                       .ThrowAsJavaScriptException();
                   return env.Null();
                 }
-                fl::Tensor* t = static_cast<fl::Tensor*>(info[0].As<Napi::External<fl::Tensor>>().Data());
+                fl::Tensor* t = UnExternalize<fl::Tensor>(info[0]);
                 size_t elemLen = static_cast<size_t>(t->elements());
                 size_t byteLen = elemLen * sizeof(uint8_t);
                 void* ptr = t->astype(fl::dtype::u8).host<unsigned>();
@@ -886,7 +886,7 @@ packages:
                       .ThrowAsJavaScriptException();
                   return env.Null();
                 }
-                fl::Tensor* t = static_cast<fl::Tensor*>(info[0].As<Napi::External<fl::Tensor>>().Data());
+                fl::Tensor* t = UnExternalize<fl::Tensor>(info[0]);
                 size_t elemLen = static_cast<size_t>(t->elements());
                 size_t byteLen = elemLen * sizeof(uint16_t);
                 void* ptr = t->astype(fl::dtype::u16).host<unsigned>();
@@ -909,7 +909,7 @@ packages:
                       .ThrowAsJavaScriptException();
                   return env.Null();
                 }
-                fl::Tensor* t = static_cast<fl::Tensor*>(info[0].As<Napi::External<fl::Tensor>>().Data());
+                fl::Tensor* t = UnExternalize<fl::Tensor>(info[0]);
                 size_t elemLen = static_cast<size_t>(t->elements());
                 size_t byteLen = elemLen * sizeof(uint32_t);
                 void* ptr = t->astype(fl::dtype::u32).host<unsigned>();
@@ -932,7 +932,7 @@ packages:
                       .ThrowAsJavaScriptException();
                   return env.Null();
                 }
-                fl::Tensor* t = static_cast<fl::Tensor*>(info[0].As<Napi::External<fl::Tensor>>().Data());
+                fl::Tensor* t = UnExternalize<fl::Tensor>(info[0]);
                 size_t elemLen = static_cast<size_t>(t->elements());
                 size_t byteLen = elemLen * sizeof(uint64_t);
                 void* ptr = t->astype(fl::dtype::u64).host<unsigned>();
@@ -955,7 +955,7 @@ packages:
                       .ThrowAsJavaScriptException();
                   return env.Null();
                 }
-                fl::Tensor* t = static_cast<fl::Tensor*>(info[0].As<Napi::External<fl::Tensor>>().Data());
+                fl::Tensor* t = UnExternalize<fl::Tensor>(info[0]);
                 return Napi::Number::New(env, t->asScalar<float>());
               }
           - name: 'toFloat64Scalar'
@@ -973,7 +973,7 @@ packages:
                       .ThrowAsJavaScriptException();
                   return env.Null();
                 }
-                fl::Tensor* t = static_cast<fl::Tensor*>(info[0].As<Napi::External<fl::Tensor>>().Data());
+                fl::Tensor* t = UnExternalize<fl::Tensor>(info[0]);
                 return Napi::Number::New(env, t->asScalar<double>());
               }
           - name: 'toBoolInt8Scalar'
@@ -991,7 +991,7 @@ packages:
                       .ThrowAsJavaScriptException();
                   return env.Null();
                 }
-                fl::Tensor* t = static_cast<fl::Tensor*>(info[0].As<Napi::External<fl::Tensor>>().Data());
+                fl::Tensor* t = UnExternalize<fl::Tensor>(info[0]);
                 return Napi::Number::New(env, t->asScalar<char>());
               }
           - name: 'toInt16Scalar'
@@ -1009,7 +1009,7 @@ packages:
                       .ThrowAsJavaScriptException();
                   return env.Null();
                 }
-                fl::Tensor* t = static_cast<fl::Tensor*>(info[0].As<Napi::External<fl::Tensor>>().Data());
+                fl::Tensor* t = UnExternalize<fl::Tensor>(info[0]);
                 return Napi::Number::New(env, t->asScalar<int16_t>());
               }
           - name: 'toInt32Scalar'
@@ -1027,7 +1027,7 @@ packages:
                       .ThrowAsJavaScriptException();
                   return env.Null();
                 }
-                fl::Tensor* t = static_cast<fl::Tensor*>(info[0].As<Napi::External<fl::Tensor>>().Data());
+                fl::Tensor* t = UnExternalize<fl::Tensor>(info[0]);
                 return Napi::Number::New(env, t->asScalar<int32_t>());
               }
           - name: 'toInt64Scalar'
@@ -1045,7 +1045,7 @@ packages:
                       .ThrowAsJavaScriptException();
                   return env.Null();
                 }
-                fl::Tensor* t = static_cast<fl::Tensor*>(info[0].As<Napi::External<fl::Tensor>>().Data());
+                fl::Tensor* t = UnExternalize<fl::Tensor>(info[0]);
                 return Napi::BigInt::New(env, t->asScalar<int64_t>());
               }
           - name: 'toUint8Scalar'
@@ -1063,7 +1063,7 @@ packages:
                       .ThrowAsJavaScriptException();
                   return env.Null();
                 }
-                fl::Tensor* t = static_cast<fl::Tensor*>(info[0].As<Napi::External<fl::Tensor>>().Data());
+                fl::Tensor* t = UnExternalize<fl::Tensor>(info[0]);
                 return Napi::Number::New(env, t->asScalar<uint8_t>());
               }
           - name: 'toUint16Scalar'
@@ -1081,7 +1081,7 @@ packages:
                       .ThrowAsJavaScriptException();
                   return env.Null();
                 }
-                fl::Tensor* t = static_cast<fl::Tensor*>(info[0].As<Napi::External<fl::Tensor>>().Data());
+                fl::Tensor* t = UnExternalize<fl::Tensor>(info[0]);
                 return Napi::Number::New(env, t->asScalar<uint16_t>());
               }
           - name: 'toUint32Scalar'
@@ -1099,7 +1099,7 @@ packages:
                       .ThrowAsJavaScriptException();
                   return env.Null();
                 }
-                fl::Tensor* t = static_cast<fl::Tensor*>(info[0].As<Napi::External<fl::Tensor>>().Data());
+                fl::Tensor* t = UnExternalize<fl::Tensor>(info[0]);
                 return Napi::Number::New(env, t->asScalar<uint32_t>());
               }
           - name: 'toUint64Scalar'
@@ -1117,7 +1117,7 @@ packages:
                       .ThrowAsJavaScriptException();
                   return env.Null();
                 }
-                fl::Tensor* t = static_cast<fl::Tensor*>(info[0].As<Napi::External<fl::Tensor>>().Data());
+                fl::Tensor* t = UnExternalize<fl::Tensor>(info[0]);
                 return Napi::BigInt::New(env, t->asScalar<uint64_t>());
               }
           - name: 'eval'
@@ -1126,7 +1126,7 @@ packages:
                 ts_type: 'Tensor'
             is_void: true
             body: |
-              void eval(const Napi::CallbackInfo& info) {
+              static void eval(const Napi::CallbackInfo& info) {
                 Napi::Env env = info.Env();
                 if (!info[0].IsExternal()) {
                   Napi::TypeError::New(env,
@@ -1134,7 +1134,7 @@ packages:
                                       "`Napi::External<fl::Tensor>` `Tensor`")
                       .ThrowAsJavaScriptException();
                 }
-                fl::Tensor* t = static_cast<fl::Tensor*>(info[0].As<Napi::External<fl::Tensor>>().Data());
+                fl::Tensor* t = UnExternalize<fl::Tensor>(info[0]);
                 fl::eval(*(t));
               }
           - name: 'dispose'
@@ -1143,7 +1143,7 @@ packages:
                 ts_type: 'Tensor'
             is_void: true
             body: |
-              void dispose(const Napi::CallbackInfo& info) {
+              static void dispose(const Napi::CallbackInfo& info) {
                 Napi::Env env = info.Env();
                 if (!info[0].IsExternal()) {
                   Napi::TypeError::New(env,
@@ -1151,7 +1151,7 @@ packages:
                                       "`Napi::External<fl::Tensor>` `Tensor`")
                       .ThrowAsJavaScriptException();
                 }
-                fl::Tensor& t = *static_cast<fl::Tensor*>(info[0].As<Napi::External<fl::Tensor>>().Data());
+                fl::Tensor& t = *UnExternalize<fl::Tensor>(info[0]);
                 g_bytes_used -= t.bytes();
                 Napi::MemoryManagement::AdjustExternalMemory(env, -t.bytes());
                 fl::detail::releaseAdapterUnsafe(t);
