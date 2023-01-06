@@ -34,76 +34,76 @@ const {
   _tensorFromUint16Array,
   _tensorFromUint32Array,
   _tensorFromUint64Array,
-  _all,
-  _nonzero,
+  _roll,
+  _tril,
+  _triu,
+  _full,
+  _cos,
+  _sigmoid,
+  _tanh,
+  _flip,
+  _reshape,
+  _maximum,
+  _std,
   _logicalNot,
   _ceil,
-  _norm,
-  _countNonzero,
-  _any,
-  _log,
-  _erf,
-  _median,
-  _exp,
-  _tanh,
   _rint,
-  _power,
-  _sum,
-  _identity,
-  _tile,
-  _concatenate,
-  _cumsum,
-  _mean,
-  _flip,
-  _matmul,
-  _amin,
-  _sqrt,
-  _absolute,
-  _sigmoid,
-  _roll,
-  _sign,
+  _isinf,
+  _where,
   _arange,
-  _transpose,
-  _cos,
+  _concatenate,
+  _negative,
+  _norm,
+  _all,
+  _sort,
+  _sum,
   _var: __var,
   _minimum,
-  _maximum,
-  _argmin,
+  _cumsum,
+  _mean,
+  _identity,
+  _nonzero,
   _isnan,
-  _tril,
-  _amax,
-  _argmax,
-  _full,
-  _iota,
-  _sin,
-  _sort,
-  _reshape,
-  _negative,
+  _absolute,
+  _argmin,
   _log1p,
-  _triu,
-  _where,
-  _std,
+  _sin,
   _floor,
+  _log,
   _clip,
-  _isinf,
-  _greaterThan,
-  _lessThan,
-  _bitwiseOr,
-  _sub,
-  _logicalAnd,
-  _eq,
-  _neq,
-  _greaterThanEqual,
-  _logicalOr,
-  _mod,
+  _countNonzero,
+  _any,
+  _transpose,
+  _tile,
+  _exp,
+  _sign,
+  _power,
+  _matmul,
+  _amin,
+  _amax,
+  _iota,
+  _sqrt,
+  _erf,
+  _argmax,
+  _median,
   _bitwiseXor,
-  _add,
-  _mul,
-  _div,
-  _bitwiseAnd,
-  _lShift,
   _rShift,
+  _lShift,
+  _bitwiseOr,
+  _eq,
+  _greaterThan,
+  _logicalAnd,
+  _mul,
+  _neq,
+  _logicalOr,
+  _bitwiseAnd,
+  _add,
+  _greaterThanEqual,
   _lessThanEqual,
+  _mod,
+  _div,
+  _lessThan,
+  _sub,
   _init,
   _bytesUsed,
   _setRowMajor,
@@ -124,76 +124,44 @@ const {
   _randn
 } = require('../../build/Release/shumai_bindings.node')
 
-const reshape = (tensor, shape) => {
-  return new Tensor(_reshape(tensor._native_self, shape))
-}
-
-const negative = (tensor) => {
-  return new Tensor(_negative(tensor._native_self))
-}
-
 const log1p = (tensor) => {
   return new Tensor(_log1p(tensor._native_self))
 }
 
-const sort = (input, axis) => {
-  return new Tensor(_sort(input._native_self, axis))
+const sin = (tensor) => {
+  return new Tensor(_sin(tensor._native_self))
 }
 
 const floor = (tensor) => {
   return new Tensor(_floor(tensor._native_self))
 }
 
-const clip = (tensor, low, high) => {
-  return new Tensor(_clip(tensor._native_self, low._native_self, high._native_self))
+const absolute = (tensor) => {
+  return new Tensor(_absolute(tensor._native_self))
 }
 
-const isinf = (tensor) => {
-  return new Tensor(_isinf(tensor._native_self))
+const argmin = (input, axis, keepDims) => {
+  return new Tensor(_argmin(input._native_self, axis, keepDims))
 }
 
-const triu = (tensor) => {
-  return new Tensor(_triu(tensor._native_self))
+const transpose = (tensor, axes) => {
+  return new Tensor(_transpose(tensor._native_self, axes))
 }
 
-const where = (condition, x, y) => {
-  return new Tensor(_where(condition._native_self, x._native_self, y._native_self))
+const tile = (tensor, shape) => {
+  return new Tensor(_tile(tensor._native_self, shape))
 }
 
-const std = (input, axes, keepDims) => {
-  return new Tensor(_std(input._native_self, axes, keepDims))
-}
-
-const nonzero = (tensor) => {
-  return new Tensor(_nonzero(tensor._native_self))
-}
-
-const logicalNot = (tensor) => {
-  return new Tensor(_logicalNot(tensor._native_self))
-}
-
-const ceil = (tensor) => {
-  return new Tensor(_ceil(tensor._native_self))
-}
-
-const all = (input, axes, keepDims) => {
-  return new Tensor(_all(input._native_self, axes, keepDims))
+const exp = (tensor) => {
+  return new Tensor(_exp(tensor._native_self))
 }
 
 const log = (tensor) => {
   return new Tensor(_log(tensor._native_self))
 }
 
-const erf = (tensor) => {
-  return new Tensor(_erf(tensor._native_self))
-}
-
-const median = (input, axes, keepDims) => {
-  return new Tensor(_median(input._native_self, axes, keepDims))
-}
-
-const norm = (input, axes, p, keepDims) => {
-  return new Tensor(_norm(input._native_self, axes, p, keepDims))
+const clip = (tensor, low, high) => {
+  return new Tensor(_clip(tensor._native_self, low._native_self, high._native_self))
 }
 
 const countNonzero = (input, axes, keepDims) => {
@@ -204,48 +172,24 @@ const any = (input, axes, keepDims) => {
   return new Tensor(_any(input._native_self, axes, keepDims))
 }
 
-const identity = (dim) => {
-  return new Tensor(_identity(dim))
+const iota = (dims, tileDims) => {
+  return new Tensor(_iota(dims, tileDims))
 }
 
-const tile = (tensor, shape) => {
-  return new Tensor(_tile(tensor._native_self, shape))
+const sqrt = (tensor) => {
+  return new Tensor(_sqrt(tensor._native_self))
 }
 
-const concatenate = (tensors, axis) => {
-  return new Tensor(_concatenate(tensors, axis))
+const erf = (tensor) => {
+  return new Tensor(_erf(tensor._native_self))
 }
 
-const exp = (tensor) => {
-  return new Tensor(_exp(tensor._native_self))
-}
-
-const tanh = (tensor) => {
-  return new Tensor(_tanh(tensor._native_self))
-}
-
-const rint = (tensor) => {
-  return new Tensor(_rint(tensor._native_self))
+const sign = (tensor) => {
+  return new Tensor(_sign(tensor._native_self))
 }
 
 const power = (lhs, rhs) => {
   return new Tensor(_power(lhs._native_self, rhs._native_self))
-}
-
-const sum = (input, axes, keepDims) => {
-  return new Tensor(_sum(input._native_self, axes, keepDims))
-}
-
-const cumsum = (input, axis) => {
-  return new Tensor(_cumsum(input._native_self, axis))
-}
-
-const mean = (input, axes, keepDims) => {
-  return new Tensor(_mean(input._native_self, axes, keepDims))
-}
-
-const flip = (tensor, dim) => {
-  return new Tensor(_flip(tensor._native_self, dim))
 }
 
 const matmul = (lhs, rhs) => {
@@ -256,24 +200,24 @@ const amin = (input, axes, keepDims) => {
   return new Tensor(_amin(input._native_self, axes, keepDims))
 }
 
-const arange = (start, end, step) => {
-  return new Tensor(_arange(start, end, step))
+const amax = (input, axes, keepDims) => {
+  return new Tensor(_amax(input._native_self, axes, keepDims))
 }
 
-const transpose = (tensor, axes) => {
-  return new Tensor(_transpose(tensor._native_self, axes))
+const argmax = (input, axis, keepDims) => {
+  return new Tensor(_argmax(input._native_self, axis, keepDims))
+}
+
+const median = (input, axes, keepDims) => {
+  return new Tensor(_median(input._native_self, axes, keepDims))
+}
+
+const full = (dims, val) => {
+  return new Tensor(_full(dims, val))
 }
 
 const cos = (tensor) => {
   return new Tensor(_cos(tensor._native_self))
-}
-
-const sqrt = (tensor) => {
-  return new Tensor(_sqrt(tensor._native_self))
-}
-
-const absolute = (tensor) => {
-  return new Tensor(_absolute(tensor._native_self))
 }
 
 const sigmoid = (tensor) => {
@@ -284,52 +228,108 @@ const roll = (tensor, shift, axis) => {
   return new Tensor(_roll(tensor._native_self, shift, axis))
 }
 
-const sign = (tensor) => {
-  return new Tensor(_sign(tensor._native_self))
+const tril = (tensor) => {
+  return new Tensor(_tril(tensor._native_self))
 }
 
-const minimum = (lhs, rhs) => {
-  return new Tensor(_minimum(lhs._native_self, rhs._native_self))
+const triu = (tensor) => {
+  return new Tensor(_triu(tensor._native_self))
+}
+
+const tanh = (tensor) => {
+  return new Tensor(_tanh(tensor._native_self))
+}
+
+const flip = (tensor, dim) => {
+  return new Tensor(_flip(tensor._native_self, dim))
+}
+
+const reshape = (tensor, shape) => {
+  return new Tensor(_reshape(tensor._native_self, shape))
 }
 
 const maximum = (lhs, rhs) => {
   return new Tensor(_maximum(lhs._native_self, rhs._native_self))
 }
 
-const argmin = (input, axis, keepDims) => {
-  return new Tensor(_argmin(input._native_self, axis, keepDims))
+const std = (input, axes, keepDims) => {
+  return new Tensor(_std(input._native_self, axes, keepDims))
+}
+
+const arange = (start, end, step) => {
+  return new Tensor(_arange(start, end, step))
+}
+
+const concatenate = (tensors, axis) => {
+  return new Tensor(_concatenate(tensors, axis))
+}
+
+const negative = (tensor) => {
+  return new Tensor(_negative(tensor._native_self))
+}
+
+const logicalNot = (tensor) => {
+  return new Tensor(_logicalNot(tensor._native_self))
+}
+
+const ceil = (tensor) => {
+  return new Tensor(_ceil(tensor._native_self))
+}
+
+const rint = (tensor) => {
+  return new Tensor(_rint(tensor._native_self))
+}
+
+const isinf = (tensor) => {
+  return new Tensor(_isinf(tensor._native_self))
+}
+
+const where = (condition, x, y) => {
+  return new Tensor(_where(condition._native_self, x._native_self, y._native_self))
+}
+
+const sort = (input, axis) => {
+  return new Tensor(_sort(input._native_self, axis))
+}
+
+const sum = (input, axes, keepDims) => {
+  return new Tensor(_sum(input._native_self, axes, keepDims))
 }
 
 const _var = (input, axes, bias, keepDims) => {
   return new Tensor(__var(input._native_self, axes, bias, keepDims))
 }
 
-const full = (dims, val) => {
-  return new Tensor(_full(dims, val))
+const norm = (input, axes, p, keepDims) => {
+  return new Tensor(_norm(input._native_self, axes, p, keepDims))
 }
 
-const iota = (dims, tileDims) => {
-  return new Tensor(_iota(dims, tileDims))
+const all = (input, axes, keepDims) => {
+  return new Tensor(_all(input._native_self, axes, keepDims))
 }
 
-const sin = (tensor) => {
-  return new Tensor(_sin(tensor._native_self))
+const identity = (dim) => {
+  return new Tensor(_identity(dim))
+}
+
+const nonzero = (tensor) => {
+  return new Tensor(_nonzero(tensor._native_self))
 }
 
 const isnan = (tensor) => {
   return new Tensor(_isnan(tensor._native_self))
 }
 
-const tril = (tensor) => {
-  return new Tensor(_tril(tensor._native_self))
+const minimum = (lhs, rhs) => {
+  return new Tensor(_minimum(lhs._native_self, rhs._native_self))
 }
 
-const amax = (input, axes, keepDims) => {
-  return new Tensor(_amax(input._native_self, axes, keepDims))
+const cumsum = (input, axis) => {
+  return new Tensor(_cumsum(input._native_self, axis))
 }
 
-const argmax = (input, axis, keepDims) => {
-  return new Tensor(_argmax(input._native_self, axis, keepDims))
+const mean = (input, axes, keepDims) => {
+  return new Tensor(_mean(input._native_self, axes, keepDims))
 }
 
 const toFloat32Array = (tensor) => {
@@ -464,76 +464,76 @@ const tensorFromUint64Array = (arr) => {
   return new Tensor(_tensorFromUint64Array(arr))
 }
 
-const mod = (lhs, rhs) => {
-  return new Tensor(_mod(lhs._native_self, rhs._native_self))
-}
-
-const bitwiseXor = (lhs, rhs) => {
-  return new Tensor(_bitwiseXor(lhs._native_self, rhs._native_self))
-}
-
-const add = (lhs, rhs) => {
-  return new Tensor(_add(lhs._native_self, rhs._native_self))
-}
-
-const mul = (lhs, rhs) => {
-  return new Tensor(_mul(lhs._native_self, rhs._native_self))
-}
-
-const div = (lhs, rhs) => {
-  return new Tensor(_div(lhs._native_self, rhs._native_self))
-}
-
-const logicalOr = (lhs, rhs) => {
-  return new Tensor(_logicalOr(lhs._native_self, rhs._native_self))
+const rShift = (lhs, rhs) => {
+  return new Tensor(_rShift(lhs._native_self, rhs._native_self))
 }
 
 const lShift = (lhs, rhs) => {
   return new Tensor(_lShift(lhs._native_self, rhs._native_self))
 }
 
-const rShift = (lhs, rhs) => {
-  return new Tensor(_rShift(lhs._native_self, rhs._native_self))
-}
-
-const lessThanEqual = (lhs, rhs) => {
-  return new Tensor(_lessThanEqual(lhs._native_self, rhs._native_self))
-}
-
-const bitwiseAnd = (lhs, rhs) => {
-  return new Tensor(_bitwiseAnd(lhs._native_self, rhs._native_self))
-}
-
-const lessThan = (lhs, rhs) => {
-  return new Tensor(_lessThan(lhs._native_self, rhs._native_self))
-}
-
-const bitwiseOr = (lhs, rhs) => {
-  return new Tensor(_bitwiseOr(lhs._native_self, rhs._native_self))
-}
-
-const sub = (lhs, rhs) => {
-  return new Tensor(_sub(lhs._native_self, rhs._native_self))
+const bitwiseXor = (lhs, rhs) => {
+  return new Tensor(_bitwiseXor(lhs._native_self, rhs._native_self))
 }
 
 const greaterThan = (lhs, rhs) => {
   return new Tensor(_greaterThan(lhs._native_self, rhs._native_self))
 }
 
-const eq = (lhs, rhs) => {
-  return new Tensor(_eq(lhs._native_self, rhs._native_self))
+const logicalAnd = (lhs, rhs) => {
+  return new Tensor(_logicalAnd(lhs._native_self, rhs._native_self))
+}
+
+const mul = (lhs, rhs) => {
+  return new Tensor(_mul(lhs._native_self, rhs._native_self))
 }
 
 const neq = (lhs, rhs) => {
   return new Tensor(_neq(lhs._native_self, rhs._native_self))
 }
 
-const greaterThanEqual = (lhs, rhs) => {
-  return new Tensor(_greaterThanEqual(lhs._native_self, rhs._native_self))
+const logicalOr = (lhs, rhs) => {
+  return new Tensor(_logicalOr(lhs._native_self, rhs._native_self))
 }
 
-const logicalAnd = (lhs, rhs) => {
-  return new Tensor(_logicalAnd(lhs._native_self, rhs._native_self))
+const bitwiseAnd = (lhs, rhs) => {
+  return new Tensor(_bitwiseAnd(lhs._native_self, rhs._native_self))
+}
+
+const bitwiseOr = (lhs, rhs) => {
+  return new Tensor(_bitwiseOr(lhs._native_self, rhs._native_self))
+}
+
+const eq = (lhs, rhs) => {
+  return new Tensor(_eq(lhs._native_self, rhs._native_self))
+}
+
+const add = (lhs, rhs) => {
+  return new Tensor(_add(lhs._native_self, rhs._native_self))
+}
+
+const lessThanEqual = (lhs, rhs) => {
+  return new Tensor(_lessThanEqual(lhs._native_self, rhs._native_self))
+}
+
+const mod = (lhs, rhs) => {
+  return new Tensor(_mod(lhs._native_self, rhs._native_self))
+}
+
+const div = (lhs, rhs) => {
+  return new Tensor(_div(lhs._native_self, rhs._native_self))
+}
+
+const lessThan = (lhs, rhs) => {
+  return new Tensor(_lessThan(lhs._native_self, rhs._native_self))
+}
+
+const sub = (lhs, rhs) => {
+  return new Tensor(_sub(lhs._native_self, rhs._native_self))
+}
+
+const greaterThanEqual = (lhs, rhs) => {
+  return new Tensor(_greaterThanEqual(lhs._native_self, rhs._native_self))
 }
 
 const init = () => {
@@ -609,76 +609,76 @@ const randn = (shape) => {
 }
 
 module.exports = {
+  tanh,
   flip,
-  matmul,
-  amin,
-  roll,
-  sign,
-  arange,
-  transpose,
-  cos,
-  sqrt,
-  absolute,
-  sigmoid,
-  minimum,
-  maximum,
-  argmin,
-  _var,
-  argmax,
-  full,
-  iota,
-  sin,
-  isnan,
-  tril,
-  amax,
-  reshape,
-  negative,
-  log1p,
-  sort,
-  floor,
-  clip,
-  isinf,
-  triu,
-  where,
   std,
-  nonzero,
+  reshape,
+  maximum,
+  negative,
   logicalNot,
   ceil,
-  all,
-  log,
-  erf,
-  median,
-  norm,
-  countNonzero,
-  any,
-  power,
-  sum,
-  identity,
-  tile,
-  concatenate,
-  exp,
-  tanh,
   rint,
+  isinf,
+  where,
+  arange,
+  concatenate,
+  _var,
+  norm,
+  all,
+  sort,
+  sum,
+  isnan,
+  minimum,
   cumsum,
   mean,
-  add,
-  mul,
-  div,
-  logicalOr,
-  mod,
-  bitwiseXor,
-  lShift,
+  identity,
+  nonzero,
+  floor,
+  absolute,
+  argmin,
+  log1p,
+  sin,
+  exp,
+  log,
+  clip,
+  countNonzero,
+  any,
+  transpose,
+  tile,
+  erf,
+  sign,
+  power,
+  matmul,
+  amin,
+  amax,
+  iota,
+  sqrt,
+  argmax,
+  median,
+  sigmoid,
+  roll,
+  tril,
+  triu,
+  full,
+  cos,
   rShift,
-  lessThanEqual,
-  bitwiseAnd,
-  lessThan,
-  bitwiseOr,
-  sub,
+  lShift,
+  bitwiseXor,
   greaterThan,
-  eq,
-  neq,
-  greaterThanEqual,
   logicalAnd,
+  mul,
+  neq,
+  logicalOr,
+  bitwiseAnd,
+  bitwiseOr,
+  eq,
+  add,
+  lessThanEqual,
+  mod,
+  div,
+  lessThan,
+  sub,
+  greaterThanEqual,
   init,
   bytesUsed,
   setRowMajor,
@@ -696,5 +696,38 @@ module.exports = {
   dtypeUint32,
   dtypeUint64,
   rand,
-  randn
+  randn,
+  toFloat32Array,
+  toFloat64Array,
+  toBoolInt8Array,
+  toInt16Array,
+  toInt32Array,
+  save,
+  toInt64Array,
+  toUint8Array,
+  toUint16Array,
+  toUint32Array,
+  toUint64Array,
+  toFloat32Scalar,
+  toFloat64Scalar,
+  toBoolInt8Scalar,
+  toInt16Scalar,
+  toInt32Scalar,
+  toInt64Scalar,
+  toUint8Scalar,
+  toUint16Scalar,
+  toUint32Scalar,
+  toUint64Scalar,
+  eval,
+  dispose,
+  tensorFromFloat32Array,
+  tensorFromFloat64Array,
+  tensorFromBoolInt8Array,
+  tensorFromInt16Array,
+  tensorFromInt32Array,
+  tensorFromInt64Array,
+  tensorFromUint8Array,
+  tensorFromUint16Array,
+  tensorFromUint32Array,
+  tensorFromUint64Array
 }

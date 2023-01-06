@@ -72,7 +72,11 @@ func (g *PackageGenerator) WriteEnvExports(classes map[string]*CPPClass, methods
 			sb.WriteString(",\n")
 		}
 		g.writeIndent(sb, 1)
-		sb.WriteString(m.Name)
+		if isInvalidName(m.Name) {
+			sb.WriteString(fmt.Sprintf("_%s", m.Name))
+		} else {
+			sb.WriteString(m.Name)
+		}
 		if i < used_len-1 {
 			sb.WriteString(",\n")
 		}
@@ -87,7 +91,11 @@ func (g *PackageGenerator) WriteEnvExports(classes map[string]*CPPClass, methods
 						sb.WriteString(",\n")
 					}
 					g.writeIndent(sb, 1)
-					sb.WriteString(m.Name)
+					if isInvalidName(m.Name) {
+						sb.WriteString(fmt.Sprintf("_%s", m.Name))
+					} else {
+						sb.WriteString(m.Name)
+					}
 					if i < used_len-1 {
 						sb.WriteString(",\n")
 					}
