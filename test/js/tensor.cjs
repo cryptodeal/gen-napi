@@ -6,12 +6,18 @@ const {
 } = require('../../build/Release/shumai_bindings.node')
 
 class Tensor {
+  #native_self
+
   constructor(t) {
     if (t instanceof Float32Array || t.constructor === Float32Array) {
-      this._native_self = _tensorFromFloat32Array(t)
+      this.#native_self = _tensorFromFloat32Array(t)
     } else {
-      this._native_self = t
+      this.#native_self = t
     }
+  }
+
+  get _native_self() {
+    return this.#native_self
   }
 
   add(other) {

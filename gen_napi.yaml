@@ -19,9 +19,9 @@ packages:
         napi: 'Number'
     js_wrapper_opts:
       front_matter: |
-        const { Tensor } = require('./tensor')
+        import { Tensor } from './tensor'
       addon_path: 'build/Release/shumai_bindings.node'
-      wrapper_out_path: 'test/js/index.cjs'
+      wrapper_out_path: 'test/ts/index.ts'
     ignored_methods:
       - 'scalar'
       - 'pad'
