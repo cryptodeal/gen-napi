@@ -19,7 +19,7 @@ packages:
         napi: 'Number'
     js_wrapper_opts:
       front_matter: |
-        import { Tensor } from './tensor'
+        const { Tensor } = require('./tensor')
       addon_path: 'build/Release/shumai_bindings.node'
       wrapper_out_path: 'test/js/index.cjs'
     ignored_methods:
@@ -1153,7 +1153,7 @@ packages:
                 fl::detail::releaseAdapterUnsafe(t);
               }
           - name: 'tensorFromFloat32Array'
-            ts_return_type: 'Tensor'
+            ts_return_type: 'any'
             args:
               - name: 'arr'
                 ts_type: 'Float32Array'
@@ -1187,7 +1187,7 @@ packages:
                 return wrapped;
               }
           - name: 'tensorFromFloat64Array'
-            ts_return_type: 'Tensor'
+            ts_return_type: 'any'
             args:
               - name: 'arr'
                 ts_type: 'Float64Array'
@@ -1221,7 +1221,7 @@ packages:
                 return wrapped;
               }
           - name: 'tensorFromBoolInt8Array'
-            ts_return_type: 'Tensor'
+            ts_return_type: 'any'
             args:
               - name: 'arr'
                 ts_type: 'Int8Array'
@@ -1255,7 +1255,7 @@ packages:
                 return wrapped;
               }
           - name: 'tensorFromInt16Array'
-            ts_return_type: 'Tensor'
+            ts_return_type: 'any'
             args:
               - name: 'arr'
                 ts_type: 'Int16Array'
@@ -1289,7 +1289,7 @@ packages:
                 return wrapped;
               }
           - name: 'tensorFromInt32Array'
-            ts_return_type: 'Tensor'
+            ts_return_type: 'any'
             args:
               - name: 'arr'
                 ts_type: 'Int32Array'
@@ -1323,7 +1323,7 @@ packages:
                 return wrapped;
               }
           - name: 'tensorFromInt64Array'
-            ts_return_type: 'Tensor'
+            ts_return_type: 'any'
             args:
               - name: 'arr'
                 ts_type: 'BigInt64Array'
@@ -1357,7 +1357,7 @@ packages:
                 return wrapped;
               }
           - name: 'tensorFromUint8Array'
-            ts_return_type: 'Tensor'
+            ts_return_type: 'any'
             args:
               - name: 'arr'
                 ts_type: 'Uint8Array'
@@ -1391,7 +1391,7 @@ packages:
                 return wrapped;
               }
           - name: 'tensorFromUint16Array'
-            ts_return_type: 'Tensor'
+            ts_return_type: 'any'
             args:
               - name: 'arr'
                 ts_type: 'Uint16Array'
@@ -1428,7 +1428,7 @@ packages:
             args:
               - name: 'arr'
                 ts_type: 'Uint32Array'
-            ts_return_type: 'Tensor'
+            ts_return_type: 'any'
             body: |
               static Napi::Value tensorFromUint32Array(const Napi::CallbackInfo& info) {
                 Napi::Env env = info.Env();
@@ -1462,7 +1462,7 @@ packages:
             args:
               - name: 'arr'
                 ts_type: 'BigUint64Array'
-            ts_return_type: 'Tensor'
+            ts_return_type: 'any'
             body: |
               static Napi::Value tensorFromUint64Array(const Napi::CallbackInfo& info) {
                 Napi::Env env = info.Env();

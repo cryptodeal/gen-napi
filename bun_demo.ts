@@ -1,5 +1,5 @@
-import { Tensor } from './test/js/tensor'
-const sm = require('./test/js/index.cjs')
+import * as sm from './test/ts/index'
+import { Tensor } from './test/ts/tensor'
 sm.init()
 function genRand() {
   const out = new Float32Array(128)
@@ -19,6 +19,6 @@ for (let i = 0; i < 10000; ++i) {
   //console.log('bytes: ', Number(sm.bytesUsed()))
 }
 const t1 = performance.now() / 1e3
-m = null
 console.log(t1 - t0, 'seconds to calculate', m)
+m = null
 console.log('bytes: ', Number(sm.bytesUsed()))

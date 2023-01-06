@@ -309,6 +309,9 @@ func (g *PackageGenerator) WriteEnvWrappedFns(methods map[string]*CPPMethod, pro
 							sb.WriteString(", ")
 						}
 						sb.WriteString(p.Name)
+						if isClass(p.TSType, classes) {
+							sb.WriteString("._native_self")
+						}
 					}
 					if isClass(m.TSReturnType, classes) {
 						sb.WriteByte(')')
