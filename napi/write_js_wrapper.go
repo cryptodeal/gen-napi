@@ -77,6 +77,24 @@ func (g *PackageGenerator) WriteEnvExports(classes map[string]*CPPClass, methods
 			sb.WriteString(",\n")
 		}
 	}
+
+	for name, c := range classes {
+		if c.Decl != nil {
+			if v, ok := g.conf.ClassOpts[name]; ok && len(v.ForcedMethods) > 0 {
+				used_len = len(v.ForcedMethods)
+				for i, m := range v.ForcedMethods {
+					if i == 0 {
+						sb.WriteString(",\n")
+					}
+					g.writeIndent(sb, 1)
+					sb.WriteString(m.Name)
+					if i < used_len-1 {
+						sb.WriteString(",\n")
+					}
+				}
+			}
+		}
+	}
 	sb.WriteString("\n}\n")
 	return sb.String()
 }

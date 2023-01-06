@@ -21,7 +21,7 @@ packages:
       front_matter: |
         import { Tensor } from './tensor'
       addon_path: 'build/Release/shumai_bindings.node'
-      wrapper_out_path: 'test/js/index.ts'
+      wrapper_out_path: 'test/js/index.cjs'
     ignored_methods:
       - 'scalar'
       - 'pad'
