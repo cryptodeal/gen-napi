@@ -444,29 +444,7 @@ func (g *PackageGenerator) writeBindings(sb *strings.Builder, classes map[string
 	g.writeBindingsFrontmatter(sb)
 	g.writeFileSourceHeader(sb, *g.Path)
 	g.writeGlobalVars(sb)
-	g.writeHelpers(sb)
-
-	hasUnexternalizer := false
-	for name, c := range classes {
-		if c.Decl != nil {
-			g.writeClassDeleter(sb, c, name)
-			g.writeClassExternalizer(sb, c, name)
-			if !hasUnexternalizer {
-				g.writeClassUnExternalizer(sb)
-				hasUnexternalizer = true
-			}
-			if c.FieldDecl != nil {
-				for _, f := range *c.FieldDecl {
-					g.writeClassField(sb, f, name, classes)
-				}
-			}
-			if v, ok := g.conf.ClassOpts[name]; ok && len(v.ForcedMethods) > 0 {
-				for _, f := range v.ForcedMethods {
-					sb.WriteString(strings.Replace(f.FnBody, f.Name, "_"+f.Name, 1))
-				}
-			}
-		}
-	}
+	g.writeHelpers(sb, classes)
 
 	sb.WriteString("// exported functions\n")
 	for _, f := range methods {
