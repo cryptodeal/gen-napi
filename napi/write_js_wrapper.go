@@ -15,6 +15,16 @@ func isInvalidName(name string) bool {
 	return false
 }
 
+func isTypedArray(typeName string) bool {
+	ta := []string{"Int8Array", "Uint8Array", "Uint8ClampedArray", "Int16Array", "Uint16Array", "Int32Array", "Uint32Array", "Float32Array", "Float64Array", "BigInt64Array", "BigUint64Array"}
+	for _, t := range ta {
+		if strings.EqualFold(typeName, t) {
+			return true
+		}
+	}
+	return false
+}
+
 func (g *PackageGenerator) WriteEnvWrapper(sb *strings.Builder, classes map[string]*CPPClass, methods map[string]*CPPMethod, processedMethods map[string]*CPPMethod) {
 	sb.WriteString(g.conf.JSWrapperOpts.FrontMatter)
 	sb.WriteString(g.WriteEnvImports(classes, methods, processedMethods))
@@ -311,6 +321,8 @@ func (g *PackageGenerator) WriteEnvWrappedFns(methods map[string]*CPPMethod, pro
 						sb.WriteString(p.Name)
 						if isClass(p.TSType, classes) {
 							sb.WriteString("._native_self")
+						} else if isTypedArray(m.Args[i].TSType) {
+							sb.WriteString(".buffer")
 						}
 					}
 					if isClass(m.TSReturnType, classes) {
@@ -428,6 +440,9 @@ func (g *PackageGenerator) WriteEnvWrappedFns(methods map[string]*CPPMethod, pro
 				sb.WriteString(", ")
 			}
 			sb.WriteString(p.Name)
+			if isTypedArray(m.Args[i].TSType) {
+				sb.WriteString(".buffer")
+			}
 		}
 		if isClass(m.TSReturnType, classes) {
 			sb.WriteByte(')')
