@@ -5,7 +5,19 @@ import (
 	"strings"
 )
 
-func (g *PackageGenerator) writeArgChecks(sb *strings.Builder, name string, args *[]*CPPArg, expected_arg_count int) {
+func (g *PackageGenerator) writeArgChecker(sb *strings.Builder, name string, checker string, idx int, msg string) {
+	g.writeIndent(sb, 1)
+	sb.WriteString(fmt.Sprintf("if (!info[%d].%s()) {\n", idx, checker))
+	g.writeIndent(sb, 2)
+	sb.WriteString(fmt.Sprintf("Napi::TypeError::New(env, %q).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects args[%d] to be %s", name, idx, msg)))
+	g.writeIndent(sb, 2)
+	sb.WriteString("return env.Null();\n")
+	g.writeIndent(sb, 1)
+	sb.WriteString("}\n")
+
+}
+
+func (g *PackageGenerator) writeArgChecks(sb *strings.Builder, name string, args *[]*CPPArg, expected_arg_count int, classes map[string]*CPPClass) {
 	if expected_arg_count == 0 {
 		return
 	}
@@ -24,7 +36,6 @@ func (g *PackageGenerator) writeArgChecks(sb *strings.Builder, name string, args
 	sb.WriteString("}\n")
 
 	// write arg checks, transforms, and declare arg variable as possible
-	/* TODO: uncomment once the remaining code is migrated
 	if v, ok := g.conf.MethodTransforms[name]; ok && v.ArgCheckTransforms != "" {
 		sb.WriteString(v.ArgCheckTransforms)
 		for i, arg := range *args {
@@ -41,7 +52,124 @@ func (g *PackageGenerator) writeArgChecks(sb *strings.Builder, name string, args
 		}
 		return
 	}
-	*/
+
+	// TODO: clean up logic/handle more cases
+	for i, arg := range *args {
+		if i > expected_arg_count {
+			break
+		}
+		if arg.IsPrimitive {
+			napiTypeHandler := ""
+			jsTypeEquivalent := ""
+			valGetter := "Value"
+			var needsCast *string
+			switch *arg.Type {
+			case "float":
+				napiTypeHandler = "IsNumber"
+				jsTypeEquivalent = "number"
+				valGetter = "FloatValue"
+
+			case "double":
+				napiTypeHandler = "IsNumber"
+				jsTypeEquivalent = "number"
+				valGetter = "DoubleValue"
+
+			case "long long", "char", "signed", "int8_t", "int32_t", "int16_t", "short":
+				napiTypeHandler = "IsNumber"
+				jsTypeEquivalent = "number"
+				valGetter = "Int32Value"
+				needsCast = arg.Type
+
+			case "int", "int64_t":
+				napiTypeHandler = "IsNumber"
+				jsTypeEquivalent = "number"
+				valGetter = "Int64Value"
+				needsCast = arg.Type
+
+			case "unsigned long long", "unsigned char", "unsigned", "uint8_t", "uint16_t", "unsigned short", "uint32_t":
+				napiTypeHandler = "IsNumber"
+				jsTypeEquivalent = "number"
+				valGetter = "Uint32Value"
+				needsCast = arg.Type
+
+			case "unsigned int", "uint64_t", "size_t", "uintptr_t":
+				napiTypeHandler = "IsNumber"
+				jsTypeEquivalent = "number"
+				valGetter = "Uint64Value"
+				needsCast = arg.Type
+			case "bool":
+				napiTypeHandler = "IsBoolean"
+				jsTypeEquivalent = "boolean"
+			}
+			g.writeArgChecker(sb, name, napiTypeHandler, i, fmt.Sprintf("typeof `%s`)", jsTypeEquivalent))
+			if _, ok := g.conf.MethodTransforms[name].ArgTransforms[*arg.Ident]; !ok {
+				g.writeIndent(sb, 1)
+				sb.WriteString(fmt.Sprintf("%s %s = ", *arg.Type, *arg.Ident))
+				if needsCast != nil {
+					sb.WriteString(fmt.Sprintf("static_cast<%s>(", *needsCast))
+				}
+				sb.WriteString(fmt.Sprintf("info[%d].As<Napi::%s>().%s()", i, strings.ReplaceAll(napiTypeHandler, "Is", ""), valGetter))
+				if needsCast != nil {
+					sb.WriteByte(')')
+				}
+				sb.WriteString(";\n")
+			}
+		} else if isClass(*arg.Type, classes) {
+			g.writeArgChecker(sb, name, "IsExternal", i, fmt.Sprintf("native `%s` (typeof `Napi::External<%s::%s>`)", *arg.Type, *g.NameSpace, *arg.Type))
+			if _, ok := g.conf.MethodTransforms[name].ArgTransforms[*arg.Ident]; !ok {
+				g.writeIndent(sb, 1)
+				sb.WriteString(fmt.Sprintf("%s::%s* %s = UnExternalize<%s::%s>(info[%d]);\n", *g.NameSpace, *arg.Type, *arg.Ident, *g.NameSpace, *arg.Type, i))
+			}
+		} else if strings.Contains(*arg.Type, "std::vector") {
+			argType := *arg.Type
+			type_test := argType[strings.Index(argType, "<")+1 : strings.Index(argType, ">")]
+			tsType, isObject := CPPTypeToTS(type_test)
+			g.writeArgChecker(sb, name, "IsArray", i, fmt.Sprintf("typeof `%s[]`)", tsType))
+			g.writeIndent(sb, 1)
+			sb.WriteString(fmt.Sprintf("int len_%s = info[%d].As<Napi::Array>().Length();\n", *arg.Ident, i))
+			g.writeIndent(sb, 1)
+			sb.WriteString(fmt.Sprintf("for (auto i = 0; i < len_%s; ++i) {\n", *arg.Ident))
+			g.writeIndent(sb, 2)
+			if isObject {
+				sb.WriteString(fmt.Sprintf("if (!info[%d].As<Napi::Array>().Get(i).IsExternal()) {\n", i))
+			} else {
+				sb.WriteString(fmt.Sprintf("if (!info[%d].As<Napi::Array>().Get(i).Is%s()) {\n", i, g.casers.upper.String(tsType[0:1])+tsType[1:]))
+			}
+			g.writeIndent(sb, 3)
+			sb.WriteString(fmt.Sprintf("Napi::TypeError::New(env, (%q + std::to_string(i) + %q)).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects args[%d][", name, i), fmt.Sprintf("] to be typeof `%s`", tsType)))
+			g.writeIndent(sb, 3)
+			sb.WriteString("return env.Null();\n")
+			g.writeIndent(sb, 2)
+			sb.WriteString("}\n")
+			g.writeIndent(sb, 1)
+			sb.WriteString("}\n")
+
+		} else if v, ok := g.conf.TypeMappings[*arg.Type]; ok {
+			g.writeIndent(sb, 1)
+			if strings.Contains(v.TSType, "Array") || strings.Contains(v.TSType, "[]") {
+				sb.WriteString(fmt.Sprintf("if (!info[%d].IsArray()) {\n", i))
+			} else if strings.Contains(v.TSType, "any") || strings.Contains(v.TSType, "object") || strings.Contains(v.TSType, "Record<") || strings.Contains(v.TSType, "Map<") {
+				sb.WriteString(fmt.Sprintf("if (!info[%d].IsExternal()) {\n", i))
+			} else if strings.Contains(v.TSType, "string") {
+				sb.WriteString(fmt.Sprintf("if (!info[%d].IsString()) {\n", i))
+			} else if strings.Contains(v.TSType, "number") {
+				sb.WriteString(fmt.Sprintf("if (!info[%d].IsNumber()) {\n", i))
+			}
+			g.writeIndent(sb, 2)
+			sb.WriteString(fmt.Sprintf("Napi::TypeError::New(env, %q).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects args[%d] to be typeof `%s`", name, i, v.TSType)))
+			g.writeIndent(sb, 2)
+			sb.WriteString("return env.Null();\n")
+			g.writeIndent(sb, 1)
+			sb.WriteString("}\n")
+		}
+
+		if v, ok := g.conf.MethodTransforms[name].ArgTransforms[*arg.Ident]; ok {
+			if !strings.Contains(v, "/arg_") {
+				g.writeIndent(sb, 1)
+				sb.WriteString(strings.ReplaceAll(v, "/arg/", fmt.Sprintf("info[%d]", i)))
+			}
+		}
+	}
 
 	// TODO: all logic for arg type checks needs to live here
 }
@@ -52,179 +180,21 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 	g.writeIndent(sb, 1)
 	sb.WriteString("Napi::Env env = info.Env();\n")
 	// if len(m.Overloads) == 1 {
-	var expected_count int
+	var arg_count int
 	if v, ok := g.conf.MethodTransforms[*m.Ident]; ok {
-		expected_count = v.ArgCount
-		m.ExpectedArgs = expected_count
+		arg_count = v.ArgCount
+		m.ExpectedArgs = arg_count
 	} else {
-		expected_count = len(*m.Overloads[0])
-		m.ExpectedArgs = expected_count
+		arg_count = len(*m.Overloads[0])
+		m.ExpectedArgs = arg_count
 	}
 	// single overload, parse args
-	argCount := expected_count
-	g.writeArgChecks(sb, *m.Ident, m.Overloads[0], argCount)
-
-	// TODO: clean up this mess/move into `writeArgChecks`
-	if expected_count > 0 {
-		if v, ok := g.conf.MethodTransforms[*m.Ident]; ok && v.ArgCheckTransforms != "" {
-			lines := strings.Split(v.ArgCheckTransforms, "\n")
-			for _, line := range lines {
-				g.writeIndent(sb, 1)
-				sb.WriteString(fmt.Sprintf("%s\n", line))
-			}
-			for i, arg := range *m.Overloads[0] {
-				if i > expected_count {
-					break
-				}
-				if v2, ok2 := v.ArgTransforms[*arg.Ident]; ok2 && !strings.Contains(v2, "/arg_") {
-					g.writeIndent(sb, 1)
-					sb.WriteString(strings.ReplaceAll(v2, "/arg/", fmt.Sprintf("info[%d]", i)))
-				}
-			}
-		} else {
-			for i, arg := range *m.Overloads[0] {
-				if i > expected_count {
-					break
-				}
-				if arg.IsPrimitive {
-					napiTypeHandler := ""
-					jsTypeEquivalent := ""
-					valGetter := "Value"
-					var needsCast *string
-					switch *arg.Type {
-					case "float":
-						napiTypeHandler = "IsNumber"
-						jsTypeEquivalent = "number"
-						valGetter = "FloatValue"
-
-					case "double":
-						napiTypeHandler = "IsNumber"
-						jsTypeEquivalent = "number"
-						valGetter = "DoubleValue"
-
-					case "long long", "char", "signed", "int8_t", "int32_t", "int16_t", "short":
-						napiTypeHandler = "IsNumber"
-						jsTypeEquivalent = "number"
-						valGetter = "Int32Value"
-						needsCast = arg.Type
-
-					case "int", "int64_t":
-						napiTypeHandler = "IsNumber"
-						jsTypeEquivalent = "number"
-						valGetter = "Int64Value"
-						needsCast = arg.Type
-
-					case "unsigned long long", "unsigned char", "unsigned", "uint8_t", "uint16_t", "unsigned short", "uint32_t":
-						napiTypeHandler = "IsNumber"
-						jsTypeEquivalent = "number"
-						valGetter = "Uint32Value"
-						needsCast = arg.Type
-
-					case "unsigned int", "uint64_t", "size_t", "uintptr_t":
-						napiTypeHandler = "IsNumber"
-						jsTypeEquivalent = "number"
-						valGetter = "Uint64Value"
-						needsCast = arg.Type
-					case "bool":
-						napiTypeHandler = "IsBoolean"
-						jsTypeEquivalent = "boolean"
-					}
-					g.writeIndent(sb, 1)
-					sb.WriteString(fmt.Sprintf("if (!info[%d].%s()) {\n", i, napiTypeHandler))
-					g.writeIndent(sb, 2)
-					sb.WriteString(fmt.Sprintf("Napi::TypeError::New(env, %q).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects args[%d] to be typeof `%s`", *m.Ident, i, jsTypeEquivalent)))
-					g.writeIndent(sb, 2)
-					sb.WriteString("return env.Null();\n")
-					g.writeIndent(sb, 1)
-					sb.WriteString("}\n")
-					if _, ok := g.conf.MethodTransforms[*m.Ident].ArgTransforms[*arg.Ident]; !ok {
-						g.writeIndent(sb, 1)
-						sb.WriteString(fmt.Sprintf("%s %s = ", *arg.Type, *arg.Ident))
-						if needsCast != nil {
-							sb.WriteString(fmt.Sprintf("static_cast<%s>(", *needsCast))
-						}
-						sb.WriteString(fmt.Sprintf("info[%d].As<Napi::%s>().%s()", i, strings.ReplaceAll(napiTypeHandler, "Is", ""), valGetter))
-						if needsCast != nil {
-							sb.WriteByte(')')
-						}
-						sb.WriteString(";\n")
-					}
-				} else if isClass(*arg.Type, classes) {
-					g.writeIndent(sb, 1)
-					sb.WriteString(fmt.Sprintf("if (!info[%d].IsExternal()) {\n", i))
-					g.writeIndent(sb, 2)
-					sb.WriteString(fmt.Sprintf("Napi::TypeError::New(env, %q).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects args[%d] to be `Napi::External<%s::%s>` `%s`", *m.Ident, i, *g.NameSpace, *m.Returns, *arg.Type)))
-					g.writeIndent(sb, 2)
-					sb.WriteString("return env.Null();\n")
-					g.writeIndent(sb, 1)
-					sb.WriteString("}\n")
-					if _, ok := g.conf.MethodTransforms[*m.Ident].ArgTransforms[*arg.Ident]; !ok {
-						g.writeIndent(sb, 1)
-						sb.WriteString(fmt.Sprintf("%s::%s* %s = UnExternalize<%s::%s>(info[%d]);\n", *g.NameSpace, *arg.Type, *arg.Ident, *g.NameSpace, *arg.Type, i))
-					}
-				} else if strings.Contains(*arg.Type, "std::vector") {
-					argType := *arg.Type
-					type_test := argType[strings.Index(argType, "<")+1 : strings.Index(argType, ">")]
-					g.writeIndent(sb, 1)
-					sb.WriteString(fmt.Sprintf("if (!info[%d].IsArray()) {\n", i))
-					g.writeIndent(sb, 2)
-					tsType, isObject := CPPTypeToTS(type_test)
-					sb.WriteString(fmt.Sprintf("Napi::TypeError::New(env, %q).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects args[%d] to be typeof `%s[]`", *m.Ident, i, tsType)))
-					g.writeIndent(sb, 2)
-					sb.WriteString("return env.Null();\n")
-					g.writeIndent(sb, 1)
-					sb.WriteString("}\n")
-					g.writeIndent(sb, 1)
-					sb.WriteString(fmt.Sprintf("int len_%s = info[%d].As<Napi::Array>().Length();\n", *arg.Ident, i))
-					g.writeIndent(sb, 1)
-					sb.WriteString(fmt.Sprintf("for (auto i = 0; i < len_%s; ++i) {\n", *arg.Ident))
-					g.writeIndent(sb, 2)
-					if isObject {
-						sb.WriteString(fmt.Sprintf("if (!info[%d].As<Napi::Array>().Get(i).IsExternal()) {\n", i))
-					} else {
-						sb.WriteString(fmt.Sprintf("if (!info[%d].As<Napi::Array>().Get(i).Is%s()) {\n", i, g.casers.upper.String(tsType[0:1])+tsType[1:]))
-					}
-					g.writeIndent(sb, 3)
-					sb.WriteString(fmt.Sprintf("Napi::TypeError::New(env, (%q + std::to_string(i) + %q)).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects args[%d][", *m.Ident, i), fmt.Sprintf("] to be typeof `%s`", tsType)))
-					g.writeIndent(sb, 3)
-					sb.WriteString("return env.Null();\n")
-					g.writeIndent(sb, 2)
-					sb.WriteString("}\n")
-					g.writeIndent(sb, 1)
-					sb.WriteString("}\n")
-
-				} else if v, ok := g.conf.TypeMappings[*arg.Type]; ok {
-					g.writeIndent(sb, 1)
-					if strings.Contains(v.TSType, "Array") || strings.Contains(v.TSType, "[]") {
-						sb.WriteString(fmt.Sprintf("if (!info[%d].IsArray()) {\n", i))
-					} else if strings.Contains(v.TSType, "any") || strings.Contains(v.TSType, "object") || strings.Contains(v.TSType, "Record<") || strings.Contains(v.TSType, "Map<") {
-						sb.WriteString(fmt.Sprintf("if (!info[%d].IsExternal()) {\n", i))
-					} else if strings.Contains(v.TSType, "string") {
-						sb.WriteString(fmt.Sprintf("if (!info[%d].IsString()) {\n", i))
-					} else if strings.Contains(v.TSType, "number") {
-						sb.WriteString(fmt.Sprintf("if (!info[%d].IsNumber()) {\n", i))
-					}
-					g.writeIndent(sb, 2)
-					sb.WriteString(fmt.Sprintf("Napi::TypeError::New(env, %q).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects args[%d] to be typeof `%s`", *m.Ident, i, v.TSType)))
-					g.writeIndent(sb, 2)
-					sb.WriteString("return env.Null();\n")
-					g.writeIndent(sb, 1)
-					sb.WriteString("}\n")
-				}
-				if v, ok := g.conf.MethodTransforms[*m.Ident].ArgTransforms[*arg.Ident]; ok {
-					if !strings.Contains(v, "/arg_") {
-						g.writeIndent(sb, 1)
-						sb.WriteString(strings.ReplaceAll(v, "/arg/", fmt.Sprintf("info[%d]", i)))
-					}
-				}
-			}
-		}
-	}
+	g.writeArgChecks(sb, *m.Ident, m.Overloads[0], arg_count, classes)
 
 	obj_name := ""
 	outType := *m.Returns
 	for i, arg := range *m.Overloads[0] {
-		if i > expected_count {
+		if i > arg_count {
 			break
 		}
 		tmpType := *arg.Type
