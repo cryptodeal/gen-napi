@@ -13,7 +13,7 @@ function genRand() {
 
 const t0 = performance.now() / 1e3
 let m = 0
-for (let i = 0; i < 1000000; ++i) {
+for (let i = 0; i < 100000; ++i) {
   // console.log('bytes: ', Number(sm.bytesUsed()))
   const a = sm.rand([128])
   const b = new Tensor(genRand())
@@ -21,7 +21,8 @@ for (let i = 0; i < 1000000; ++i) {
   // console.log('bytes: ', Number(sm.bytesUsed()))
 }
 const t1 = performance.now() / 1e3
-console.log(t1 - t0, 'seconds to calculate', m)
+const time = t1 - t0
+console.log(time, 'seconds to calculate', m)
 m = null
 // force gc (comment out for more fair comparison w nodejs)
 Bun.gc(true)

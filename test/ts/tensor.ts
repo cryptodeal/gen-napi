@@ -1,6 +1,6 @@
 const {
   _add,
-  _tensorFromFloat32Array,
+  _tensorFromFloat32Buffer,
   _mean,
   _toFloat32Scalar
 } = require('../../build/Release/shumai_bindings.node')
@@ -10,7 +10,7 @@ export class Tensor {
 
   constructor(t) {
     if (t instanceof Float32Array || t.constructor === Float32Array) {
-      this.#native_self = _tensorFromFloat32Array(t)
+      this.#native_self = _tensorFromFloat32Buffer(t.buffer)
     } else {
       this.#native_self = t
     }

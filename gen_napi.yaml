@@ -1163,360 +1163,230 @@ packages:
                 Napi::MemoryManagement::AdjustExternalMemory(env, -byte_count);
                 fl::detail::releaseAdapterUnsafe(t);
               }
-          - name: 'tensorFromFloat32Array'
+          - name: 'tensorFromFloat32Buffer'
             ts_return_type: 'any'
             args:
               - name: 'arr'
                 ts_type: 'Float32Array'
             body: |
-              static Napi::Value tensorFromFloat32Array(const Napi::CallbackInfo& info) {
+              static Napi::Value tensorFromFloat32Buffer(const Napi::CallbackInfo& info) {
                 Napi::Env env = info.Env();
-                if (!info[0].IsTypedArray()) {
-                  Napi::TypeError::New(env,
-                                      "`tensorFromFloat32Array` expects exactly 1 arg; "
-                                      "(expected type `Float32Array`)...")
+                if (!info[0].IsArrayBuffer()) {
+                  Napi::Error::New(info.Env(), "Expected an ArrayBuffer")
                       .ThrowAsJavaScriptException();
-                  return env.Null();
+                  return info.Env().Undefined();
                 }
-                Napi::TypedArray underlying = info[0].As<Napi::TypedArray>();
-                int64_t length = static_cast<int64_t>(underlying.ElementLength());
-                napi_typedarray_type arrayType = underlying.TypedArrayType();
-                if (arrayType != napi_float32_array) {
-                  Napi::TypeError::New(env,
-                                      "`tensorFromFloat32Array` expects exactly 1 arg; "
-                                      "(expected type `Float32Array`)...")
-                      .ThrowAsJavaScriptException();
-                  return env.Null();
-                }
-                Napi::TypedArrayOf<float> float_array =
-                    underlying.As<Napi::TypedArrayOf<float>>();
-                float* ptr = float_array.Data();
-                auto* t = new fl::Tensor(
-                    fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
+                Napi::ArrayBuffer buf = info[0].As<Napi::ArrayBuffer>();
+                int64_t length = static_cast<int64_t>(buf.ByteLength() / sizeof(float));
+                float* ptr = reinterpret_cast<float*>(buf.Data());
+                auto* t = new fl::Tensor(fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
                 auto _out_bytes_used = static_cast<int64_t>(t->bytes());
                 g_bytes_used += _out_bytes_used;
                 Napi::MemoryManagement::AdjustExternalMemory(env, _out_bytes_used);
                 Napi::External<fl::Tensor> wrapped = ExternalizeTensor(env, t);
                 return wrapped;
               }
-          - name: 'tensorFromFloat64Array'
+          - name: 'tensorFromFloat64Buffer'
             ts_return_type: 'any'
             args:
               - name: 'arr'
                 ts_type: 'Float64Array'
             body: |
-              static Napi::Value tensorFromFloat64Array(const Napi::CallbackInfo& info) {
+              static Napi::Value tensorFromFloat64Buffer(const Napi::CallbackInfo& info) {
                 Napi::Env env = info.Env();
-                if (!info[0].IsTypedArray()) {
-                  Napi::TypeError::New(env,
-                                      "`tensorFromFloat64Array` expects exactly 1 arg; "
-                                      "(expected type `Float64Array`)...")
+                if (!info[0].IsArrayBuffer()) {
+                  Napi::Error::New(info.Env(), "Expected an ArrayBuffer")
                       .ThrowAsJavaScriptException();
-                  return env.Null();
+                  return info.Env().Undefined();
                 }
-                Napi::TypedArray underlying = info[0].As<Napi::TypedArray>();
-                int64_t length = static_cast<int64_t>(underlying.ElementLength());
-                napi_typedarray_type arrayType = underlying.TypedArrayType();
-                if (arrayType != napi_float64_array) {
-                  Napi::TypeError::New(env,
-                                      "`tensorFromFloat64Array` expects exactly 1 arg; "
-                                      "(expected type `Float64Array`)...")
-                      .ThrowAsJavaScriptException();
-                  return env.Null();
-                }
-                Napi::TypedArrayOf<double> double_array =
-                    underlying.As<Napi::TypedArrayOf<double>>();
-                double* ptr = double_array.Data();
-                auto* t = new fl::Tensor(
-                    fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
+                Napi::ArrayBuffer buf = info[0].As<Napi::ArrayBuffer>();
+                int64_t length = static_cast<int64_t>(buf.ByteLength() / sizeof(double));
+                double* ptr = reinterpret_cast<double*>(buf.Data());
+                auto* t = new fl::Tensor(fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
                 auto _out_bytes_used = static_cast<int64_t>(t->bytes());
                 g_bytes_used += _out_bytes_used;
                 Napi::MemoryManagement::AdjustExternalMemory(env, _out_bytes_used);
                 Napi::External<fl::Tensor> wrapped = ExternalizeTensor(env, t);
                 return wrapped;
               }
-          - name: 'tensorFromBoolInt8Array'
+          - name: 'tensorFromBoolInt8Buffer'
             ts_return_type: 'any'
             args:
               - name: 'arr'
                 ts_type: 'Int8Array'
             body: |
-              static Napi::Value tensorFromBoolInt8Array(const Napi::CallbackInfo& info) {
+              static Napi::Value tensorFromBoolInt8Buffer(const Napi::CallbackInfo& info) {
                 Napi::Env env = info.Env();
-                if (!info[0].IsTypedArray()) {
-                  Napi::TypeError::New(env,
-                                      "`tensorFromBoolInt8Array` expects exactly 1 arg; "
-                                      "(expected type `Int8Array`)...")
+                if (!info[0].IsArrayBuffer()) {
+                  Napi::Error::New(info.Env(), "Expected an ArrayBuffer")
                       .ThrowAsJavaScriptException();
-                  return env.Null();
+                  return info.Env().Undefined();
                 }
-                Napi::TypedArray underlying = info[0].As<Napi::TypedArray>();
-                int64_t length = static_cast<int64_t>(underlying.ElementLength());
-                napi_typedarray_type arrayType = underlying.TypedArrayType();
-                if (arrayType != napi_int8_array) {
-                  Napi::TypeError::New(env,
-                                      "`tensorFromBoolInt8Array` expects exactly 1 arg; "
-                                      "(expected type `Int8Array`)...")
-                      .ThrowAsJavaScriptException();
-                  return env.Null();
-                }
-                Napi::TypedArrayOf<int8_t> int8_array =
-                    underlying.As<Napi::TypedArrayOf<int8_t>>();
-                char* ptr = reinterpret_cast<char*>(int8_array.Data());
-                auto* t = new fl::Tensor(
-                    fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
+                Napi::ArrayBuffer buf = info[0].As<Napi::ArrayBuffer>();
+                int64_t length = static_cast<int64_t>(buf.ByteLength() / sizeof(int8_t));
+                char* ptr = reinterpret_cast<char*>(buf.Data());
+                auto* t = new fl::Tensor(fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
                 auto _out_bytes_used = static_cast<int64_t>(t->bytes());
                 g_bytes_used += _out_bytes_used;
                 Napi::MemoryManagement::AdjustExternalMemory(env, _out_bytes_used);
                 Napi::External<fl::Tensor> wrapped = ExternalizeTensor(env, t);
                 return wrapped;
               }
-          - name: 'tensorFromInt16Array'
+          - name: 'tensorFromInt16Buffer'
             ts_return_type: 'any'
             args:
               - name: 'arr'
                 ts_type: 'Int16Array'
             body: |
-              static Napi::Value tensorFromInt16Array(const Napi::CallbackInfo& info) {
+              static Napi::Value tensorFromInt16Buffer(const Napi::CallbackInfo& info) {
                 Napi::Env env = info.Env();
-                if (!info[0].IsTypedArray()) {
-                  Napi::TypeError::New(env,
-                                      "`tensorFromInt16Array` expects exactly 1 arg; "
-                                      "(expected type `Int16Array`)...")
+                if (!info[0].IsArrayBuffer()) {
+                  Napi::Error::New(info.Env(), "Expected an ArrayBuffer")
                       .ThrowAsJavaScriptException();
-                  return env.Null();
+                  return info.Env().Undefined();
                 }
-                Napi::TypedArray underlying = info[0].As<Napi::TypedArray>();
-                int64_t length = static_cast<int64_t>(underlying.ElementLength());
-                napi_typedarray_type arrayType = underlying.TypedArrayType();
-                if (arrayType != napi_int16_array) {
-                  Napi::TypeError::New(env,
-                                      "`tensorFromInt16Array` expects exactly 1 arg; "
-                                      "(expected type `Int16Array`)...")
-                      .ThrowAsJavaScriptException();
-                  return env.Null();
-                }
-                Napi::TypedArrayOf<int16_t> int16_array =
-                    underlying.As<Napi::TypedArrayOf<int16_t>>();
-                int16_t* ptr = int16_array.Data();
-                auto* t = new fl::Tensor(
-                    fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
+                Napi::ArrayBuffer buf = info[0].As<Napi::ArrayBuffer>();
+                int64_t length = static_cast<int64_t>(buf.ByteLength() / sizeof(int16_t));
+                int16_t* ptr = reinterpret_cast<int16_t*>(buf.Data());
+                auto* t = new fl::Tensor(fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
                 auto _out_bytes_used = static_cast<int64_t>(t->bytes());
                 g_bytes_used += _out_bytes_used;
                 Napi::MemoryManagement::AdjustExternalMemory(env, _out_bytes_used);
                 Napi::External<fl::Tensor> wrapped = ExternalizeTensor(env, t);
                 return wrapped;
               }
-          - name: 'tensorFromInt32Array'
+          - name: 'tensorFromInt32Buffer'
             ts_return_type: 'any'
             args:
               - name: 'arr'
                 ts_type: 'Int32Array'
             body: |
-              static Napi::Value tensorFromInt32Array(const Napi::CallbackInfo& info) {
+              static Napi::Value tensorFromInt32Buffer(const Napi::CallbackInfo& info) {
                 Napi::Env env = info.Env();
-                if (!info[0].IsTypedArray()) {
-                  Napi::TypeError::New(env,
-                                      "`tensorFromInt32Array` expects exactly 1 arg; "
-                                      "(expected type `Int32Array`)...")
+                if (!info[0].IsArrayBuffer()) {
+                  Napi::Error::New(info.Env(), "Expected an ArrayBuffer")
                       .ThrowAsJavaScriptException();
-                  return env.Null();
+                  return info.Env().Undefined();
                 }
-                Napi::TypedArray underlying = info[0].As<Napi::TypedArray>();
-                int64_t length = static_cast<int64_t>(underlying.ElementLength());
-                napi_typedarray_type arrayType = underlying.TypedArrayType();
-                if (arrayType != napi_int32_array) {
-                  Napi::TypeError::New(env,
-                                      "`tensorFromInt32Array` expects exactly 1 arg; "
-                                      "(expected type `Int32Array`)...")
-                      .ThrowAsJavaScriptException();
-                  return env.Null();
-                }
-                Napi::TypedArrayOf<int32_t> int32_array =
-                    underlying.As<Napi::TypedArrayOf<int32_t>>();
-                int32_t* ptr = int32_array.Data();
-                auto* t = new fl::Tensor(
-                    fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
+                Napi::ArrayBuffer buf = info[0].As<Napi::ArrayBuffer>();
+                int64_t length = static_cast<int64_t>(buf.ByteLength() / sizeof(int32_t));
+                int32_t* ptr = reinterpret_cast<int32_t*>(buf.Data());
+                auto* t = new fl::Tensor(fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
                 auto _out_bytes_used = static_cast<int64_t>(t->bytes());
                 g_bytes_used += _out_bytes_used;
                 Napi::MemoryManagement::AdjustExternalMemory(env, _out_bytes_used);
                 Napi::External<fl::Tensor> wrapped = ExternalizeTensor(env, t);
                 return wrapped;
               }
-          - name: 'tensorFromInt64Array'
+          - name: 'tensorFromInt64Buffer'
             ts_return_type: 'any'
             args:
               - name: 'arr'
                 ts_type: 'BigInt64Array'
             body: |
-              static Napi::Value tensorFromInt64Array(const Napi::CallbackInfo& info) {
+              static Napi::Value tensorFromInt64Buffer(const Napi::CallbackInfo& info) {
                 Napi::Env env = info.Env();
-                if (!info[0].IsTypedArray()) {
-                  Napi::TypeError::New(env,
-                                      "`tensorFromInt64Array` expects exactly 1 arg; "
-                                      "(expected type `BigInt64Array`)...")
+                if (!info[0].IsArrayBuffer()) {
+                  Napi::Error::New(info.Env(), "Expected an ArrayBuffer")
                       .ThrowAsJavaScriptException();
-                  return env.Null();
+                  return info.Env().Undefined();
                 }
-                Napi::TypedArray underlying = info[0].As<Napi::TypedArray>();
-                int64_t length = static_cast<int64_t>(underlying.ElementLength());
-                napi_typedarray_type arrayType = underlying.TypedArrayType();
-                if (arrayType != napi_bigint64_array) {
-                  Napi::TypeError::New(env,
-                                      "`tensorFromInt64Array` expects exactly 1 arg; "
-                                      "(expected type `BigInt64Array`)...")
-                      .ThrowAsJavaScriptException();
-                  return env.Null();
-                }
-                Napi::TypedArrayOf<int64_t> int64_array =
-                    underlying.As<Napi::TypedArrayOf<int64_t>>();
-                int64_t* ptr = int64_array.Data();
-                auto* t = new fl::Tensor(
-                    fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
+                Napi::ArrayBuffer buf = info[0].As<Napi::ArrayBuffer>();
+                int64_t length = static_cast<int64_t>(buf.ByteLength() / sizeof(int64_t));
+                int64_t* ptr = reinterpret_cast<int64_t*>(buf.Data());
+                auto* t = new fl::Tensor(fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
                 auto _out_bytes_used = static_cast<int64_t>(t->bytes());
                 g_bytes_used += _out_bytes_used;
                 Napi::MemoryManagement::AdjustExternalMemory(env, _out_bytes_used);
                 Napi::External<fl::Tensor> wrapped = ExternalizeTensor(env, t);
                 return wrapped;
               }
-          - name: 'tensorFromUint8Array'
+          - name: 'tensorFromUint8Buffer'
             ts_return_type: 'any'
             args:
               - name: 'arr'
                 ts_type: 'Uint8Array'
             body: |
-              static Napi::Value tensorFromUint8Array(const Napi::CallbackInfo& info) {
+              static Napi::Value tensorFromUint8Buffer(const Napi::CallbackInfo& info) {
                 Napi::Env env = info.Env();
-                if (!info[0].IsTypedArray()) {
-                  Napi::TypeError::New(env,
-                                      "`tensorFromUint8Array` expects exactly 1 arg; "
-                                      "(expected type `Uint8Array`)...")
+                if (!info[0].IsArrayBuffer()) {
+                  Napi::Error::New(info.Env(), "Expected an ArrayBuffer")
                       .ThrowAsJavaScriptException();
-                  return env.Null();
+                  return info.Env().Undefined();
                 }
-                Napi::TypedArray underlying = info[0].As<Napi::TypedArray>();
-                int64_t length = static_cast<int64_t>(underlying.ElementLength());
-                napi_typedarray_type arrayType = underlying.TypedArrayType();
-                if (arrayType != napi_uint8_array) {
-                  Napi::TypeError::New(env,
-                                      "`tensorFromUint8Array` expects exactly 1 arg; "
-                                      "(expected type `Uint8Array`)...")
-                      .ThrowAsJavaScriptException();
-                  return env.Null();
-                }
-                Napi::TypedArrayOf<uint8_t> uint8_array =
-                    underlying.As<Napi::TypedArrayOf<uint8_t>>();
-                uint8_t* ptr = uint8_array.Data();
-                auto* t = new fl::Tensor(
-                    fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
+                Napi::ArrayBuffer buf = info[0].As<Napi::ArrayBuffer>();
+                int64_t length = static_cast<int64_t>(buf.ByteLength() / sizeof(uint8_t));
+                uint8_t* ptr = reinterpret_cast<uint8_t*>(buf.Data());
+                auto* t = new fl::Tensor(fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
                 auto _out_bytes_used = static_cast<int64_t>(t->bytes());
                 g_bytes_used += _out_bytes_used;
                 Napi::MemoryManagement::AdjustExternalMemory(env, _out_bytes_used);
                 Napi::External<fl::Tensor> wrapped = ExternalizeTensor(env, t);
                 return wrapped;
               }
-          - name: 'tensorFromUint16Array'
+          - name: 'tensorFromUint16Buffer'
             ts_return_type: 'any'
             args:
               - name: 'arr'
                 ts_type: 'Uint16Array'
             body: |
-              static Napi::Value tensorFromUint16Array(const Napi::CallbackInfo& info) {
+              static Napi::Value tensorFromUint16Buffer(const Napi::CallbackInfo& info) {
                 Napi::Env env = info.Env();
-                if (!info[0].IsTypedArray()) {
-                  Napi::TypeError::New(env,
-                                      "`tensorFromUint16Array` expects exactly 1 arg; "
-                                      "(expected type `Uint16Array`)...")
+                if (!info[0].IsArrayBuffer()) {
+                  Napi::Error::New(info.Env(), "Expected an ArrayBuffer")
                       .ThrowAsJavaScriptException();
-                  return env.Null();
+                  return info.Env().Undefined();
                 }
-                Napi::TypedArray underlying = info[0].As<Napi::TypedArray>();
-                int64_t length = static_cast<int64_t>(underlying.ElementLength());
-                napi_typedarray_type arrayType = underlying.TypedArrayType();
-                if (arrayType != napi_int16_array) {
-                  Napi::TypeError::New(env,
-                                      "`tensorFromUint16Array` expects exactly 1 arg; "
-                                      "(expected type `Uint16Array`)...")
-                      .ThrowAsJavaScriptException();
-                  return env.Null();
-                }
-                Napi::TypedArrayOf<uint16_t> uint16_array =
-                    underlying.As<Napi::TypedArrayOf<uint16_t>>();
-                uint16_t* ptr = uint16_array.Data();
-                auto* t = new fl::Tensor(
-                    fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
+                Napi::ArrayBuffer buf = info[0].As<Napi::ArrayBuffer>();
+                int64_t length = static_cast<int64_t>(buf.ByteLength() / sizeof(uint16_t));
+                uint16_t* ptr = reinterpret_cast<uint16_t*>(buf.Data());
+                auto* t = new fl::Tensor(fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
                 auto _out_bytes_used = static_cast<int64_t>(t->bytes());
                 g_bytes_used += _out_bytes_used;
                 Napi::MemoryManagement::AdjustExternalMemory(env, _out_bytes_used);
                 Napi::External<fl::Tensor> wrapped = ExternalizeTensor(env, t);
                 return wrapped;
               }
-          - name: 'tensorFromUint32Array'
+          - name: 'tensorFromUint32Buffer'
             args:
               - name: 'arr'
                 ts_type: 'Uint32Array'
             ts_return_type: 'any'
             body: |
-              static Napi::Value tensorFromUint32Array(const Napi::CallbackInfo& info) {
+              static Napi::Value tensorFromUint32Buffer(const Napi::CallbackInfo& info) {
                 Napi::Env env = info.Env();
-                if (!info[0].IsTypedArray()) {
-                  Napi::TypeError::New(env,
-                                      "`tensorFromUint32Array` expects exactly 1 arg; "
-                                      "(expected type `Uint32Array`)...")
+                if (!info[0].IsArrayBuffer()) {
+                  Napi::Error::New(info.Env(), "Expected an ArrayBuffer")
                       .ThrowAsJavaScriptException();
-                  return env.Null();
+                  return info.Env().Undefined();
                 }
-                Napi::TypedArray underlying = info[0].As<Napi::TypedArray>();
-                int64_t length = static_cast<int64_t>(underlying.ElementLength());
-                napi_typedarray_type arrayType = underlying.TypedArrayType();
-                if (arrayType != napi_uint32_array) {
-                  Napi::TypeError::New(env,
-                                      "`tensorFromUint32Array` expects exactly 1 arg; "
-                                      "(expected type `Uint32Array`)...")
-                      .ThrowAsJavaScriptException();
-                  return env.Null();
-                }
-                Napi::TypedArrayOf<uint32_t> uint32_array =
-                    underlying.As<Napi::TypedArrayOf<uint32_t>>();
-                uint32_t* ptr = uint32_array.Data();
-                auto* t = new fl::Tensor(
-                    fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
+                Napi::ArrayBuffer buf = info[0].As<Napi::ArrayBuffer>();
+                int64_t length = static_cast<int64_t>(buf.ByteLength() / sizeof(uint32_t));
+                uint32_t* ptr = reinterpret_cast<uint32_t*>(buf.Data());
+                auto* t = new fl::Tensor(fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
                 auto _out_bytes_used = static_cast<int64_t>(t->bytes());
                 g_bytes_used += _out_bytes_used;
                 Napi::MemoryManagement::AdjustExternalMemory(env, _out_bytes_used);
                 Napi::External<fl::Tensor> wrapped = ExternalizeTensor(env, t);
                 return wrapped;
               }
-          - name: 'tensorFromUint64Array'
+          - name: 'tensorFromUint64Buffer'
             args:
               - name: 'arr'
                 ts_type: 'BigUint64Array'
             ts_return_type: 'any'
             body: |
-              static Napi::Value tensorFromUint64Array(const Napi::CallbackInfo& info) {
+              static Napi::Value tensorFromUint64Buffer(const Napi::CallbackInfo& info) {
                 Napi::Env env = info.Env();
-                if (!info[0].IsTypedArray()) {
-                  Napi::TypeError::New(env,
-                                      "`tensorFromUint64Array` expects exactly 1 arg; "
-                                      "(expected type `BigUint64Array`)...")
+                if (!info[0].IsArrayBuffer()) {
+                  Napi::Error::New(info.Env(), "Expected an ArrayBuffer")
                       .ThrowAsJavaScriptException();
-                  return env.Null();
+                  return info.Env().Undefined();
                 }
-                Napi::TypedArray underlying = info[0].As<Napi::TypedArray>();
-                int64_t length = static_cast<int64_t>(underlying.ElementLength());
-                napi_typedarray_type arrayType = underlying.TypedArrayType();
-                if (arrayType != napi_biguint64_array) {
-                  Napi::TypeError::New(env,
-                                      "`tensorFromUint64Array` expects exactly 1 arg; "
-                                      "(expected type `BigUint64Array`)...")
-                      .ThrowAsJavaScriptException();
-                  return env.Null();
-                }
-                Napi::TypedArrayOf<uint64_t> int64_array =
-                    underlying.As<Napi::TypedArrayOf<uint64_t>>();
-                uint64_t* ptr = int64_array.Data();
-                auto* t = new fl::Tensor(
-                    fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
+                Napi::ArrayBuffer buf = info[0].As<Napi::ArrayBuffer>();
+                int64_t length = static_cast<int64_t>(buf.ByteLength() / sizeof(uint64_t));
+                uint64_t* ptr = reinterpret_cast<uint64_t*>(buf.Data());
+                auto* t = new fl::Tensor(fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
                 auto _out_bytes_used = static_cast<int64_t>(t->bytes());
                 g_bytes_used += _out_bytes_used;
                 Napi::MemoryManagement::AdjustExternalMemory(env, _out_bytes_used);
