@@ -5,14 +5,14 @@ import (
 	"strings"
 )
 
-func (g *PackageGenerator) writeArgChecker(sb *strings.Builder, name string, checker string, idx int, msg string) {
-	g.writeIndent(sb, 1)
+func (g *PackageGenerator) writeArgChecker(sb *strings.Builder, name string, checker string, idx int, msg string, indents int) {
+	g.writeIndent(sb, indents)
 	sb.WriteString(fmt.Sprintf("if (!info[%d].%s()) {\n", idx, checker))
-	g.writeIndent(sb, 2)
+	g.writeIndent(sb, indents+1)
 	sb.WriteString(fmt.Sprintf("Napi::TypeError::New(env, %q).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects args[%d] to be %s", name, idx, msg)))
-	g.writeIndent(sb, 2)
+	g.writeIndent(sb, indents+1)
 	sb.WriteString("return env.Null();\n")
-	g.writeIndent(sb, 1)
+	g.writeIndent(sb, indents)
 	sb.WriteString("}\n")
 
 }
@@ -101,7 +101,7 @@ func (g *PackageGenerator) writeArgChecks(sb *strings.Builder, name string, args
 				napiTypeHandler = "IsBoolean"
 				jsTypeEquivalent = "boolean"
 			}
-			g.writeArgChecker(sb, name, napiTypeHandler, i, fmt.Sprintf("typeof `%s`)", jsTypeEquivalent))
+			g.writeArgChecker(sb, name, napiTypeHandler, i, fmt.Sprintf("typeof `%s`)", jsTypeEquivalent), 1)
 			if _, ok := g.conf.MethodTransforms[name].ArgTransforms[*arg.Ident]; !ok {
 				g.writeIndent(sb, 1)
 				sb.WriteString(fmt.Sprintf("%s %s = ", *arg.Type, *arg.Ident))
@@ -115,7 +115,7 @@ func (g *PackageGenerator) writeArgChecks(sb *strings.Builder, name string, args
 				sb.WriteString(";\n")
 			}
 		} else if isClass(*arg.Type, classes) {
-			g.writeArgChecker(sb, name, "IsExternal", i, fmt.Sprintf("native `%s` (typeof `Napi::External<%s::%s>`)", *arg.Type, *g.NameSpace, *arg.Type))
+			g.writeArgChecker(sb, name, "IsExternal", i, fmt.Sprintf("native `%s` (typeof `Napi::External<%s::%s>`)", *arg.Type, *g.NameSpace, *arg.Type), 1)
 			if _, ok := g.conf.MethodTransforms[name].ArgTransforms[*arg.Ident]; !ok {
 				g.writeIndent(sb, 1)
 				sb.WriteString(fmt.Sprintf("%s::%s* %s = UnExternalize<%s::%s>(info[%d]);\n", *g.NameSpace, *arg.Type, *arg.Ident, *g.NameSpace, *arg.Type, i))
@@ -124,7 +124,7 @@ func (g *PackageGenerator) writeArgChecks(sb *strings.Builder, name string, args
 			argType := *arg.Type
 			type_test := argType[strings.Index(argType, "<")+1 : strings.Index(argType, ">")]
 			tsType, isObject := CPPTypeToTS(type_test)
-			g.writeArgChecker(sb, name, "IsArray", i, fmt.Sprintf("typeof `%s[]`)", tsType))
+			g.writeArgChecker(sb, name, "IsArray", i, fmt.Sprintf("typeof `%s[]`)", tsType), 1)
 			g.writeIndent(sb, 1)
 			sb.WriteString(fmt.Sprintf("int len_%s = info[%d].As<Napi::Array>().Length();\n", *arg.Ident, i))
 			g.writeIndent(sb, 1)
