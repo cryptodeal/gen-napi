@@ -3,14 +3,9 @@ package napi
 import (
 	"fmt"
 	"strings"
-
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
 )
 
 func (g *PackageGenerator) writeHeader(sb *strings.Builder, classes map[string]*CPPClass, methods map[string]*CPPMethod, prepocessedMethods map[string]*CPPMethod) {
-	lower_caser := cases.Lower(language.AmericanEnglish)
-
 	sb.WriteString("#pragma once\n")
 	sb.WriteString("#include <napi.h>\n")
 	g.writeHeaderFrontmatter(sb)
@@ -26,7 +21,7 @@ func (g *PackageGenerator) writeHeader(sb *strings.Builder, classes map[string]*
 			g.writeIndent(sb, 2)
 			sb.WriteString("static Napi::FunctionReference* constructor;\n")
 			g.writeIndent(sb, 2)
-			sb.WriteString(fmt.Sprintf("%s::%s* _%s;\n", *cf.NameSpace, class, lower_caser.String(class)[0:1]+class[1:]))
+			sb.WriteString(fmt.Sprintf("%s::%s* _%s;\n", *cf.NameSpace, class, g.casers.lower.String(class)[0:1]+class[1:]))
 			g.writeIndent(sb, 2)
 			sb.WriteString("static Napi::Function GetClass(Napi::Env);\n")
 			/* TODO: fix finalize method

@@ -30,40 +30,6 @@ func (g *PackageGenerator) writeGlobalVars(w *strings.Builder) {
 	}
 }
 
-func (g *PackageGenerator) writeHelpers(w *strings.Builder, classes map[string]*CPPClass) {
-	if len(g.conf.HelperFuncs) > 0 {
-		w.WriteString("// non-exported helpers\n")
-		hasUnexternalizer := false
-		for name, c := range classes {
-			if c.Decl != nil {
-				g.writeClassDeleter(w, c, name)
-				g.writeClassExternalizer(w, c, name)
-				if !hasUnexternalizer {
-					g.writeClassUnExternalizer(w)
-					hasUnexternalizer = true
-				}
-
-				if c.FieldDecl != nil {
-					for _, f := range *c.FieldDecl {
-						g.writeClassField(w, f, name, classes)
-					}
-				}
-
-				if v, ok := g.conf.ClassOpts[name]; ok && len(v.ForcedMethods) > 0 {
-					for _, f := range v.ForcedMethods {
-						w.WriteString(strings.Replace(f.FnBody, f.Name, "_"+f.Name, 1))
-						w.WriteByte('\n')
-					}
-				}
-			}
-		}
-		for _, helper := range g.conf.HelperFuncs {
-			w.WriteString(helper)
-			w.WriteByte('\n')
-		}
-	}
-}
-
 func (g *PackageGenerator) writeFileSourceHeader(w *strings.Builder, path string) {
 	w.WriteString("\n//////////\n// source: ")
 	w.WriteString(fmt.Sprintf("%s\n", filepath.Base(path)))

@@ -11,6 +11,8 @@ import (
 
 	sitter "github.com/smacker/go-tree-sitter"
 	"github.com/smacker/go-tree-sitter/cpp"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 // Generator for one or more input packages, responsible for linking
@@ -35,8 +37,14 @@ type ResHelpers struct {
 	ASTType     *ast.Expr
 }
 
+type Casers struct {
+	lower cases.Caser
+	upper cases.Caser
+}
+
 // Responsible for generating the code for an input package
 type PackageGenerator struct {
+	casers    Casers
 	conf      *PackageConfig
 	NameSpace *string
 	Name      *string
@@ -84,7 +92,12 @@ func (g *TSGo) Generate() error {
 		split_path := strings.Split(path, "/")
 		name := strings.Replace(split_path[len(split_path)-1], ".h", "", 1)
 
+		casers := Casers{
+			lower: cases.Lower(language.AmericanEnglish),
+			upper: cases.Upper(language.AmericanEnglish),
+		}
 		napiGen := &PackageGenerator{
+			casers:    casers,
 			conf:      napiConfig,
 			NameSpace: &namespace,
 			Name:      &name,

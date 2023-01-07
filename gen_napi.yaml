@@ -1,5 +1,4 @@
-# This is a config file that typescriptifies the packages under the example folder.
-# and some other packages.
+# This is a config file that typescriptifies the packages under the test folder.
 packages:
   - path: 'test/TensorBase.h'
     bindings_out_path: 'test/out'
