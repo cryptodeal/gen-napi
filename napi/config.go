@@ -31,8 +31,9 @@ type TypeMap struct {
 }
 
 type FnArg struct {
-	Name   string `yaml:"name"`
-	TSType string `yaml:"ts_type"`
+	Name    string `yaml:"name"`
+	TSType  string `yaml:"ts_type"`
+	Default string `yaml:"default"`
 }
 
 type FnOpts struct {
