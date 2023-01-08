@@ -25,17 +25,21 @@ func (g *PackageGenerator) writeArgCountChecker(sb *strings.Builder, name string
 
 func (g *PackageGenerator) writeArgTypeChecker(sb *strings.Builder, name string, checker string, idx int, msg string, indents int, isArrayItem bool) {
 	g.writeIndent(sb, indents)
+	// required to handle checking array index items (i.e. info[0][i])
 	if isArrayItem {
 		sb.WriteString(fmt.Sprintf("if (!info[%d].As<Napi::Array>().Get(i).%s()) {\n", idx, checker))
 	} else {
 		sb.WriteString(fmt.Sprintf("if (!info[%d].%s()) {\n", idx, checker))
 	}
+
+	// error msg is customized a bit if validating array to be more descriptive
 	g.writeIndent(sb, indents+1)
 	if isArrayItem {
 		sb.WriteString(fmt.Sprintf("Napi::TypeError::New(env, (%q + std::to_string(i) + %q)).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects args[%d][", name, idx), fmt.Sprintf("] to be %s", msg)))
 	} else {
 		sb.WriteString(fmt.Sprintf("Napi::TypeError::New(env, %q).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects args[%d] to be %s", name, idx, msg)))
 	}
+
 	g.writeIndent(sb, indents+1)
 	sb.WriteString("return env.Null();\n")
 	g.writeIndent(sb, indents)
@@ -73,42 +77,25 @@ func (g *PackageGenerator) writeArgChecks(sb *strings.Builder, name string, args
 		}
 
 		if arg.IsPrimitive {
-			napiTypeHandler := ""
-			jsTypeEquivalent := ""
+			napiTypeHandler := "IsNumber"
+			jsTypeEquivalent := "number"
 			valGetter := "Value"
 			var needsCast *string
 			switch *arg.Type {
 			case "float":
-				napiTypeHandler = "IsNumber"
-				jsTypeEquivalent = "number"
 				valGetter = "FloatValue"
-
 			case "double":
-				napiTypeHandler = "IsNumber"
-				jsTypeEquivalent = "number"
 				valGetter = "DoubleValue"
-
 			case "long long", "char", "signed", "int8_t", "int32_t", "int16_t", "short":
-				napiTypeHandler = "IsNumber"
-				jsTypeEquivalent = "number"
 				valGetter = "Int32Value"
 				needsCast = arg.Type
-
 			case "int", "int64_t":
-				napiTypeHandler = "IsNumber"
-				jsTypeEquivalent = "number"
 				valGetter = "Int64Value"
 				needsCast = arg.Type
-
 			case "unsigned long long", "unsigned char", "unsigned", "uint8_t", "uint16_t", "unsigned short", "uint32_t":
-				napiTypeHandler = "IsNumber"
-				jsTypeEquivalent = "number"
 				valGetter = "Uint32Value"
 				needsCast = arg.Type
-
 			case "unsigned int", "uint64_t", "size_t", "uintptr_t":
-				napiTypeHandler = "IsNumber"
-				jsTypeEquivalent = "number"
 				valGetter = "Uint64Value"
 				needsCast = arg.Type
 			case "bool":
@@ -116,9 +103,11 @@ func (g *PackageGenerator) writeArgChecks(sb *strings.Builder, name string, args
 				jsTypeEquivalent = "boolean"
 			}
 			g.writeArgTypeChecker(sb, name, napiTypeHandler, i, fmt.Sprintf("typeof `%s`)", jsTypeEquivalent), 1, false)
+			// handle any necessary transformations
 			if _, ok := g.conf.MethodTransforms[name].ArgTransforms[*arg.Ident]; !ok {
 				g.writeIndent(sb, 1)
 				sb.WriteString(fmt.Sprintf("%s %s = ", *arg.Type, *arg.Ident))
+				// only cast when necessary
 				if needsCast != nil {
 					sb.WriteString(fmt.Sprintf("static_cast<%s>(", *needsCast))
 				}
@@ -151,26 +140,19 @@ func (g *PackageGenerator) writeArgChecks(sb *strings.Builder, name string, args
 			}
 			g.writeIndent(sb, 1)
 			sb.WriteString("}\n")
-
 		} else if v, ok := g.conf.TypeMappings[*arg.Type]; ok {
 			g.writeIndent(sb, 1)
+			errMsg := fmt.Sprintf("typeof `%s`)", v.TSType)
 			if strings.Contains(v.TSType, "Array") || strings.Contains(v.TSType, "[]") {
-				sb.WriteString(fmt.Sprintf("if (!info[%d].IsArray()) {\n", i))
+				g.writeArgTypeChecker(sb, name, "IsArray", i, errMsg, 1, false)
 			} else if strings.Contains(v.TSType, "any") || strings.Contains(v.TSType, "object") || strings.Contains(v.TSType, "Record<") || strings.Contains(v.TSType, "Map<") {
-				sb.WriteString(fmt.Sprintf("if (!info[%d].IsExternal()) {\n", i))
+				g.writeArgTypeChecker(sb, name, "IsObject", i, errMsg, 1, false)
 			} else if strings.Contains(v.TSType, "string") {
-				sb.WriteString(fmt.Sprintf("if (!info[%d].IsString()) {\n", i))
+				g.writeArgTypeChecker(sb, name, "IsString", i, errMsg, 1, false)
 			} else if strings.Contains(v.TSType, "number") {
-				sb.WriteString(fmt.Sprintf("if (!info[%d].IsNumber()) {\n", i))
+				g.writeArgTypeChecker(sb, name, "IsNumber", i, errMsg, 1, false)
 			}
-			g.writeIndent(sb, 2)
-			sb.WriteString(fmt.Sprintf("Napi::TypeError::New(env, %q).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects args[%d] to be typeof `%s`", name, i, v.TSType)))
-			g.writeIndent(sb, 2)
-			sb.WriteString("return env.Null();\n")
-			g.writeIndent(sb, 1)
-			sb.WriteString("}\n")
 		}
-
 		if v, ok := g.conf.MethodTransforms[name].ArgTransforms[*arg.Ident]; ok {
 			if !strings.Contains(v, "/arg_") {
 				g.writeIndent(sb, 1)
@@ -178,8 +160,6 @@ func (g *PackageGenerator) writeArgChecks(sb *strings.Builder, name string, args
 			}
 		}
 	}
-
-	// TODO: all logic for arg type checks needs to live here
 }
 
 func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classes map[string]*CPPClass) {
