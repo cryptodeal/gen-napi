@@ -25,21 +25,23 @@ func (g *PackageGenerator) writeArgCountChecker(sb *strings.Builder, name string
 
 func (g *PackageGenerator) writeArgTypeChecker(sb *strings.Builder, name string, checker string, idx int, msg string, indents int, isArrayItem bool) {
 	g.writeIndent(sb, indents)
+	sb.WriteString(fmt.Sprintf("if (!info[%d].", idx))
 	// required to handle checking array index items (i.e. info[0][i])
 	if isArrayItem {
-		sb.WriteString(fmt.Sprintf("if (!info[%d].As<Napi::Array>().Get(i).%s()) {\n", idx, checker))
+		sb.WriteString(fmt.Sprintf("As<Napi::Array>().Get(i).%s", checker))
 	} else {
-		sb.WriteString(fmt.Sprintf("if (!info[%d].%s()) {\n", idx, checker))
+		sb.WriteString(checker)
 	}
-
-	// error msg is customized a bit if validating array to be more descriptive
+	sb.WriteString("()) {\n")
 	g.writeIndent(sb, indents+1)
+	sb.WriteString("Napi::TypeError::New(env, ")
+	// error msg is customized a bit if validating array to be more descriptive
 	if isArrayItem {
-		sb.WriteString(fmt.Sprintf("Napi::TypeError::New(env, (%q + std::to_string(i) + %q)).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects args[%d][", name, idx), fmt.Sprintf("] to be %s", msg)))
+		sb.WriteString(fmt.Sprintf("(%q + std::to_string(i) + %q)", fmt.Sprintf("`%s` expects args[%d][", name, idx), fmt.Sprintf("] to be %s", msg)))
 	} else {
-		sb.WriteString(fmt.Sprintf("Napi::TypeError::New(env, %q).ThrowAsJavaScriptException();\n", fmt.Sprintf("`%s` expects args[%d] to be %s", name, idx, msg)))
+		sb.WriteString(fmt.Sprintf("%q", fmt.Sprintf("`%s` expects args[%d] to be %s", name, idx, msg)))
 	}
-
+	sb.WriteString(").ThrowAsJavaScriptException();\n")
 	g.writeIndent(sb, indents+1)
 	sb.WriteString("return env.Null();\n")
 	g.writeIndent(sb, indents)
@@ -341,7 +343,6 @@ func (g *PackageGenerator) writeClassField(sb *strings.Builder, f *CPPFieldDecl,
 				sb.WriteString(fmt.Sprintf("auto* out = new %s::%s(_res);\n", *g.NameSpace, returnType))
 				g.writeIndent(sb, 1)
 				sb.WriteString(fmt.Sprintf("Napi::External<%s::%s> _external_out = Externalize%s(env, out);", *g.NameSpace, returnType, returnType))
-				g.writeIndent(sb, 1)
 				g.writeIndent(sb, 1)
 				sb.WriteString("return _external_out;\n")
 			} else {
