@@ -2,7 +2,8 @@ const {
   _add,
   _tensorFromFloat32Buffer,
   _mean,
-  _toFloat32Scalar
+  _toFloat32Scalar,
+  _toFloat32Array
 } = require('../../build/Release/shumai_bindings.node')
 
 class Tensor {
@@ -30,6 +31,10 @@ class Tensor {
 
   toFloat32Scalar() {
     return _toFloat32Scalar(this._native_self)
+  }
+
+  toFloat32Array() {
+    return _toFloat32Array(this._native_self)
   }
 }
 
