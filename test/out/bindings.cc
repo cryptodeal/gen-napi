@@ -24,6 +24,14 @@ static std::atomic<size_t> g_bytes_used = 0;
 static std::atomic<bool> g_row_major = true;
 
 // non-exported helpers
+
+template <typename T>
+static inline void DeleteArrayBuffer(Napi::Env /*env*/,
+                                     void* /*data*/,
+                                     std::vector<T>* hint) {
+  std::unique_ptr<std::vector<T>> vectorPtrToDelete(hint);
+}
+
 static inline void DeleteTensor(Napi::Env env, void* ptr) {
   auto* val = static_cast<fl::Tensor*>(ptr);
   if (val->hasAdapter()) {
@@ -357,18 +365,18 @@ static Napi::Value _toFloat32Array(const Napi::CallbackInfo& info) {
 
 static Napi::Value _toFloat64Array(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
-  if (!info[0].IsExternal()) {
-    Napi::TypeError::New(env,
-                         "`toFloat64Array` expects args[0] to be native "
-                         "`Tensor` (typeof `Napi::External<fl::Tensor>`)")
-        .ThrowAsJavaScriptException();
-    return env.Null();
-  }
   fl::Tensor* t = UnExternalize<fl::Tensor>(info[0]);
-  size_t elemLen = static_cast<size_t>(t->elements());
+  fl::Tensor* contig_tensor = new fl::Tensor(t->asContiguousTensor());
+  size_t elemLen = static_cast<size_t>(contig_tensor->elements());
   size_t byteLen = elemLen * sizeof(double);
-  void* ptr = t->astype(fl::dtype::f64).host<double>();
-  Napi::ArrayBuffer buff = Napi::ArrayBuffer::New(env, ptr, byteLen);
+  double* ptr = contig_tensor->astype(fl::dtype::f64).host<double>();
+  std::unique_ptr<std::vector<double>> nativeArray =
+      std::make_unique<std::vector<double>>(ptr, ptr + elemLen);
+  delete contig_tensor;
+  Napi::ArrayBuffer buff =
+      Napi::ArrayBuffer::New(env, nativeArray->data(), byteLen,
+                             DeleteArrayBuffer<double>, nativeArray.get());
+  nativeArray.release();
   Napi::TypedArrayOf<double> out = Napi::TypedArrayOf<double>::New(
       env, elemLen, buff, 0, napi_float64_array);
   return out;

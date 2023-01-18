@@ -1,5 +1,5 @@
 const { Tensor } = require('./test/js/tensor.cjs')
-const sm = require('./test/js/index.cjs')
+const { bytesUsed } = require('./test/js/index.cjs')
 
 const fillArray = (arr) => {
   const len = arr.length
@@ -9,15 +9,36 @@ const fillArray = (arr) => {
   return arr
 }
 
-const t0 = performance.now() / 1e3
-
-for (let i = 0; i < 100000; i++) {
-  const backingArray = fillArray(new Float32Array(10000))
-  const a = new Tensor(backingArray)
-  const out = a.toFloat32Array()
+const test = () => {
+  const t0 = performance.now() / 1e3
+  for (let i = 0; i < 10000; i++) {
+    const backingArray = fillArray(new Float64Array(1000))
+    const a = new Tensor(backingArray).toFloat64Array()
+  }
+  const t1 = performance.now() / 1e3
+  const time = t1 - t0
+  const bytes = bytesUsed()
+  return { time, bytes }
 }
 
-const t1 = performance.now() / 1e3
+const runTest = (runs) => {
+  const times = []
+  const endBytes = []
+  for (let i = 0; i < runs; ++i) {
+    const { time, bytes } = test()
+    times[i] = time
+    endBytes[i] = bytes
+  }
+  console.log(
+    `avg time (${runs} runs) to init 10k Tensors of 1k elements (dtype = Float64; ${runs} runs): ${
+      times.reduce((a, b) => a + b, 0) / runs
+    } seconds`
+  )
+  console.log(
+    `avg bytesUsed (${runs} runs) to init 10k Tensors of 1k elements (dtype = Float64; ${runs} runs): ${
+      Number(endBytes.reduce((a, b) => a + b, BigInt(0))) / runs
+    } bytes`
+  )
+}
 
-const time = t1 - t0
-console.log(time, 'seconds to init 100,000 tensors of 10,000 elements (dtype float64)')
+runTest(5)

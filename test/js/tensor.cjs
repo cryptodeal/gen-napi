@@ -1,8 +1,10 @@
 const {
   _add,
   _tensorFromFloat32Buffer,
+  _tensorFromFloat64Buffer,
   _mean,
   _toFloat32Scalar,
+  _toFloat64Array,
   _toFloat32Array
 } = require('../../build/Release/shumai_bindings.node')
 
@@ -12,6 +14,8 @@ class Tensor {
   constructor(t) {
     if (t instanceof Float32Array || t.constructor === Float32Array) {
       this.#native_self = _tensorFromFloat32Buffer(t.buffer)
+    } else if (t instanceof Float64Array || t.constructor === Float64Array) {
+      this.#native_self = _tensorFromFloat64Buffer(t.buffer)
     } else {
       this.#native_self = t
     }
@@ -35,6 +39,10 @@ class Tensor {
 
   toFloat32Array() {
     return _toFloat32Array(this._native_self)
+  }
+
+  toFloat64Array() {
+    return _toFloat64Array(this._native_self)
   }
 }
 
