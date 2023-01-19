@@ -51,6 +51,18 @@ func (g *PackageGenerator) writeClassDeleter(sb *strings.Builder, class *CPPClas
 	sb.WriteString("}\n\n")
 }
 
+func (g *PackageGenerator) writeArrayBufferDeleter(sb *strings.Builder, class *CPPClass, name string) {
+	sb.WriteString("template <typename T>\n")
+	sb.WriteString("static inline void DeleteArrayBuffer(Napi::Env env, void* /*data*/, std::vector<T>* hint) {\n")
+	g.writeIndent(sb, 1)
+	sb.WriteString("size_t bytes = hint->size() * sizeof(T);\n")
+	g.writeIndent(sb, 1)
+	sb.WriteString("std::unique_ptr<std::vector<T>> vectorPtrToDelete(hint);\n")
+	g.writeIndent(sb, 1)
+	sb.WriteString("Napi::MemoryManagement::AdjustExternalMemory(env, -bytes);\n")
+	sb.WriteString("}\n\n")
+}
+
 func (g *PackageGenerator) writeClassExternalizer(sb *strings.Builder, class *CPPClass, name string) {
 	sb.WriteString(fmt.Sprintf("static inline Napi::External<%s::%s> Externalize%s(Napi::Env env, %s::%s* ptr) {\n", *g.NameSpace, name, name, *g.NameSpace, name))
 	g.writeIndent(sb, 1)
