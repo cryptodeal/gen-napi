@@ -1,6 +1,6 @@
 # Gen-NAPI (WIP)
 
-** Not even remotely prod ready! (see below for details) **
+**Not even remotely prod ready!**
 
 Gen-NAPI is under development, and is not yet ready for production use. It is currently only tested against `test/TensorBase.h` and used to test NAPI performance for the [shumai](https://github.com/facebookresearch/shumai) NAPI bindings.
 
