@@ -1,0 +1,42 @@
+project_name: gen-napi
+before:
+  hooks:
+    # You may remove this if you don't use go modules.
+    - go mod tidy
+builds:
+  - id: linux
+    binary: gen-napi
+    goos:
+      - linux
+    goarch:
+      - amd64
+      - arm64
+    env:
+      - CGO_ENABLED=1
+      - CC=zig cc -v -target {{ if eq .Arch "arm64" }}aarch64{{else}}x86_64{{end}}-linux-gnu
+      - CXX=zig c++ -v -target {{ if eq .Arch "arm64" }}aarch64{{else}}x86_64{{end}}-linux-gnu
+    ldflags:
+      - -s -w -X github.com/cryptodeal/gen-napi/cmd.version={{.Version}} -X github.com/cryptodeal/gen-napi/cmd.commit={{.Commit}} -X github.com/cryptodeal/gen-napi/cmd.commitDate={{.CommitDate}} -X github.com/cryptodeal/gen-napi/cmd.target={{.Env.GOOS}}
+  - id: darwin
+    binary: gen-napi
+    goos:
+      - darwin
+    goarch:
+      - amd64
+      - arm64
+    env:
+      - CGO_ENABLED=1
+      - CC=zig cc -v -target {{ if eq .Arch "arm64" }}aarch64{{else}}x86_64{{end}}-macos.11
+      - CXX=zig c++ -v -target {{ if eq .Arch "arm64" }}aarch64{{else}}x86_64{{end}}-macos.11
+    ldflags:
+      - -s -w -X github.com/cryptodeal/gen-napi/cmd.version={{.Version}} -X github.com/cryptodeal/gen-napi/cmd.commit={{.Commit}} -X github.com/cryptodeal/gen-napi/cmd.commitDate={{.CommitDate}} -X github.com/cryptodeal/gen-napi/cmd.target={{.Env.GOOS}}
+archives:
+  - name_template: >-
+      {{ .ProjectName }}_
+      {{- title .Os }}_
+      {{- if eq .Arch "amd64" }}x86_64
+      {{- else if eq .Arch "386" }}i386
+      {{- else }}{{ .Arch }}{{ end }}
+    format_overrides:
+      - goos: windows
+        format: zip
