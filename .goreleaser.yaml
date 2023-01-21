@@ -26,8 +26,8 @@ builds:
       - arm64
     env:
       - CGO_ENABLED=1
-      - CC=zig cc -v --sysroot "${{ env.SYSROOT }}" -target {{ if eq .Arch "arm64" }}aarch64{{else}}x86_64{{end}}-macos.11 -F/System/Library/Frameworks
-      - CXX=zig c++ -v --sysroot "${{ env.SYSROOT }}" -target {{ if eq .Arch "arm64" }}aarch64{{else}}x86_64{{end}}-macos.11 -F/System/Library/Frameworks
+      - CC=zig cc -v {{ if eq .Arch "arm64" }} -target aarch64-macos.11 --sysroot "${{ env.SYSROOT }}" -I/usr/include -L/usr/lib -F/System/Library/Frameworks -framework Foundation{{end}}
+      - CXX=zig c++ -v {{ if eq .Arch "arm64" }} -target aarch64-macos.11 --sysroot "${{ env.SYSROOT }}" -I/usr/include -L/usr/lib -F/System/Library/Frameworks -framework Foundation{{end}}
     ldflags:
       - -s -w -X github.com/cryptodeal/gen-napi/cmd.version={{.Version}} -X github.com/cryptodeal/gen-napi/cmd.commit={{.Commit}} -X github.com/cryptodeal/gen-napi/cmd.commitDate={{.CommitDate}} -X github.com/cryptodeal/gen-napi/cmd.target={{.Env.GOOS}}
 archives:
