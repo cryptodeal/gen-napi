@@ -11,6 +11,7 @@ jobs:
       - name: Capture OSXSDK path
         run: |
           echo "SYSROOT=$(xcrun --show-sdk-path)" >> $GITHUB_ENV
+          echo "${{ env.SYSROOT }}"
       - name: Checkout
         uses: actions/checkout@v2
         with:
