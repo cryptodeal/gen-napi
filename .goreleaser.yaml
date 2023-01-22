@@ -23,10 +23,11 @@ builds:
       - darwin
     goarch:
       - amd64
+      - arm64
     env:
       - CGO_ENABLED=1
-      - CC=zig cc -v {{ if eq .Arch "arm64" }} -target aarch64-macos.11 --sysroot "${{ env.SYSROOT }}" -I/usr/include -L/usr/lib -F/System/Library/Frameworks -framework Foundation{{end}}
-      - CXX=zig c++ -v {{ if eq .Arch "arm64" }} -target aarch64-macos.11 --sysroot "${{ env.SYSROOT }}" -I/usr/include -L/usr/lib -F/System/Library/Frameworks -framework Foundation{{end}}
+      - CC=zig cc -v {{ if eq .Arch "arm64" }} -target aarch64-macos.11 --sysroot /Applications/Xcode_14.2.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/macosx13.1.sdk -I/usr/include -L/usr/lib -F/System/Library/Frameworks -framework Foundation{{end}}
+      - CXX=zig c++ -v {{ if eq .Arch "arm64" }} -target aarch64-macos.11 --sysroot /Applications/Xcode_14.2.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/macosx13.1.sdk -I/usr/include -L/usr/lib -F/System/Library/Frameworks -framework Foundation{{end}}
     ldflags:
       - -s -w -X github.com/cryptodeal/gen-napi/cmd.version={{.Version}} -X github.com/cryptodeal/gen-napi/cmd.commit={{.Commit}} -X github.com/cryptodeal/gen-napi/cmd.commitDate={{.CommitDate}} -X github.com/cryptodeal/gen-napi/cmd.target={{.Env.GOOS}}
 archives:

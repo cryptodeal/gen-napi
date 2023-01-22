@@ -8,10 +8,6 @@ jobs:
   goreleaser:
     runs-on: macos-latest
     steps:
-      - name: Capture OSXSDK path
-        run: |
-          sudo rm -Rf /Library/Developer/CommandLineTools/SDKs/*;
-          echo "SYSROOT=$(xcrun --sdk macosx --show-sdk-path)" >> $GITHUB_ENV
       - name: Checkout
         uses: actions/checkout@v2
         with:
