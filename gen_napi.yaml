@@ -692,16 +692,32 @@ packages:
             body: |
               static Napi::Value toFloat32Array(const Napi::CallbackInfo& info) {
                 Napi::Env env = info.Env();
-                if (!info[0].IsExternal()) {
-                  Napi::TypeError::New(env, "`toFloat32Array` expects args[0] to be native `Tensor` (typeof `Napi::External<fl::Tensor>`)").ThrowAsJavaScriptException();
-                  return env.Null();
-                }
                 fl::Tensor* t = UnExternalize<fl::Tensor>(info[0]);
-                size_t elemLen = static_cast<size_t>(t->elements());
+                fl::Tensor* contig_tensor = t;
+                bool isContiguous = t->isContiguous();
+                if (!isContiguous) {
+                  contig_tensor = new fl::Tensor(t->asContiguousTensor());
+                }
+                size_t elemLen = contig_tensor->elements();
                 size_t byteLen = elemLen * sizeof(float);
-                void* ptr = t->astype(fl::dtype::f32).host<float>();
-                Napi::ArrayBuffer buff = Napi::ArrayBuffer::New(env, ptr, byteLen);
-                Napi::TypedArrayOf<float> out = Napi::TypedArrayOf<float>::New(env, elemLen, buff, 0, napi_float32_array);
+                float* ptr;
+                if (contig_tensor->type() == fl::dtype::f32) {
+                  ptr = contig_tensor->host<float>();
+                } else {
+                  ptr = contig_tensor->astype(fl::dtype::f32).host<float>();
+                }
+                std::unique_ptr<std::vector<float>> nativeArray =
+                    std::make_unique<std::vector<float>>(ptr, ptr + elemLen);
+                if (!isContiguous) {
+                  delete contig_tensor;
+                }
+                Napi::ArrayBuffer buff =
+                    Napi::ArrayBuffer::New(env, nativeArray->data(), byteLen,
+                                          DeleteArrayBuffer<float>, nativeArray.get());
+                nativeArray.release();
+                Napi::MemoryManagement::AdjustExternalMemory(env, byteLen);
+                Napi::TypedArrayOf<float> out = Napi::TypedArrayOf<float>::New(
+                    env, elemLen, buff, 0, napi_float32_array);
                 return out;
               }
           - name: 'toFloat64Array'
@@ -712,16 +728,32 @@ packages:
             body: |
               static Napi::Value toFloat64Array(const Napi::CallbackInfo& info) {
                 Napi::Env env = info.Env();
-                if (!info[0].IsExternal()) {
-                  Napi::TypeError::New(env, "`toFloat64Array` expects args[0] to be native `Tensor` (typeof `Napi::External<fl::Tensor>`)").ThrowAsJavaScriptException();
-                  return env.Null();
-                }
                 fl::Tensor* t = UnExternalize<fl::Tensor>(info[0]);
-                size_t elemLen = static_cast<size_t>(t->elements());
+                fl::Tensor* contig_tensor = t;
+                bool isContiguous = t->isContiguous();
+                if (!isContiguous) {
+                  contig_tensor = new fl::Tensor(t->asContiguousTensor());
+                }
+                size_t elemLen = contig_tensor->elements();
                 size_t byteLen = elemLen * sizeof(double);
-                void* ptr = t->astype(fl::dtype::f64).host<double>();
-                Napi::ArrayBuffer buff = Napi::ArrayBuffer::New(env, ptr, byteLen);
-                Napi::TypedArrayOf<double> out = Napi::TypedArrayOf<double>::New(env, elemLen, buff, 0, napi_float64_array);
+                double* ptr;
+                if (contig_tensor->type() == fl::dtype::f64) {
+                  ptr = contig_tensor->host<double>();
+                } else {
+                  ptr = contig_tensor->astype(fl::dtype::f64).host<double>();
+                }
+                std::unique_ptr<std::vector<double>> nativeArray =
+                    std::make_unique<std::vector<double>>(ptr, ptr + elemLen);
+                if (!isContiguous) {
+                  delete contig_tensor;
+                }
+                Napi::ArrayBuffer buff =
+                    Napi::ArrayBuffer::New(env, nativeArray->data(), byteLen,
+                                          DeleteArrayBuffer<double>, nativeArray.get());
+                nativeArray.release();
+                Napi::MemoryManagement::AdjustExternalMemory(env, byteLen);
+                Napi::TypedArrayOf<double> out = Napi::TypedArrayOf<double>::New(
+                    env, elemLen, buff, 0, napi_float64_array);
                 return out;
               }
           - name: 'toBoolInt8Array'
@@ -731,19 +763,35 @@ packages:
             ts_return_type: 'Int8Array'
             body: |
               static Napi::Value toBoolInt8Array(const Napi::CallbackInfo& info) {
-                 Napi::Env env = info.Env();
-                 if (!info[0].IsExternal()) {
-                   Napi::TypeError::New(env, "`toBoolInt8Array` expects args[0] to be native `Tensor` (typeof `Napi::External<fl::Tensor>`)").ThrowAsJavaScriptException();
-                   return env.Null();
-                 }
-                 fl::Tensor* t = UnExternalize<fl::Tensor>(info[0]);
-                 size_t elemLen = static_cast<size_t>(t->elements());
-                 size_t byteLen = elemLen * sizeof(int8_t);
-                 void* ptr = t->astype(fl::dtype::b8).host<int>();
-                 Napi::ArrayBuffer buff = Napi::ArrayBuffer::New(env, ptr, byteLen);
-                 Napi::TypedArrayOf<int8_t> out = Napi::TypedArrayOf<int8_t>::New(env, elemLen, buff, 0, napi_int8_array);
-                 return out;
-               }
+                Napi::Env env = info.Env();
+                fl::Tensor* t = UnExternalize<fl::Tensor>(info[0]);
+                fl::Tensor* contig_tensor = t;
+                bool isContiguous = t->isContiguous();
+                if (!isContiguous) {
+                  contig_tensor = new fl::Tensor(t->asContiguousTensor());
+                }
+                size_t elemLen = contig_tensor->elements();
+                size_t byteLen = elemLen * sizeof(int8_t);
+                int8_t* ptr;
+                if (contig_tensor->type() == fl::dtype::b8) {
+                  ptr = (int8_t*)contig_tensor->host<int>();
+                } else {
+                  ptr = (int8_t*)contig_tensor->astype(fl::dtype::b8).host<int>();
+                }
+                std::unique_ptr<std::vector<int8_t>> nativeArray =
+                    std::make_unique<std::vector<int8_t>>(ptr, ptr + elemLen);
+                if (!isContiguous) {
+                  delete contig_tensor;
+                }
+                Napi::ArrayBuffer buff =
+                    Napi::ArrayBuffer::New(env, nativeArray->data(), byteLen,
+                                          DeleteArrayBuffer<int8_t>, nativeArray.get());
+                nativeArray.release();
+                Napi::MemoryManagement::AdjustExternalMemory(env, byteLen);
+                Napi::TypedArrayOf<int8_t> out = Napi::TypedArrayOf<int8_t>::New(
+                    env, elemLen, buff, 0, napi_int8_array);
+                return out;
+              }
           - name: 'toInt16Array'
             args:
               - name: 'tensor'

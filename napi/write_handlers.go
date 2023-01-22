@@ -8,6 +8,7 @@ import (
 func (g *PackageGenerator) writeHelpers(w *strings.Builder, classes map[string]*CPPClass) {
 	if len(g.conf.HelperFuncs) > 0 {
 		w.WriteString("// non-exported helpers\n")
+		g.writeArrayBufferDeleter(w)
 		hasUnexternalizer := false
 		for name, c := range classes {
 			if c.Decl != nil {
@@ -51,7 +52,7 @@ func (g *PackageGenerator) writeClassDeleter(sb *strings.Builder, class *CPPClas
 	sb.WriteString("}\n\n")
 }
 
-func (g *PackageGenerator) writeArrayBufferDeleter(sb *strings.Builder, class *CPPClass, name string) {
+func (g *PackageGenerator) writeArrayBufferDeleter(sb *strings.Builder) {
 	sb.WriteString("template <typename T>\n")
 	sb.WriteString("static inline void DeleteArrayBuffer(Napi::Env env, void* /*data*/, std::vector<T>* hint) {\n")
 	g.writeIndent(sb, 1)
