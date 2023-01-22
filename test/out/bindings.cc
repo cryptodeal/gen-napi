@@ -34,6 +34,15 @@ static inline void DeleteTensor(Napi::Env env, void* ptr) {
   delete val;
 }
 
+template <typename T>
+static inline void DeleteArrayBuffer(Napi::Env env,
+                                     void* /*data*/,
+                                     std::vector<T>* hint) {
+  size_t bytes = hint->size() * sizeof(T);
+  std::unique_ptr<std::vector<T>> vectorPtrToDelete(hint);
+  Napi::MemoryManagement::AdjustExternalMemory(env, -bytes);
+}
+
 static inline Napi::External<fl::Tensor> ExternalizeTensor(Napi::Env env,
                                                            fl::Tensor* ptr) {
   return Napi::External<fl::Tensor>::New(env, ptr, DeleteTensor);
@@ -357,18 +366,30 @@ static Napi::Value _toFloat32Array(const Napi::CallbackInfo& info) {
 
 static Napi::Value _toFloat64Array(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
-  if (!info[0].IsExternal()) {
-    Napi::TypeError::New(env,
-                         "`toFloat64Array` expects args[0] to be native "
-                         "`Tensor` (typeof `Napi::External<fl::Tensor>`)")
-        .ThrowAsJavaScriptException();
-    return env.Null();
-  }
   fl::Tensor* t = UnExternalize<fl::Tensor>(info[0]);
-  size_t elemLen = static_cast<size_t>(t->elements());
+  fl::Tensor* contig_tensor = t;
+  bool isContiguous = t->isContiguous();
+  if (!isContiguous) {
+    contig_tensor = new fl::Tensor(t->asContiguousTensor());
+  }
+  size_t elemLen = contig_tensor->elements();
   size_t byteLen = elemLen * sizeof(double);
-  void* ptr = t->astype(fl::dtype::f64).host<double>();
-  Napi::ArrayBuffer buff = Napi::ArrayBuffer::New(env, ptr, byteLen);
+  double* ptr = nullptr;
+  if (contig_tensor->type() == fl::dtype::f64) {
+    ptr = contig_tensor->host<double>();
+  } else {
+    ptr = contig_tensor->astype(fl::dtype::f64).host<double>();
+  }
+  std::unique_ptr<std::vector<double>> nativeArray =
+      std::make_unique<std::vector<double>>(ptr, ptr + elemLen);
+  if (!isContiguous) {
+    delete contig_tensor;
+  }
+  Napi::ArrayBuffer buff =
+      Napi::ArrayBuffer::New(env, nativeArray->data(), byteLen,
+                             DeleteArrayBuffer<double>, nativeArray.get());
+  nativeArray.release();
+  Napi::MemoryManagement::AdjustExternalMemory(env, byteLen);
   Napi::TypedArrayOf<double> out = Napi::TypedArrayOf<double>::New(
       env, elemLen, buff, 0, napi_float64_array);
   return out;
