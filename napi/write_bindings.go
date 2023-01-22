@@ -346,9 +346,7 @@ func (g *PackageGenerator) writeClassField(sb *strings.Builder, f *CPPFieldDecl,
 				g.writeIndent(sb, 1)
 				sb.WriteString(fmt.Sprintf("auto* out = new %s::%s(_res);\n", *g.NameSpace, returnType))
 				g.writeIndent(sb, 1)
-				sb.WriteString(fmt.Sprintf("Napi::External<%s::%s> _external_out = Externalize%s(env, out);", *g.NameSpace, returnType, returnType))
-				g.writeIndent(sb, 1)
-				sb.WriteString("return _external_out;\n")
+				sb.WriteString(fmt.Sprintf("return Externalize%s(env, out);", returnType))
 			} else {
 				napiHandler := g.casers.upper.String(jsType[0:1]) + jsType[1:]
 				sb.WriteString(fmt.Sprintf("return Napi::%s::New(env, %s);\n", napiHandler, "_res"))

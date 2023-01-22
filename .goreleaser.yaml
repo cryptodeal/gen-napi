@@ -23,7 +23,6 @@ builds:
       - darwin
     goarch:
       - amd64
-      - arm64
     env:
       - CGO_ENABLED=1
       - CC=zig cc -v {{ if eq .Arch "arm64" }} -target aarch64-macos.11 --sysroot "${{ env.SYSROOT }}" -I/usr/include -L/usr/lib -F/System/Library/Frameworks -framework Foundation{{end}}
