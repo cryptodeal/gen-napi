@@ -35,6 +35,46 @@ func parseIncludes(n *sitter.Node, input []byte) string {
 	return includes.String()
 }
 
+func parseGlobalVars(n *sitter.Node, input []byte) string {
+	global_vars := &strings.Builder{}
+	q, err := sitter.NewQuery([]byte("(namespace_definition) @namespace"), cpp.GetLanguage())
+	if err != nil {
+		fmt.Println(err)
+		panic(err)
+	}
+
+	qc := sitter.NewQueryCursor()
+	qc.Exec(q, n)
+
+	for {
+		m, ok := qc.NextMatch()
+		if !ok {
+			break
+		}
+		for _, c := range m.Captures {
+			name := c.Node.ChildByFieldName("name")
+			if name != nil {
+				nameContent := name.Content(input)
+				if !strings.EqualFold(nameContent, "global_vars") {
+					continue
+				}
+				bodyNode := c.Node.ChildByFieldName("body")
+				if bodyNode != nil {
+					splitBody := strings.Split(bodyNode.Content(input), "\n")
+					length := len(splitBody)
+					for i, line := range splitBody {
+						if i == 0 || i == length-1 {
+							continue
+						}
+						global_vars.WriteString(line)
+					}
+				}
+			}
+		}
+	}
+	return global_vars.String()
+}
+
 type NameSpaceGroup struct {
 	NameSpace   *string
 	IsClass     *string
