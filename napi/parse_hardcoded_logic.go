@@ -127,7 +127,7 @@ func parsePrivateHelpers(n *sitter.Node, input []byte) map[string]string {
 							} else if childType == "template_declaration" {
 								funcNode := findChildNodeByType(child, "function_definition")
 								if funcNode != nil {
-									decl := child.ChildByFieldName("declarator")
+									decl := funcNode.ChildByFieldName("declarator")
 									if decl != nil {
 										name := getFuncName(decl, input)
 										helpers[name] = child.Content(input)
