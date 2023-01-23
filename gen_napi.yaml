@@ -26,7 +26,6 @@ packages:
       - 'pad'
       - 'argsort'
       - 'fromScalar'
-      # TODO: following op should not be ignored (ignored for compilation errors)
     header_frontmatter: |
       #include "flashlight/fl/autograd/Functions.h"
       #include "flashlight/fl/autograd/tensor/AutogradExtension.h"
@@ -485,21 +484,6 @@ packages:
           }
           return out;
         }
-      load: |
-        static inline void* load(std::string filename, Napi::Env env) {
-          try {
-            fl::Tensor tensor;
-            fl::load(filename, tensor);
-            auto* t = new fl::Tensor(tensor);
-            auto _out_bytes_used = static_cast<int64_t>(t->bytes());
-            g_bytes_used += _out_bytes_used;
-            Napi::MemoryManagement::AdjustExternalMemory(env, _out_bytes_used);
-            return t;
-          } catch (std::exception const& e) {
-            Napi::TypeError::New(env, e.what()).ThrowAsJavaScriptException();
-            return nullptr;
-          }
-        }
     global_methods:
       - name: 'init'
         is_void: true
@@ -613,7 +597,7 @@ packages:
                 jsArrayArg<long long>(info[0].As<Napi::Array>(), g_row_major, false, env);
             fl::Tensor t;
             t = fl::rand(fl::Shape(shape));
-            auto _out_bytes_used = static_cast<int64_t>(t.bytes());
+            auto _out_bytes_used = t.bytes();
             g_bytes_used += _out_bytes_used;
             Napi::MemoryManagement::AdjustExternalMemory(env, _out_bytes_used);
             auto* tensor = new fl::Tensor(t);
@@ -636,7 +620,7 @@ packages:
                 jsArrayArg<long long>(info[0].As<Napi::Array>(), g_row_major, false, env);
             fl::Tensor t;
             t = fl::randn(fl::Shape(shape));
-            auto _out_bytes_used = static_cast<int64_t>(t.bytes());
+            auto _out_bytes_used = t.bytes();
             g_bytes_used += _out_bytes_used;
             Napi::MemoryManagement::AdjustExternalMemory(env, _out_bytes_used);
             auto* tensor = new fl::Tensor(t);
@@ -716,9 +700,8 @@ packages:
                                           DeleteArrayBuffer<float>, nativeArray.get());
                 nativeArray.release();
                 Napi::MemoryManagement::AdjustExternalMemory(env, byteLen);
-                Napi::TypedArrayOf<float> out = Napi::TypedArrayOf<float>::New(
+                return Napi::TypedArrayOf<float>::New(
                     env, elemLen, buff, 0, napi_float32_array);
-                return out;
               }
           - name: 'toFloat64Array'
             args:
@@ -752,9 +735,8 @@ packages:
                                           DeleteArrayBuffer<double>, nativeArray.get());
                 nativeArray.release();
                 Napi::MemoryManagement::AdjustExternalMemory(env, byteLen);
-                Napi::TypedArrayOf<double> out = Napi::TypedArrayOf<double>::New(
+                return Napi::TypedArrayOf<double>::New(
                     env, elemLen, buff, 0, napi_float64_array);
-                return out;
               }
           - name: 'toBoolInt8Array'
             args:
@@ -788,9 +770,8 @@ packages:
                                           DeleteArrayBuffer<int8_t>, nativeArray.get());
                 nativeArray.release();
                 Napi::MemoryManagement::AdjustExternalMemory(env, byteLen);
-                Napi::TypedArrayOf<int8_t> out = Napi::TypedArrayOf<int8_t>::New(
+                return Napi::TypedArrayOf<int8_t>::New(
                     env, elemLen, buff, 0, napi_int8_array);
-                return out;
               }
           - name: 'toInt16Array'
             args:
@@ -824,9 +805,8 @@ packages:
                                             DeleteArrayBuffer<int16_t>, nativeArray.get());
                   nativeArray.release();
                   Napi::MemoryManagement::AdjustExternalMemory(env, byteLen);
-                  Napi::TypedArrayOf<int16_t> out = Napi::TypedArrayOf<int16_t>::New(
+                  return Napi::TypedArrayOf<int16_t>::New(
                       env, elemLen, buff, 0, napi_int16_array);
-                  return out;
                 }
           - name: 'toInt32Array'
             args:
@@ -860,9 +840,8 @@ packages:
                                             DeleteArrayBuffer<int32_t>, nativeArray.get());
                   nativeArray.release();
                   Napi::MemoryManagement::AdjustExternalMemory(env, byteLen);
-                  Napi::TypedArrayOf<int32_t> out = Napi::TypedArrayOf<int32_t>::New(
+                  return Napi::TypedArrayOf<int32_t>::New(
                       env, elemLen, buff, 0, napi_int32_array);
-                  return out;
                 }
           - name: 'save'
             args:
@@ -921,9 +900,8 @@ packages:
                                             DeleteArrayBuffer<int64_t>, nativeArray.get());
                   nativeArray.release();
                   Napi::MemoryManagement::AdjustExternalMemory(env, byteLen);
-                  Napi::TypedArrayOf<int64_t> out = Napi::TypedArrayOf<int64_t>::New(
+                  return Napi::TypedArrayOf<int64_t>::New(
                       env, elemLen, buff, 0, napi_bigint64_array);
-                  return out;
                 }
           - name: 'toUint8Array'
             args:
@@ -957,9 +935,8 @@ packages:
                                             DeleteArrayBuffer<uint8_t>, nativeArray.get());
                   nativeArray.release();
                   Napi::MemoryManagement::AdjustExternalMemory(env, byteLen);
-                  Napi::TypedArrayOf<uint8_t> out = Napi::TypedArrayOf<uint8_t>::New(
+                  return Napi::TypedArrayOf<uint8_t>::New(
                       env, elemLen, buff, 0, napi_uint8_array);
-                  return out;
                 }
           - name: 'toUint16Array'
             args:
@@ -993,9 +970,8 @@ packages:
                                             DeleteArrayBuffer<uint16_t>, nativeArray.get());
                   nativeArray.release();
                   Napi::MemoryManagement::AdjustExternalMemory(env, byteLen);
-                  Napi::TypedArrayOf<uint16_t> out = Napi::TypedArrayOf<uint16_t>::New(
+                  return Napi::TypedArrayOf<uint16_t>::New(
                       env, elemLen, buff, 0, napi_uint16_array);
-                  return out;
                 }
           - name: 'toUint32Array'
             args:
@@ -1029,9 +1005,8 @@ packages:
                                             DeleteArrayBuffer<uint32_t>, nativeArray.get());
                   nativeArray.release();
                   Napi::MemoryManagement::AdjustExternalMemory(env, byteLen);
-                  Napi::TypedArrayOf<uint32_t> out = Napi::TypedArrayOf<uint32_t>::New(
+                  return Napi::TypedArrayOf<uint32_t>::New(
                       env, elemLen, buff, 0, napi_uint32_array);
-                  return out;
                 }
           - name: 'toUint64Array'
             args:
@@ -1065,9 +1040,8 @@ packages:
                                             DeleteArrayBuffer<uint64_t>, nativeArray.get());
                   nativeArray.release();
                   Napi::MemoryManagement::AdjustExternalMemory(env, byteLen);
-                  Napi::TypedArrayOf<uint64_t> out = Napi::TypedArrayOf<uint64_t>::New(
+                  return Napi::TypedArrayOf<uint64_t>::New(
                       env, elemLen, buff, 0, napi_biguint64_array);
-                  return out;
                 }
           - name: 'toFloat32Scalar'
             args:
@@ -1268,11 +1242,10 @@ packages:
                 int64_t length = static_cast<int64_t>(buf.ByteLength() / sizeof(float));
                 float* ptr = reinterpret_cast<float*>(buf.Data());
                 auto* t = new fl::Tensor(fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
-                auto _out_bytes_used = static_cast<int64_t>(t->bytes());
+                auto _out_bytes_used = t->bytes();
                 g_bytes_used += _out_bytes_used;
                 Napi::MemoryManagement::AdjustExternalMemory(env, _out_bytes_used);
-                Napi::External<fl::Tensor> wrapped = ExternalizeTensor(env, t);
-                return wrapped;
+                return ExternalizeTensor(env, t);
               }
           - name: 'tensorFromFloat64Buffer'
             ts_return_type: 'any'
@@ -1290,11 +1263,10 @@ packages:
                 int64_t length = static_cast<int64_t>(buf.ByteLength() / sizeof(double));
                 double* ptr = reinterpret_cast<double*>(buf.Data());
                 auto* t = new fl::Tensor(fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
-                auto _out_bytes_used = static_cast<int64_t>(t->bytes());
+                auto _out_bytes_used = t->bytes();
                 g_bytes_used += _out_bytes_used;
                 Napi::MemoryManagement::AdjustExternalMemory(env, _out_bytes_used);
-                Napi::External<fl::Tensor> wrapped = ExternalizeTensor(env, t);
-                return wrapped;
+                return ExternalizeTensor(env, t);
               }
           - name: 'tensorFromBoolInt8Buffer'
             ts_return_type: 'any'
@@ -1312,11 +1284,10 @@ packages:
                 int64_t length = static_cast<int64_t>(buf.ByteLength() / sizeof(int8_t));
                 char* ptr = reinterpret_cast<char*>(buf.Data());
                 auto* t = new fl::Tensor(fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
-                auto _out_bytes_used = static_cast<int64_t>(t->bytes());
+                auto _out_bytes_used = t->bytes();
                 g_bytes_used += _out_bytes_used;
                 Napi::MemoryManagement::AdjustExternalMemory(env, _out_bytes_used);
-                Napi::External<fl::Tensor> wrapped = ExternalizeTensor(env, t);
-                return wrapped;
+                return ExternalizeTensor(env, t);
               }
           - name: 'tensorFromInt16Buffer'
             ts_return_type: 'any'
@@ -1334,11 +1305,10 @@ packages:
                 int64_t length = static_cast<int64_t>(buf.ByteLength() / sizeof(int16_t));
                 int16_t* ptr = reinterpret_cast<int16_t*>(buf.Data());
                 auto* t = new fl::Tensor(fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
-                auto _out_bytes_used = static_cast<int64_t>(t->bytes());
+                auto _out_bytes_used = t->bytes();
                 g_bytes_used += _out_bytes_used;
                 Napi::MemoryManagement::AdjustExternalMemory(env, _out_bytes_used);
-                Napi::External<fl::Tensor> wrapped = ExternalizeTensor(env, t);
-                return wrapped;
+                return ExternalizeTensor(env, t);
               }
           - name: 'tensorFromInt32Buffer'
             ts_return_type: 'any'
@@ -1356,11 +1326,10 @@ packages:
                 int64_t length = static_cast<int64_t>(buf.ByteLength() / sizeof(int32_t));
                 int32_t* ptr = reinterpret_cast<int32_t*>(buf.Data());
                 auto* t = new fl::Tensor(fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
-                auto _out_bytes_used = static_cast<int64_t>(t->bytes());
+                auto _out_bytes_used = t->bytes();
                 g_bytes_used += _out_bytes_used;
                 Napi::MemoryManagement::AdjustExternalMemory(env, _out_bytes_used);
-                Napi::External<fl::Tensor> wrapped = ExternalizeTensor(env, t);
-                return wrapped;
+                return ExternalizeTensor(env, t);
               }
           - name: 'tensorFromInt64Buffer'
             ts_return_type: 'any'
@@ -1378,11 +1347,10 @@ packages:
                 int64_t length = static_cast<int64_t>(buf.ByteLength() / sizeof(int64_t));
                 int64_t* ptr = reinterpret_cast<int64_t*>(buf.Data());
                 auto* t = new fl::Tensor(fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
-                auto _out_bytes_used = static_cast<int64_t>(t->bytes());
+                auto _out_bytes_used = t->bytes();
                 g_bytes_used += _out_bytes_used;
                 Napi::MemoryManagement::AdjustExternalMemory(env, _out_bytes_used);
-                Napi::External<fl::Tensor> wrapped = ExternalizeTensor(env, t);
-                return wrapped;
+                return ExternalizeTensor(env, t);
               }
           - name: 'tensorFromUint8Buffer'
             ts_return_type: 'any'
@@ -1400,11 +1368,10 @@ packages:
                 int64_t length = static_cast<int64_t>(buf.ByteLength() / sizeof(uint8_t));
                 uint8_t* ptr = reinterpret_cast<uint8_t*>(buf.Data());
                 auto* t = new fl::Tensor(fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
-                auto _out_bytes_used = static_cast<int64_t>(t->bytes());
+                auto _out_bytes_used = t->bytes();
                 g_bytes_used += _out_bytes_used;
                 Napi::MemoryManagement::AdjustExternalMemory(env, _out_bytes_used);
-                Napi::External<fl::Tensor> wrapped = ExternalizeTensor(env, t);
-                return wrapped;
+                return ExternalizeTensor(env, t);
               }
           - name: 'tensorFromUint16Buffer'
             ts_return_type: 'any'
@@ -1422,11 +1389,10 @@ packages:
                 int64_t length = static_cast<int64_t>(buf.ByteLength() / sizeof(uint16_t));
                 uint16_t* ptr = reinterpret_cast<uint16_t*>(buf.Data());
                 auto* t = new fl::Tensor(fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
-                auto _out_bytes_used = static_cast<int64_t>(t->bytes());
+                auto _out_bytes_used = t->bytes();
                 g_bytes_used += _out_bytes_used;
                 Napi::MemoryManagement::AdjustExternalMemory(env, _out_bytes_used);
-                Napi::External<fl::Tensor> wrapped = ExternalizeTensor(env, t);
-                return wrapped;
+                return ExternalizeTensor(env, t);
               }
           - name: 'tensorFromUint32Buffer'
             args:
@@ -1444,11 +1410,10 @@ packages:
                 int64_t length = static_cast<int64_t>(buf.ByteLength() / sizeof(uint32_t));
                 uint32_t* ptr = reinterpret_cast<uint32_t*>(buf.Data());
                 auto* t = new fl::Tensor(fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
-                auto _out_bytes_used = static_cast<int64_t>(t->bytes());
+                auto _out_bytes_used = t->bytes();
                 g_bytes_used += _out_bytes_used;
                 Napi::MemoryManagement::AdjustExternalMemory(env, _out_bytes_used);
-                Napi::External<fl::Tensor> wrapped = ExternalizeTensor(env, t);
-                return wrapped;
+                return ExternalizeTensor(env, t);
               }
           - name: 'tensorFromUint64Buffer'
             args:
@@ -1466,9 +1431,8 @@ packages:
                 int64_t length = static_cast<int64_t>(buf.ByteLength() / sizeof(uint64_t));
                 uint64_t* ptr = reinterpret_cast<uint64_t*>(buf.Data());
                 auto* t = new fl::Tensor(fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
-                auto _out_bytes_used = static_cast<int64_t>(t->bytes());
+                auto _out_bytes_used = t->bytes();
                 g_bytes_used += _out_bytes_used;
                 Napi::MemoryManagement::AdjustExternalMemory(env, _out_bytes_used);
-                Napi::External<fl::Tensor> wrapped = ExternalizeTensor(env, t);
-                return wrapped;
+                return ExternalizeTensor(env, t);
               }
