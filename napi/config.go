@@ -128,6 +128,7 @@ func (c Config) LoadForcedLogic() {
 			n := tree.RootNode()
 			p.BindingsFrontmatter = parseIncludes(n, input)
 			p.GlobalVars = parseGlobalVars(n, input)
+			p.HelperFuncs = parsePrivateHelpers(n, input)
 		}
 	}
 }

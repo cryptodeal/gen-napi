@@ -33,5 +33,4 @@ func (g *PackageGenerator) writeGlobalVars(w *strings.Builder) {
 func (g *PackageGenerator) writeFileSourceHeader(w *strings.Builder, path string) {
 	w.WriteString("\n//////////\n// source: ")
 	w.WriteString(fmt.Sprintf("%s\n", filepath.Base(path)))
-	w.WriteByte('\n')
 }
