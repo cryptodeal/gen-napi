@@ -1,9 +1,15 @@
 package napi
 
 import (
+	"context"
+	"fmt"
 	"log"
+	"os"
 	"path/filepath"
 	"strings"
+
+	sitter "github.com/smacker/go-tree-sitter"
+	"github.com/smacker/go-tree-sitter/cpp"
 )
 
 const defaultOutBindingsFileName = "bindings.cc"
@@ -66,9 +72,10 @@ type PackageConfig struct {
 
 	// Where this output should be written to.
 	// If you specify a folder it will be written to a file `index.ts` within that folder. By default it is written into the Golang package folder.
-	BindingsOutPath string        `yaml:"bindings_out_path"`
-	HeaderOutPath   string        `yaml:"header_out_path"`
-	JSWrapperOpts   JSWrapperOpts `yaml:"js_wrapper_opts"`
+	BindingsOutPath   string        `yaml:"bindings_out_path"`
+	HeaderOutPath     string        `yaml:"header_out_path"`
+	JSWrapperOpts     JSWrapperOpts `yaml:"js_wrapper_opts"`
+	PathToForcedLogic string        `yaml:"path_to_forced_logic"`
 
 	// Customize the indentation (use \t if you want tabs)
 	Indent string `yaml:"indent"`
@@ -100,6 +107,30 @@ type PackageConfig struct {
 
 type Config struct {
 	Packages []*PackageConfig `yaml:"packages"`
+}
+
+func (c Config) LoadForcedLogic() {
+	for _, p := range c.Packages {
+		if p.PathToForcedLogic != "" {
+			input, err := os.ReadFile(p.PathToForcedLogic)
+			if err != nil {
+				fmt.Println(err)
+				panic(err)
+			}
+
+			parser := sitter.NewParser()
+			parser.SetLanguage(cpp.GetLanguage())
+
+			tree, err := parser.ParseCtx(context.Background(), nil, input)
+			if err != nil {
+				fmt.Println(err)
+				panic(err)
+			}
+
+			n := tree.RootNode()
+			p.BindingsFrontmatter = parseIncludes(n, input)
+		}
+	}
 }
 
 func (c Config) PackageNames() []string {
@@ -168,7 +199,7 @@ func (c PackageConfig) ResolvedBindingsOutPath(packageDir string) string {
 	return c.BindingsOutPath
 }
 
-func (c PackageConfig) ResolvedHeaderOutPath(packageDir string) string {
+func (c PackageConfig) ResolvedForcedLogicPath(packageDir string) string {
 	if c.HeaderOutPath == "" {
 		return filepath.Join(packageDir, defaultOutHeaderFileName)
 	} else if !strings.HasSuffix(c.HeaderOutPath, ".h") {

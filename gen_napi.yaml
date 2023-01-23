@@ -26,23 +26,7 @@ packages:
       - 'pad'
       - 'argsort'
       - 'fromScalar'
-    header_frontmatter: |
-      #include "flashlight/fl/autograd/Functions.h"
-      #include "flashlight/fl/autograd/tensor/AutogradExtension.h"
-      #include "flashlight/fl/autograd/tensor/AutogradOps.h"
-      #include "flashlight/fl/common/DynamicBenchmark.h"
-      #include "flashlight/fl/nn/Init.h"
-      #include "flashlight/fl/runtime/Device.h"
-      #include "flashlight/fl/runtime/Stream.h"
-      #include "flashlight/fl/tensor/Compute.h"
-      #include "flashlight/fl/tensor/Index.h"
-      #include "flashlight/fl/tensor/Init.h"
-      #include "flashlight/fl/tensor/Random.h"
-      #include "flashlight/fl/tensor/TensorAdapter.h"
-    bindings_frontmatter: |
-      #include <atomic>
-      #include <iostream>
-      #include <string>
+    path_to_forced_logic: path_to_forced_logic
     global_vars: |
       static std::atomic<size_t> g_bytes_used = 0;
       static std::atomic<bool> g_row_major = true;

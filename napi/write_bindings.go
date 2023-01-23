@@ -365,7 +365,7 @@ func (g *PackageGenerator) writeAddonExport(sb *strings.Builder, name string) {
 // makes calls to functions that write bindings
 func (g *PackageGenerator) writeBindings(sb *strings.Builder, classes map[string]*CPPClass, methods map[string]*CPPMethod, processedMethods map[string]*CPPMethod) {
 	sb.WriteString("#include <napi.h>\n")
-	g.writeHeaderFrontmatter(sb)
+	// g.writeHeaderFrontmatter(sb)
 	g.writeBindingsFrontmatter(sb)
 	g.writeFileSourceHeader(sb, *g.Path)
 	g.writeGlobalVars(sb)

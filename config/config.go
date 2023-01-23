@@ -18,6 +18,6 @@ func ReadFromFilepath(cfgFilepath string) napi.Config {
 	if err != nil {
 		log.Fatalf("Could not parse config file froms: %v", err)
 	}
-
+	conf.LoadForcedLogic()
 	return conf
 }
