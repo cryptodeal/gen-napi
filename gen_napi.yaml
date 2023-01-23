@@ -26,7 +26,7 @@ packages:
       - 'pad'
       - 'argsort'
       - 'fromScalar'
-    path_to_forced_logic: path_to_forced_logic
+    path_to_forced_logic: test/ForcedLogic.cc
     global_vars: |
       static std::atomic<size_t> g_bytes_used = 0;
       static std::atomic<bool> g_row_major = true;

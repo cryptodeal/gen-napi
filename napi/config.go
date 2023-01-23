@@ -88,8 +88,6 @@ type PackageConfig struct {
 
 	ClassOpts map[string]ClassOpts `yaml:"class_opts"`
 
-	// This content will be put at the top of the output Typescript file.
-	// You would generally use this to import custom types.
 	HeaderFrontmatter   string `yaml:"header_frontmatter"`
 	BindingsFrontmatter string `yaml:"bindings_frontmatter"`
 

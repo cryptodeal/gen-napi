@@ -30,7 +30,6 @@ func parseIncludes(n *sitter.Node, input []byte) string {
 				continue
 			}
 			includes.WriteString(c.Node.Content(input))
-			includes.WriteByte('\n')
 		}
 	}
 	return includes.String()
