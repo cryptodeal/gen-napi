@@ -185,7 +185,7 @@ func parseScopedFnBlock(n *sitter.Node, input []byte, scopeName string) *[]FnOpt
 			name := c.Node.ChildByFieldName("name")
 			if name != nil {
 				nameContent := name.Content(input)
-				if !strings.EqualFold(nameContent, "exported_global_methods") {
+				if !strings.EqualFold(nameContent, scopeName) {
 					continue
 				}
 				bodyNode := c.Node.ChildByFieldName("body")
