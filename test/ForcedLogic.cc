@@ -276,8 +276,8 @@ static inline std::vector<T> ptrArrayArg(const void* ptr, int len) {
 
 namespace Tensor_forced_methods {
 /*
-  @gen-napi-`ts_args`: (shape: number[])
-  @gen-napi-`ts_return_type`: Tensor
+  @gen-napi-`ts_args`: (tensor: Tensor)
+  @gen-napi-`ts_return_type`: Float32Array
 */
 static Napi::Value toFloat32Array(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
@@ -309,6 +309,10 @@ static Napi::Value toFloat32Array(const Napi::CallbackInfo& info) {
                                         napi_float32_array);
 }
 
+/*
+  @gen-napi-`ts_args`: (tensor: Tensor)
+  @gen-napi-`ts_return_type`: Float64Array
+*/
 static Napi::Value toFloat64Array(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   fl::Tensor* t = UnExternalize<fl::Tensor>(info[0]);
@@ -339,6 +343,10 @@ static Napi::Value toFloat64Array(const Napi::CallbackInfo& info) {
                                          napi_float64_array);
 }
 
+/*
+  @gen-napi-`ts_args`: (tensor: Tensor)
+  @gen-napi-`ts_return_type`: Int8Array
+*/
 static Napi::Value toBoolInt8Array(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   fl::Tensor* t = UnExternalize<fl::Tensor>(info[0]);
@@ -370,6 +378,10 @@ static Napi::Value toBoolInt8Array(const Napi::CallbackInfo& info) {
                                          napi_int8_array);
 }
 
+/*
+  @gen-napi-`ts_args`: (tensor: Tensor)
+  @gen-napi-`ts_return_type`: Int16Array
+*/
 static Napi::Value toInt16Array(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   fl::Tensor* t = UnExternalize<fl::Tensor>(info[0]);
@@ -401,6 +413,10 @@ static Napi::Value toInt16Array(const Napi::CallbackInfo& info) {
                                           napi_int16_array);
 }
 
+/*
+  @gen-napi-`ts_args`: (tensor: Tensor)
+  @gen-napi-`ts_return_type`: Int32Array
+*/
 static Napi::Value toInt32Array(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   fl::Tensor* t = UnExternalize<fl::Tensor>(info[0]);
@@ -432,6 +448,10 @@ static Napi::Value toInt32Array(const Napi::CallbackInfo& info) {
                                           napi_int32_array);
 }
 
+/*
+  @gen-napi-`ts_args`: (tensor: Tensor)
+  @gen-napi-`ts_return_type`: BigInt64Array
+*/
 static Napi::Value toInt64Array(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   fl::Tensor* t = UnExternalize<fl::Tensor>(info[0]);
@@ -463,6 +483,10 @@ static Napi::Value toInt64Array(const Napi::CallbackInfo& info) {
                                           napi_bigint64_array);
 }
 
+/*
+  @gen-napi-`ts_args`: (tensor: Tensor)
+  @gen-napi-`ts_return_type`: Uint8Array
+*/
 static Napi::Value toUint8Array(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   fl::Tensor* t = UnExternalize<fl::Tensor>(info[0]);
@@ -494,6 +518,10 @@ static Napi::Value toUint8Array(const Napi::CallbackInfo& info) {
                                           napi_uint8_array);
 }
 
+/*
+  @gen-napi-`ts_args`: (tensor: Tensor)
+  @gen-napi-`ts_return_type`: Uint16Array
+*/
 static Napi::Value toUint16Array(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   fl::Tensor* t = UnExternalize<fl::Tensor>(info[0]);
@@ -525,6 +553,10 @@ static Napi::Value toUint16Array(const Napi::CallbackInfo& info) {
                                            napi_uint16_array);
 }
 
+/*
+  @gen-napi-`ts_args`: (tensor: Tensor)
+  @gen-napi-`ts_return_type`: Uint32Array
+*/
 static Napi::Value toUint32Array(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   fl::Tensor* t = UnExternalize<fl::Tensor>(info[0]);
@@ -556,6 +588,10 @@ static Napi::Value toUint32Array(const Napi::CallbackInfo& info) {
                                            napi_uint32_array);
 }
 
+/*
+  @gen-napi-`ts_args`: (tensor: Tensor)
+  @gen-napi-`ts_return_type`: BigUint64Array
+*/
 static Napi::Value toUint64Array(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   fl::Tensor* t = UnExternalize<fl::Tensor>(info[0]);
@@ -587,6 +623,10 @@ static Napi::Value toUint64Array(const Napi::CallbackInfo& info) {
                                            napi_biguint64_array);
 }
 
+/*
+  @gen-napi-`ts_args`: (tensor: Tensor)
+  @gen-napi-`ts_return_type`: number
+*/
 static Napi::Value toFloat32Scalar(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   if (!info[0].IsExternal()) {
@@ -600,6 +640,10 @@ static Napi::Value toFloat32Scalar(const Napi::CallbackInfo& info) {
   return Napi::Number::New(env, t->asScalar<float>());
 }
 
+/*
+  @gen-napi-`ts_args`: (tensor: Tensor)
+  @gen-napi-`ts_return_type`: number
+*/
 static Napi::Value toFloat64Scalar(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   if (!info[0].IsExternal()) {
@@ -613,6 +657,10 @@ static Napi::Value toFloat64Scalar(const Napi::CallbackInfo& info) {
   return Napi::Number::New(env, t->asScalar<double>());
 }
 
+/*
+  @gen-napi-`ts_args`: (tensor: Tensor)
+  @gen-napi-`ts_return_type`: number
+*/
 static Napi::Value toBoolInt8Scalar(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   if (!info[0].IsExternal()) {
@@ -626,6 +674,10 @@ static Napi::Value toBoolInt8Scalar(const Napi::CallbackInfo& info) {
   return Napi::Number::New(env, t->asScalar<char>());
 }
 
+/*
+  @gen-napi-`ts_args`: (tensor: Tensor)
+  @gen-napi-`ts_return_type`: number
+*/
 static Napi::Value toInt16Scalar(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   if (!info[0].IsExternal()) {
@@ -639,6 +691,10 @@ static Napi::Value toInt16Scalar(const Napi::CallbackInfo& info) {
   return Napi::Number::New(env, t->asScalar<int16_t>());
 }
 
+/*
+  @gen-napi-`ts_args`: (tensor: Tensor)
+  @gen-napi-`ts_return_type`: number
+*/
 static Napi::Value toInt32Scalar(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   if (!info[0].IsExternal()) {
@@ -652,6 +708,10 @@ static Napi::Value toInt32Scalar(const Napi::CallbackInfo& info) {
   return Napi::Number::New(env, t->asScalar<int32_t>());
 }
 
+/*
+  @gen-napi-`ts_args`: (tensor: Tensor)
+  @gen-napi-`ts_return_type`: bigint
+*/
 static Napi::Value toInt64Scalar(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   if (!info[0].IsExternal()) {
@@ -665,6 +725,10 @@ static Napi::Value toInt64Scalar(const Napi::CallbackInfo& info) {
   return Napi::BigInt::New(env, t->asScalar<int64_t>());
 }
 
+/*
+  @gen-napi-`ts_args`: (tensor: Tensor)
+  @gen-napi-`ts_return_type`: number
+*/
 static Napi::Value toUint8Scalar(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   if (!info[0].IsExternal()) {
@@ -678,6 +742,10 @@ static Napi::Value toUint8Scalar(const Napi::CallbackInfo& info) {
   return Napi::Number::New(env, t->asScalar<uint8_t>());
 }
 
+/*
+  @gen-napi-`ts_args`: (tensor: Tensor)
+  @gen-napi-`ts_return_type`: number
+*/
 static Napi::Value toUint16Scalar(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   if (!info[0].IsExternal()) {
@@ -691,6 +759,10 @@ static Napi::Value toUint16Scalar(const Napi::CallbackInfo& info) {
   return Napi::Number::New(env, t->asScalar<uint16_t>());
 }
 
+/*
+  @gen-napi-`ts_args`: (tensor: Tensor)
+  @gen-napi-`ts_return_type`: number
+*/
 static Napi::Value toUint32Scalar(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   if (!info[0].IsExternal()) {
@@ -704,6 +776,10 @@ static Napi::Value toUint32Scalar(const Napi::CallbackInfo& info) {
   return Napi::Number::New(env, t->asScalar<uint32_t>());
 }
 
+/*
+  @gen-napi-`ts_args`: (tensor: Tensor)
+  @gen-napi-`ts_return_type`: bigint
+*/
 static Napi::Value toUint64Scalar(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   if (!info[0].IsExternal()) {
@@ -717,6 +793,10 @@ static Napi::Value toUint64Scalar(const Napi::CallbackInfo& info) {
   return Napi::BigInt::New(env, t->asScalar<uint64_t>());
 }
 
+/*
+  @gen-napi-`ts_args`: (tensor: Tensor)
+  @gen-napi-`ts_return_type`: void
+*/
 static void eval(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   if (!info[0].IsExternal()) {
@@ -730,6 +810,10 @@ static void eval(const Napi::CallbackInfo& info) {
   fl::eval(*(t));
 }
 
+/*
+  @gen-napi-`ts_args`: (tensor: Tensor)
+  @gen-napi-`ts_return_type`: void
+*/
 static void dispose(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   if (!info[0].IsExternal()) {
@@ -746,6 +830,10 @@ static void dispose(const Napi::CallbackInfo& info) {
   fl::detail::releaseAdapterUnsafe(t);
 }
 
+/*
+  @gen-napi-`ts_args`: (buffer: ArrayBuffer)
+  @gen-napi-`ts_return_type`: any
+*/
 static Napi::Value tensorFromFloat32Buffer(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   if (!info[0].IsArrayBuffer()) {
@@ -766,6 +854,10 @@ static Napi::Value tensorFromFloat32Buffer(const Napi::CallbackInfo& info) {
   return ExternalizeTensor(env, t);
 }
 
+/*
+  @gen-napi-`ts_args`: (buffer: ArrayBuffer)
+  @gen-napi-`ts_return_type`: any
+*/
 static Napi::Value tensorFromFloat64Buffer(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   if (!info[0].IsArrayBuffer()) {
@@ -786,6 +878,10 @@ static Napi::Value tensorFromFloat64Buffer(const Napi::CallbackInfo& info) {
   return ExternalizeTensor(env, t);
 }
 
+/*
+  @gen-napi-`ts_args`: (buffer: ArrayBuffer)
+  @gen-napi-`ts_return_type`: any
+*/
 static Napi::Value tensorFromBoolInt8Buffer(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   if (!info[0].IsArrayBuffer()) {
@@ -806,6 +902,10 @@ static Napi::Value tensorFromBoolInt8Buffer(const Napi::CallbackInfo& info) {
   return ExternalizeTensor(env, t);
 }
 
+/*
+  @gen-napi-`ts_args`: (buffer: ArrayBuffer)
+  @gen-napi-`ts_return_type`: any
+*/
 static Napi::Value tensorFromInt16Buffer(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   if (!info[0].IsArrayBuffer()) {
@@ -826,6 +926,10 @@ static Napi::Value tensorFromInt16Buffer(const Napi::CallbackInfo& info) {
   return ExternalizeTensor(env, t);
 }
 
+/*
+  @gen-napi-`ts_args`: (buffer: ArrayBuffer)
+  @gen-napi-`ts_return_type`: any
+*/
 static Napi::Value tensorFromInt32Buffer(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   if (!info[0].IsArrayBuffer()) {
@@ -846,6 +950,10 @@ static Napi::Value tensorFromInt32Buffer(const Napi::CallbackInfo& info) {
   return ExternalizeTensor(env, t);
 }
 
+/*
+  @gen-napi-`ts_args`: (buffer: ArrayBuffer)
+  @gen-napi-`ts_return_type`: any
+*/
 static Napi::Value tensorFromInt64Buffer(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   if (!info[0].IsArrayBuffer()) {
@@ -866,6 +974,10 @@ static Napi::Value tensorFromInt64Buffer(const Napi::CallbackInfo& info) {
   return ExternalizeTensor(env, t);
 }
 
+/*
+  @gen-napi-`ts_args`: (buffer: ArrayBuffer)
+  @gen-napi-`ts_return_type`: any
+*/
 static Napi::Value tensorFromUint8Buffer(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   if (!info[0].IsArrayBuffer()) {
@@ -886,6 +998,10 @@ static Napi::Value tensorFromUint8Buffer(const Napi::CallbackInfo& info) {
   return ExternalizeTensor(env, t);
 }
 
+/*
+  @gen-napi-`ts_args`: (buffer: ArrayBuffer)
+  @gen-napi-`ts_return_type`: any
+*/
 static Napi::Value tensorFromUint16Buffer(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   if (!info[0].IsArrayBuffer()) {
@@ -906,6 +1022,10 @@ static Napi::Value tensorFromUint16Buffer(const Napi::CallbackInfo& info) {
   return ExternalizeTensor(env, t);
 }
 
+/*
+  @gen-napi-`ts_args`: (buffer: ArrayBuffer)
+  @gen-napi-`ts_return_type`: any
+*/
 static Napi::Value tensorFromUint32Buffer(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   if (!info[0].IsArrayBuffer()) {
@@ -926,6 +1046,10 @@ static Napi::Value tensorFromUint32Buffer(const Napi::CallbackInfo& info) {
   return ExternalizeTensor(env, t);
 }
 
+/*
+  @gen-napi-`ts_args`: (buffer: ArrayBuffer)
+  @gen-napi-`ts_return_type`: any
+*/
 static Napi::Value tensorFromUint64Buffer(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   if (!info[0].IsArrayBuffer()) {
@@ -946,6 +1070,10 @@ static Napi::Value tensorFromUint64Buffer(const Napi::CallbackInfo& info) {
   return ExternalizeTensor(env, t);
 }
 
+/*
+  @gen-napi-`ts_args`: (tensor: Tensor, path: string)
+  @gen-napi-`ts_return_type`: void
+*/
 static void save(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   if (info.Length() != 2) {

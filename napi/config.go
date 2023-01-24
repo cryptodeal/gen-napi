@@ -126,6 +126,11 @@ func (c Config) LoadForcedLogic() {
 			}
 
 			n := tree.RootNode()
+			for name := range p.ClassOpts {
+				if v, ok := p.ClassOpts[name]; ok {
+					v.ForcedMethods = *parseScopedFnBlock(n, input, fmt.Sprintf("%s_forced_methods", name))
+				}
+			}
 			p.GlobalForcedMethods = *parseScopedFnBlock(n, input, "exported_global_methods")
 			p.BindingsFrontmatter = parseIncludes(n, input)
 			p.GlobalVars = parseGlobalVars(n, input)

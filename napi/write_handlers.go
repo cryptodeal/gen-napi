@@ -28,7 +28,7 @@ func (g *PackageGenerator) writeHelpers(w *strings.Builder, classes map[string]*
 				if v, ok := g.conf.ClassOpts[name]; ok && len(v.ForcedMethods) > 0 {
 					for _, f := range v.ForcedMethods {
 						w.WriteString(strings.Replace(f.FnBody, f.Name, "_"+f.Name, 1))
-						w.WriteByte('\n')
+						w.WriteString("\n\n")
 					}
 				}
 			}
