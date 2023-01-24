@@ -127,7 +127,11 @@ func (c Config) LoadForcedLogic() {
 
 			n := tree.RootNode()
 			for name, class := range p.ClassOpts {
-				class.ForcedMethods = *parseScopedFnBlock(n, input, fmt.Sprintf("%s_forced_methods", name))
+				fmt.Printf("debug forced class methods: %s", name)
+				methods := *parseScopedFnBlock(n, input, fmt.Sprintf("%s_forced_methods", name))
+				fmt.Printf("Method count %d", len(methods))
+				class.ForcedMethods = methods
+				p.ClassOpts[name] = class
 			}
 			p.GlobalForcedMethods = *parseScopedFnBlock(n, input, "exported_global_methods")
 			p.BindingsFrontmatter = parseIncludes(n, input)
