@@ -123,7 +123,7 @@ func parseScopedForcedMethods(n *sitter.Node, input []byte) []FnOpts {
 								argString := strings.Replace(line, "@gen-napi-`ts_args`:", "", 1)
 								argString = argString[1 : len(argString)-1]
 								argSplit := strings.Split(argString, ",")
-								for j, arg := range argSplit {
+								for _, arg := range argSplit {
 									fnArg := FnArg{}
 									hasType := strings.Contains(arg, ":")
 									hasDefault := strings.Contains(arg, "=")
@@ -146,7 +146,7 @@ func parseScopedForcedMethods(n *sitter.Node, input []byte) []FnOpts {
 										fnArg.TSType = strings.TrimSpace(defaultSplit[0])
 										fnArg.Default = strings.TrimSpace(defaultSplit[1])
 									}
-									fnData.Args[j] = fnArg
+									fnData.Args = append(fnData.Args, fnArg)
 								}
 							}
 							if i == length-2 {
