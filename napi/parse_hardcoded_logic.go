@@ -113,8 +113,8 @@ func parseScopedForcedMethods(n *sitter.Node, input []byte) []FnOpts {
 						comment := unusedComment.Content(input)
 						comment_split := strings.Split(comment, "\n")
 						length := len(comment_split)
-						for _, line := range comment_split {
-							if i == 0 {
+						for j, line := range comment_split {
+							if j == 0 {
 								continue
 							}
 							if strings.Contains(line, "`ts_return_type`") {
@@ -149,7 +149,7 @@ func parseScopedForcedMethods(n *sitter.Node, input []byte) []FnOpts {
 									fnData.Args = append(fnData.Args, fnArg)
 								}
 							}
-							if i == length-2 {
+							if j == length-2 {
 								break
 							}
 						}
