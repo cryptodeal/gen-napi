@@ -383,7 +383,7 @@ func (g *PackageGenerator) writeBindings(sb *strings.Builder, classes map[string
 
 	// write any forced methods (specified in config)
 	for _, f := range g.conf.GlobalForcedMethods {
-		sb.WriteString(fmt.Sprintf("%s\n", strings.Replace(f.FnBody, f.Name, "_"+f.Name, 1)))
+		sb.WriteString(fmt.Sprintf("%s\n\n", strings.Replace(f.FnBody, f.Name, "_"+f.Name, 1)))
 	}
 
 	// writes NAPI `Init` function (init NAPI exports)

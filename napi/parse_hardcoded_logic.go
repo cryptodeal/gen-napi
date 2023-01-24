@@ -120,7 +120,7 @@ func parseScopedForcedMethods(n *sitter.Node, input []byte) []FnOpts {
 							if strings.Contains(line, "`ts_return_type`") {
 								fnData.TSReturnType = strings.TrimSpace(strings.Replace(line, "@gen-napi-`ts_return_type`:", "", 1))
 							} else if strings.Contains(line, "`ts_args`") {
-								argString := strings.Replace(line, "@gen-napi-`ts_args`:", "", 1)
+								argString := strings.TrimSpace(strings.Replace(line, "@gen-napi-`ts_args`:", "", 1))
 								argString = argString[1 : len(argString)-1]
 								argSplit := strings.Split(argString, ",")
 								for _, arg := range argSplit {

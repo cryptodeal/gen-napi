@@ -21,6 +21,9 @@ static std::atomic<bool> g_row_major = true;
 }  // namespace global_vars
 
 namespace exported_global_methods {
+/*
+  @gen-napi-`ts_return_type`: void
+*/
 static void init(const Napi::CallbackInfo& /*info*/) {
   fl::init();
 }
@@ -272,6 +275,10 @@ static inline std::vector<T> ptrArrayArg(const void* ptr, int len) {
 }  // namespace private_helpers
 
 namespace Tensor_forced_methods {
+/*
+  @gen-napi-`ts_args`: (shape: number[])
+  @gen-napi-`ts_return_type`: Tensor
+*/
 static Napi::Value toFloat32Array(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   fl::Tensor* t = UnExternalize<fl::Tensor>(info[0]);
