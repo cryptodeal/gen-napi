@@ -129,6 +129,7 @@ func (c Config) LoadForcedLogic() {
 			for name := range p.ClassOpts {
 				if v, ok := p.ClassOpts[name]; ok {
 					v.ForcedMethods = *parseScopedFnBlock(n, input, fmt.Sprintf("%s_forced_methods", name))
+					p.ClassOpts[name] = v
 				}
 			}
 			p.GlobalForcedMethods = *parseScopedFnBlock(n, input, "exported_global_methods")
