@@ -208,7 +208,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 			obj_name = *arg.Ident
 		} else if strings.Contains(*arg.Type, "std::vector") && !strings.EqualFold(tmpType[strings.Index(*arg.Type, "<")+1:strings.Index(*arg.Type, ">")], *m.Returns) {
 			g.writeIndent(sb, 2)
-			sb.WriteString(fmt.Sprintf("auto %s = jsArrayToVector<%s>(info[%d].As<Napi::Array>(), g_row_major, %s->ndim(), env);\n", *arg.Ident, tmpType[strings.Index(*arg.Type, "<")+1:strings.Index(*arg.Type, ">")], i, obj_name))
+			sb.WriteString(fmt.Sprintf("auto %s = jsArrayToVector<%s>(env, info[%d].As<Napi::Array>(), g_row_major, %s->ndim());\n", *arg.Ident, tmpType[strings.Index(*arg.Type, "<")+1:strings.Index(*arg.Type, ">")], i, obj_name))
 		} else {
 			fmt.Println("TODO: handle type ", *arg.Type)
 		}

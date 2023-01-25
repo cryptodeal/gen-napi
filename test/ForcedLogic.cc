@@ -146,7 +146,7 @@ static Napi::Value rand(const Napi::CallbackInfo& info) {
     return env.Null();
   }
   std::vector<long long> shape = jsArrayToVector<long long>(
-      info[0].As<Napi::Array>(), g_row_major, false, env);
+      env, info[0].As<Napi::Array>(), g_row_major, false);
   fl::Tensor t;
   t = fl::rand(fl::Shape(shape));
   auto _out_bytes_used = t.bytes();
@@ -170,7 +170,7 @@ static Napi::Value randn(const Napi::CallbackInfo& info) {
     return env.Null();
   }
   std::vector<long long> shape = jsArrayToVector<long long>(
-      info[0].As<Napi::Array>(), g_row_major, false, env);
+      env, info[0].As<Napi::Array>(), g_row_major, false);
   fl::Tensor t;
   t = fl::randn(fl::Shape(shape));
   auto _out_bytes_used = t.bytes();
