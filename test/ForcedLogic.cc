@@ -182,6 +182,7 @@ static Napi::Value randn(const Napi::CallbackInfo& info) {
 }
 }  // namespace exported_global_methods
 
+namespace private_helpers {
 template <typename T>
 static inline std::vector<T> jsTensorArrayArg(Napi::Array arr, Napi::Env env) {
   std::vector<T> out;
