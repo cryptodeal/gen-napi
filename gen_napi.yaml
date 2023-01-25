@@ -384,7 +384,7 @@ packages:
         out_type: 'Napi::Number'
         out_var: '_out'
         handler: |
-          Napi::Number _out = Napi::Number::New(env, static_cast<int>(/val/));
+          Napi::Number _out = Napi::Number::New(env, static_cast<double>(/val/));
       Shape:
         out_type: 'Napi::TypedArrayOf<int64_t>'
         out_var: '_out'

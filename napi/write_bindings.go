@@ -18,7 +18,7 @@ func (g *PackageGenerator) writeArgCountChecker(sb *strings.Builder, name string
 	}
 	sb.WriteString(fmt.Sprintf("Napi::TypeError::New(env, %q).ThrowAsJavaScriptException();\n", errMsg))
 	g.writeIndent(sb, 2)
-	sb.WriteString("return env.Null();\n")
+	sb.WriteString("return env.Undefined();\n")
 	g.writeIndent(sb, 1)
 	sb.WriteString("}\n")
 }
@@ -29,7 +29,7 @@ func (g *PackageGenerator) writeArgTypeChecker(sb *strings.Builder, name string,
 	sb.WriteString("if (!")
 	// required to handle checking array index items (i.e. info[0][i])
 	if isArrayItem {
-		sb.WriteString(fmt.Sprintf("%s.Get(i).%s", *arrName, checker))
+		sb.WriteString(fmt.Sprintf("%s[i].%s", *arrName, checker))
 	} else {
 		sb.WriteString(fmt.Sprintf("info[%d].%s", idx, checker))
 	}
@@ -44,7 +44,7 @@ func (g *PackageGenerator) writeArgTypeChecker(sb *strings.Builder, name string,
 	}
 	sb.WriteString(").ThrowAsJavaScriptException();\n")
 	g.writeIndent(sb, indents+1)
-	sb.WriteString("return env.Null();\n")
+	sb.WriteString("return env.Undefined();\n")
 	g.writeIndent(sb, indents)
 	sb.WriteString("}\n")
 }
@@ -137,7 +137,7 @@ func (g *PackageGenerator) writeArgChecks(sb *strings.Builder, name string, args
 			g.writeIndent(sb, 1)
 			sb.WriteString(fmt.Sprintf("int len_%s = %s.Length();\n", *arg.Ident, arrName))
 			g.writeIndent(sb, 1)
-			sb.WriteString(fmt.Sprintf("for (auto i = 0; i < len_%s; ++i) {\n", *arg.Ident))
+			sb.WriteString(fmt.Sprintf("for (size_t i = 0; i < len_%s; ++i) {\n", *arg.Ident))
 			g.writeIndent(sb, 2)
 			if isObject {
 				g.writeArgTypeChecker(sb, name, "IsExternal", i, fmt.Sprintf("native `%s` (typeof `Napi::External<%s::%s>`)", tsType, *g.NameSpace, tsType), 2, &arrName)
@@ -265,7 +265,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 	} else {
 		// TODO: handle cases w multiple overloads
 		g.writeIndent(sb, 1)
-		sb.WriteString("return env.Null();\n")
+		sb.WriteString("return env.Undefined();\n")
 	}
 	*/
 	sb.WriteString("}\n\n")
