@@ -8,6 +8,13 @@ import (
 	"github.com/smacker/go-tree-sitter/cpp"
 )
 
+func isAlreadyIncluded(val string) bool {
+	if strings.Contains(val, "napi.h") || strings.Contains(val, "atomic") || strings.Contains(val, "string") {
+		return true
+	}
+	return false
+}
+
 func parseIncludes(n *sitter.Node, input []byte) string {
 	includes := &strings.Builder{}
 	q, err := sitter.NewQuery([]byte("(preproc_include) @includes"), cpp.GetLanguage())
@@ -26,7 +33,7 @@ func parseIncludes(n *sitter.Node, input []byte) string {
 		}
 		for _, c := range m.Captures {
 			content := c.Node.Content(input)
-			if strings.Contains(content, "#include <napi.h>") {
+			if !isAlreadyIncluded(string(content)) {
 				continue
 			}
 			includes.WriteString(c.Node.Content(input))

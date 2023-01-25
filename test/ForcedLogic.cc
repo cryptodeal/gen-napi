@@ -17,7 +17,6 @@
 
 namespace global_vars {
 static std::atomic<size_t> g_bytes_used = 0;
-static std::atomic<bool> g_row_major = true;
 }  // namespace global_vars
 
 namespace exported_global_methods {
@@ -186,18 +185,12 @@ namespace private_helpers {
 template <typename T>
 static inline std::vector<T> jsTensorArrayArg(Napi::Array arr, Napi::Env env) {
   std::vector<T> out;
-  const size_t len = static_cast<size_t>(arr.Length());
+  size_t len = arr.Length();
   out.reserve(len);
   for (size_t i = 0; i < len; ++i) {
     Napi::Value temp = arr[i];
-    if (temp.IsExternal()) {
-      fl::Tensor* tensor = UnExternalize<fl::Tensor>(temp);
-      out.emplace_back(*(tensor));
-    } else {
-      Napi::TypeError::New(env, "jsTensorArrayArg requires `Tensor[]`")
-          .ThrowAsJavaScriptException();
-      return out;
-    }
+    fl::Tensor* tensor = UnExternalize<fl::Tensor>(temp);
+    out.emplace_back(*(tensor));
   }
   return out;
 }

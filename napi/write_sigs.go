@@ -25,11 +25,17 @@ func (g *PackageGenerator) writeBindingsFrontmatter(w *strings.Builder) {
 func (g *PackageGenerator) writeGlobalVars(w *strings.Builder) {
 	if g.conf.GlobalVars != "" {
 		w.WriteString("// globally scoped variables\n")
+		w.WriteString("static std::atomic<bool> g_row_major = true;\n")
 		w.WriteString(g.conf.GlobalVars)
 		w.WriteByte('\n')
 	}
 }
 
+func (g *PackageGenerator) writeRequiredIncludes(sb *strings.Builder) {
+	sb.WriteString("#include <napi.h>\n")
+	sb.WriteString("#include <atomic>\n")
+	sb.WriteString("#include <string>\n")
+}
 func (g *PackageGenerator) writeFileSourceHeader(w *strings.Builder, path string) {
 	w.WriteString("\n//////////\n// source: ")
 	w.WriteString(fmt.Sprintf("%s\n", filepath.Base(path)))
