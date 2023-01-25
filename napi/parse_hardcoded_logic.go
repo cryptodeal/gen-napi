@@ -33,7 +33,7 @@ func parseIncludes(n *sitter.Node, input []byte) string {
 		}
 		for _, c := range m.Captures {
 			content := c.Node.Content(input)
-			if !isAlreadyIncluded(string(content)) {
+			if isAlreadyIncluded(string(content)) {
 				continue
 			}
 			includes.WriteString(c.Node.Content(input))
