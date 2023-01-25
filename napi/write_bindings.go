@@ -26,7 +26,6 @@ func (g *PackageGenerator) writeArgCountChecker(sb *strings.Builder, name string
 func (g *PackageGenerator) writeArgTypeChecker(sb *strings.Builder, name string, checker string, idx int, msg string, indents int, arrName *string) {
 	isArrayItem := arrName != nil
 	g.writeIndent(sb, indents)
-	// need to get value @ array idx as `Napi::Value` to check type
 	if isArrayItem {
 		sb.WriteString(fmt.Sprintf("Napi::Value arrayItem = %s[i];\n", *arrName))
 	}
