@@ -22,7 +22,7 @@ func (g *PackageGenerator) writeJsArrayToVectorFn(sb *strings.Builder) {
 	sb.WriteString("Napi::Value val = arr[idx];\n")
 	g.writeIndent(sb, 2)
 	// skip checking type `IsNumber` as we check in the exported bindings
-	sb.WriteString("auto v = reinterpret_cast<const T>(val.As<Napi::Number>().Int64Value());\n")
+	sb.WriteString("auto v = static_cast<const T>(val.As<Napi::Number>().Int64Value());\n")
 	g.writeIndent(sb, 2)
 	sb.WriteString("if (invert && v < 0) {\n")
 	g.writeIndent(sb, 3)
