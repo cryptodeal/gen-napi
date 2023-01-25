@@ -26,10 +26,13 @@ func (g *PackageGenerator) writeArgCountChecker(sb *strings.Builder, name string
 func (g *PackageGenerator) writeArgTypeChecker(sb *strings.Builder, name string, checker string, idx int, msg string, indents int, arrName *string) {
 	isArrayItem := arrName != nil
 	g.writeIndent(sb, indents)
+	if isArrayItem {
+		sb.WriteString(fmt.Sprintf("Napi::Value arrayItem = %s[i];\n", *arrName))
+	}
 	sb.WriteString("if (!")
 	// required to handle checking array index items (i.e. info[0][i])
 	if isArrayItem {
-		sb.WriteString(fmt.Sprintf("%s[i].%s", *arrName, checker))
+		sb.WriteString(fmt.Sprintf("arrayItem.%s", checker))
 	} else {
 		sb.WriteString(fmt.Sprintf("info[%d].%s", idx, checker))
 	}
@@ -135,7 +138,7 @@ func (g *PackageGenerator) writeArgChecks(sb *strings.Builder, name string, args
 			arrName := fmt.Sprintf("_tmp_parsed_%s", *arg.Ident)
 			sb.WriteString(fmt.Sprintf("Napi::Array %s = info[%d].As<Napi::Array>();\n", arrName, i))
 			g.writeIndent(sb, 1)
-			sb.WriteString(fmt.Sprintf("int len_%s = %s.Length();\n", *arg.Ident, arrName))
+			sb.WriteString(fmt.Sprintf("size_t len_%s = %s.Length();\n", *arg.Ident, arrName))
 			g.writeIndent(sb, 1)
 			sb.WriteString(fmt.Sprintf("for (size_t i = 0; i < len_%s; ++i) {\n", *arg.Ident))
 			g.writeIndent(sb, 2)
