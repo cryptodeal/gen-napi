@@ -306,7 +306,7 @@ packages:
           /return/ = fl::full(fl::Shape(/arg_0/), /arg_1/);
         arg_transforms:
           dims: |
-            std::vector<long long> dims = jsArrayToVector<long long>(env, /arg/.As<Napi::Array>(), g_row_major, false);
+            std::vector<long long> dims = jsArrayToVector<long long>(/arg/.As<Napi::Array>(), g_row_major, false);
           val: |
             float val = /arg/.As<Napi::Number>().FloatValue();
       identity:
@@ -323,16 +323,16 @@ packages:
           /return/ = fl::iota(fl::Shape(/arg_0/), fl::Shape(/arg_1/));
         arg_transforms:
           dims: |
-            auto dims = jsArrayToVector<long long>(env, /arg/.As<Napi::Array>(), g_row_major, false);
+            auto dims = jsArrayToVector<long long>(/arg/.As<Napi::Array>(), g_row_major, false);
           tileDims: |
-            auto tileDims = jsArrayToVector<long long>(env, /arg/.As<Napi::Array>(), g_row_major, false);
+            auto tileDims = jsArrayToVector<long long>(/arg/.As<Napi::Array>(), g_row_major, false);
       concatenate:
         arg_count: 2
         arg_transforms:
           axis: |
             auto axis = axisArg(/arg/.As<Napi::Number>().Int32Value(), g_row_major, (&tensors[0])->ndim());
           tensors: |
-            auto tensors = jsTensorArrayArg<fl::Tensor>(/arg/.As<Napi::Array>(), env);
+            auto tensors = jsTensorArrayArg<fl::Tensor>(/arg/.As<Napi::Array>());
       tril:
         arg_count: 1
         return_transforms: |
@@ -368,17 +368,17 @@ packages:
         arg_count: 2
         arg_transforms:
           shape: |
-            auto shape = jsArrayToVector<long long>(env, /arg/.As<Napi::Array>(), g_row_major, false);
+            auto shape = jsArrayToVector<long long>(/arg/.As<Napi::Array>(), g_row_major, false);
       transpose:
         arg_count: 2
         arg_transforms:
           axes: |
-            auto axes = jsArrayToVector<long long>(env, /arg/.As<Napi::Array>(), g_row_major, /arg_0/->ndim());
+            auto axes = jsArrayToVector<long long>(/arg/.As<Napi::Array>(), g_row_major, /arg_0/->ndim());
       reshape:
         arg_count: 2
         arg_transforms:
           shape: |
-            auto shape = jsArrayToVector<long long>(env, /arg/.As<Napi::Array>(), g_row_major, false);
+            auto shape = jsArrayToVector<long long>(/arg/.As<Napi::Array>(), g_row_major, false);
     type_handlers:
       dtype:
         out_type: 'Napi::Number'

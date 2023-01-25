@@ -144,8 +144,8 @@ static Napi::Value rand(const Napi::CallbackInfo& info) {
         .ThrowAsJavaScriptException();
     return env.Null();
   }
-  std::vector<long long> shape = jsArrayToVector<long long>(
-      env, info[0].As<Napi::Array>(), g_row_major, false);
+  std::vector<long long> shape =
+      jsArrayToVector<long long>(info[0].As<Napi::Array>(), g_row_major, false);
   fl::Tensor t;
   t = fl::rand(fl::Shape(shape));
   auto _out_bytes_used = t.bytes();
@@ -168,8 +168,8 @@ static Napi::Value randn(const Napi::CallbackInfo& info) {
         .ThrowAsJavaScriptException();
     return env.Null();
   }
-  std::vector<long long> shape = jsArrayToVector<long long>(
-      env, info[0].As<Napi::Array>(), g_row_major, false);
+  std::vector<long long> shape =
+      jsArrayToVector<long long>(info[0].As<Napi::Array>(), g_row_major, false);
   fl::Tensor t;
   t = fl::randn(fl::Shape(shape));
   auto _out_bytes_used = t.bytes();
@@ -183,7 +183,7 @@ static Napi::Value randn(const Napi::CallbackInfo& info) {
 
 namespace private_helpers {
 template <typename T>
-static inline std::vector<T> jsTensorArrayArg(Napi::Array arr, Napi::Env env) {
+static inline std::vector<T> jsTensorArrayArg(Napi::Array arr) {
   std::vector<T> out;
   size_t len = arr.Length();
   out.reserve(len);
