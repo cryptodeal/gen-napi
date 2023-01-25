@@ -66,16 +66,22 @@ type JSWrapperOpts struct {
 	EnvType string `yaml:"env_type"`
 }
 
+type VectorOrientationOpts struct {
+	RowMajorDefault bool   `yaml:"row_major_default"`
+	DimAccessor     string `yaml:"dim_accessor"`
+}
+
 type PackageConfig struct {
 	// The package path just like you would import it in Go
 	Path string `yaml:"path"`
 
 	// Where this output should be written to.
 	// If you specify a folder it will be written to a file `index.ts` within that folder. By default it is written into the Golang package folder.
-	BindingsOutPath   string        `yaml:"bindings_out_path"`
-	HeaderOutPath     string        `yaml:"header_out_path"`
-	JSWrapperOpts     JSWrapperOpts `yaml:"js_wrapper_opts"`
-	PathToForcedLogic string        `yaml:"path_to_forced_logic"`
+	BindingsOutPath   string                `yaml:"bindings_out_path"`
+	HeaderOutPath     string                `yaml:"header_out_path"`
+	JSWrapperOpts     JSWrapperOpts         `yaml:"js_wrapper_opts"`
+	PathToForcedLogic string                `yaml:"path_to_forced_logic"`
+	VectorOpts        VectorOrientationOpts `yaml:"vector_opts"`
 
 	// Customize the indentation (use \t if you want tabs)
 	Indent string `yaml:"indent"`

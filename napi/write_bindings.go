@@ -208,8 +208,11 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 			obj_name = *arg.Ident
 		} else if strings.Contains(*arg.Type, "std::vector") && !strings.EqualFold(tmpType[strings.Index(*arg.Type, "<")+1:strings.Index(*arg.Type, ">")], *m.Returns) {
 			g.writeIndent(sb, 2)
-			// will need to remove `%s->ndim()` as hardcoded (shumai specific logic)
-			sb.WriteString(fmt.Sprintf("auto %s = jsArrayToVector<%s>(info[%d].As<Napi::Array>(), g_row_major, %s->ndim());\n", *arg.Ident, tmpType[strings.Index(*arg.Type, "<")+1:strings.Index(*arg.Type, ">")], i, obj_name))
+			invertVal := "false"
+			if g.conf.VectorOpts.DimAccessor != "" {
+				invertVal = fmt.Sprintf("%s->%s", obj_name, g.conf.VectorOpts.DimAccessor)
+			}
+			sb.WriteString(fmt.Sprintf("auto %s = jsArrayToVector<%s>(info[%d].As<Napi::Array>(), g_row_major, %s);\n", *arg.Ident, tmpType[strings.Index(*arg.Type, "<")+1:strings.Index(*arg.Type, ">")], i, invertVal))
 		} else {
 			fmt.Println("TODO: handle type ", *arg.Type)
 		}

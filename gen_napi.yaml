@@ -2,6 +2,9 @@ packages:
   - path: 'test/TensorBase.h'
     bindings_out_path: 'test/out'
     indent: "\t"
+    vector_opts:
+      row_major_default: true
+      dim_accessor: ndim()
     type_mappings:
       Shape:
         ts: 'number[]'
