@@ -306,7 +306,7 @@ packages:
           /return/ = fl::full(fl::Shape(/arg_0/), /arg_1/);
         arg_transforms:
           dims: |
-            std::vector<long long> dims = jsArrayArg<long long>(/arg/.As<Napi::Array>(), g_row_major, false, env);
+            std::vector<long long> dims = jsArrayToVector<long long>(/arg/.As<Napi::Array>(), g_row_major, false, env);
           val: |
             float val = /arg/.As<Napi::Number>().FloatValue();
       identity:
@@ -323,9 +323,9 @@ packages:
           /return/ = fl::iota(fl::Shape(/arg_0/), fl::Shape(/arg_1/));
         arg_transforms:
           dims: |
-            auto dims = jsArrayArg<long long>(/arg/.As<Napi::Array>(), g_row_major, false, env);
+            auto dims = jsArrayToVector<long long>(/arg/.As<Napi::Array>(), g_row_major, false, env);
           tileDims: |
-            auto tileDims = jsArrayArg<long long>(/arg/.As<Napi::Array>(), g_row_major, false, env);
+            auto tileDims = jsArrayToVector<long long>(/arg/.As<Napi::Array>(), g_row_major, false, env);
       concatenate:
         arg_count: 2
         arg_transforms:
@@ -368,17 +368,17 @@ packages:
         arg_count: 2
         arg_transforms:
           shape: |
-            auto shape = jsArrayArg<long long>(/arg/.As<Napi::Array>(), g_row_major, false, env);
+            auto shape = jsArrayToVector<long long>(/arg/.As<Napi::Array>(), g_row_major, false, env);
       transpose:
         arg_count: 2
         arg_transforms:
           axes: |
-            auto axes = jsArrayArg<long long>(/arg/.As<Napi::Array>(), g_row_major, /arg_0/->ndim(), env);
+            auto axes = jsArrayToVector<long long>(/arg/.As<Napi::Array>(), g_row_major, /arg_0/->ndim(), env);
       reshape:
         arg_count: 2
         arg_transforms:
           shape: |
-            auto shape = jsArrayArg<long long>(/arg/.As<Napi::Array>(), g_row_major, false, env);
+            auto shape = jsArrayToVector<long long>(/arg/.As<Napi::Array>(), g_row_major, false, env);
     type_handlers:
       dtype:
         out_type: 'Napi::Number'

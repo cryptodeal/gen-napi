@@ -26,6 +26,7 @@ func (g *PackageGenerator) writeArgCountChecker(sb *strings.Builder, name string
 func (g *PackageGenerator) writeArgTypeChecker(sb *strings.Builder, name string, checker string, idx int, msg string, indents int, arrName *string) {
 	isArrayItem := arrName != nil
 	g.writeIndent(sb, indents)
+	// need to get value @ array idx as `Napi::Value` to check type
 	if isArrayItem {
 		sb.WriteString(fmt.Sprintf("Napi::Value arrayItem = %s[i];\n", *arrName))
 	}
@@ -39,7 +40,7 @@ func (g *PackageGenerator) writeArgTypeChecker(sb *strings.Builder, name string,
 	sb.WriteString("()) {\n")
 	g.writeIndent(sb, indents+1)
 	sb.WriteString("Napi::TypeError::New(env, ")
-	// error msg is customized a bit if validating array to be more descriptive
+	// customize error msg when checking indexes in array
 	if isArrayItem {
 		sb.WriteString(fmt.Sprintf("(%q + std::to_string(i) + %q)", fmt.Sprintf("`%s` expects args[%d][", name, idx), fmt.Sprintf("] to be %s", msg)))
 	} else {
@@ -56,7 +57,6 @@ func (g *PackageGenerator) writeArgChecks(sb *strings.Builder, name string, args
 	if expected_arg_count == 0 {
 		return
 	}
-
 	g.writeArgCountChecker(sb, name, expected_arg_count)
 	// write arg checks, transforms, and declare arg variable as possible
 	if v, ok := g.conf.MethodTransforms[name]; ok && v.ArgCheckTransforms != "" {
@@ -208,7 +208,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 			obj_name = *arg.Ident
 		} else if strings.Contains(*arg.Type, "std::vector") && !strings.EqualFold(tmpType[strings.Index(*arg.Type, "<")+1:strings.Index(*arg.Type, ">")], *m.Returns) {
 			g.writeIndent(sb, 2)
-			sb.WriteString(fmt.Sprintf("auto axes = jsArrayArg<%s>(info[%d].As<Napi::Array>(), g_row_major, %s->ndim(), env);\n", tmpType[strings.Index(*arg.Type, "<")+1:strings.Index(*arg.Type, ">")], i, obj_name))
+			sb.WriteString(fmt.Sprintf("auto %s = jsArrayToVector<%s>(info[%d].As<Napi::Array>(), g_row_major, %s->ndim(), env);\n", *arg.Ident, tmpType[strings.Index(*arg.Type, "<")+1:strings.Index(*arg.Type, ">")], i, obj_name))
 		} else {
 			fmt.Println("TODO: handle type ", *arg.Type)
 		}

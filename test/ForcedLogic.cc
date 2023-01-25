@@ -145,8 +145,8 @@ static Napi::Value rand(const Napi::CallbackInfo& info) {
         .ThrowAsJavaScriptException();
     return env.Null();
   }
-  std::vector<long long> shape =
-      jsArrayArg<long long>(info[0].As<Napi::Array>(), g_row_major, false, env);
+  std::vector<long long> shape = jsArrayToVector<long long>(
+      info[0].As<Napi::Array>(), g_row_major, false, env);
   fl::Tensor t;
   t = fl::rand(fl::Shape(shape));
   auto _out_bytes_used = t.bytes();
@@ -169,8 +169,8 @@ static Napi::Value randn(const Napi::CallbackInfo& info) {
         .ThrowAsJavaScriptException();
     return env.Null();
   }
-  std::vector<long long> shape =
-      jsArrayArg<long long>(info[0].As<Napi::Array>(), g_row_major, false, env);
+  std::vector<long long> shape = jsArrayToVector<long long>(
+      info[0].As<Napi::Array>(), g_row_major, false, env);
   fl::Tensor t;
   t = fl::randn(fl::Shape(shape));
   auto _out_bytes_used = t.bytes();
@@ -181,55 +181,6 @@ static Napi::Value randn(const Napi::CallbackInfo& info) {
   return wrapped;
 }
 }  // namespace exported_global_methods
-
-namespace private_helpers {
-template <typename T>
-static inline std::vector<T> arrayArg(const void* ptr,
-                                      int len,
-                                      bool reverse,
-                                      int invert) {
-  std::vector<T> out;
-  out.reserve(len);
-  for (auto i = 0; i < len; ++i) {
-    const auto idx = reverse ? len - i - 1 : i;
-    auto v = reinterpret_cast<const int64_t*>(ptr)[idx];
-    if (invert && v < 0) {
-      v = -v - 1;
-    } else if (invert) {
-      v = invert - v - 1;
-    }
-    out.emplace_back(v);
-  }
-  return out;
-}
-
-template <typename T>
-static inline std::vector<T> jsArrayArg(Napi::Array arr,
-                                        bool reverse,
-                                        int invert,
-                                        Napi::Env env) {
-  std::vector<T> out;
-  const size_t len = static_cast<size_t>(arr.Length());
-  out.reserve(len);
-  for (size_t i = 0; i < len; ++i) {
-    const auto idx = reverse ? len - i - 1 : i;
-    Napi::Value val = arr[idx];
-    if (!val.IsNumber()) {
-      Napi::TypeError::New(env, "jsArrayArg requires `number[]`")
-          .ThrowAsJavaScriptException();
-      return out;
-    } else {
-      int64_t v = val.As<Napi::Number>().Int64Value();
-      if (invert && v < 0) {
-        v = -v - 1;
-      } else if (invert) {
-        v = invert - v - 1;
-      }
-      out.emplace_back(v);
-    }
-  }
-  return out;
-}
 
 template <typename T>
 static inline std::vector<T> jsTensorArrayArg(Napi::Array arr, Napi::Env env) {
@@ -261,17 +212,6 @@ static inline uint32_t axisArg(int32_t axis, bool reverse, int ndim) {
   }
 }
 
-template <typename T>
-static inline std::vector<T> ptrArrayArg(const void* ptr, int len) {
-  std::vector<T> out;
-  out.reserve(len);
-  for (auto i = 0; i < len; ++i) {
-    auto ptrAsInt = reinterpret_cast<const int64_t*>(ptr)[i];
-    auto ptr = reinterpret_cast<T*>(ptrAsInt);
-    out.emplace_back(*ptr);
-  }
-  return out;
-}
 }  // namespace private_helpers
 
 namespace Tensor_forced_methods {

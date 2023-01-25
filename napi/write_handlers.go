@@ -5,9 +5,47 @@ import (
 	"strings"
 )
 
+func (g *PackageGenerator) writeJsArrayToVectorFn(sb *strings.Builder) {
+	sb.WriteString("template <typename T>\n")
+	sb.WriteString("static inline std::vector<T> jsArrayToVector(Napi::Env env, Napi::Array arr, bool reverse, int invert) {\n")
+	g.writeIndent(sb, 1)
+	sb.WriteString("std::vector<T> out;\n")
+	g.writeIndent(sb, 1)
+	sb.WriteString("size_t len = arr.Length();\n")
+	g.writeIndent(sb, 1)
+	sb.WriteString("out.reserve(len);\n")
+	g.writeIndent(sb, 1)
+	sb.WriteString("for(size_t i = 0; i < len; ++i) {\n")
+	g.writeIndent(sb, 2)
+	sb.WriteString("auto idx = reverse ? len - i - 1 : i;\n")
+	g.writeIndent(sb, 2)
+	sb.WriteString("Napi::Value val = arr[idx];\n")
+	g.writeIndent(sb, 2)
+	// skip checking type `IsNumber` as we check in the exported bindings
+	sb.WriteString("auto v = reinterpret_cast<const T>(val.As<Napi::Number>().Int64Value());\n")
+	g.writeIndent(sb, 2)
+	sb.WriteString("if (invert && v < 0) {\n")
+	g.writeIndent(sb, 3)
+	sb.WriteString("v = -v - 1;\n")
+	g.writeIndent(sb, 2)
+	sb.WriteString("} else if (invert) {\n")
+	g.writeIndent(sb, 3)
+	sb.WriteString("v = invert - v - 1;\n")
+	g.writeIndent(sb, 2)
+	sb.WriteString("}\n")
+	g.writeIndent(sb, 2)
+	sb.WriteString("out.emplace_back(v);\n")
+	g.writeIndent(sb, 1)
+	sb.WriteString("}\n")
+	g.writeIndent(sb, 1)
+	sb.WriteString("return out;\n")
+	sb.WriteString("}\n\n")
+}
+
 func (g *PackageGenerator) writeHelpers(w *strings.Builder, classes map[string]*CPPClass) {
 	if len(g.conf.HelperFuncs) > 0 {
 		w.WriteString("// non-exported helpers\n")
+		g.writeJsArrayToVectorFn(w)
 		g.writeArrayBufferDeleter(w)
 		hasUnexternalizer := false
 		for name, c := range classes {
