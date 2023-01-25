@@ -7,7 +7,7 @@ import (
 
 func (g *PackageGenerator) writeJsArrayToVectorFn(sb *strings.Builder) {
 	sb.WriteString("template <typename T>\n")
-	sb.WriteString("static inline std::vector<T> jsArrayToVector(Napi::Env env, Napi::Array arr, bool reverse, int invert) {\n")
+	sb.WriteString("static inline std::vector<T> jsArrayToVector(Napi::Array arr, bool reverse, int invert) {\n")
 	g.writeIndent(sb, 1)
 	sb.WriteString("std::vector<T> out;\n")
 	g.writeIndent(sb, 1)
