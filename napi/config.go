@@ -72,8 +72,9 @@ type VectorOrientationOpts struct {
 }
 
 type GroupedMethodTransforms struct {
-	AppliesTo        []string `yaml:"applies_to"`
-	ReturnTransforms string   `yaml:"return_transforms"`
+	AppliesTo        []string          `yaml:"applies_to"`
+	ReturnTransforms string            `yaml:"return_transforms"`
+	ArgTransforms    map[string]string `yaml:"arg_transforms"`
 }
 
 type PackageConfig struct {
@@ -174,12 +175,23 @@ func (c Config) PackageConfig(packagePath string) *PackageConfig {
 	return nil
 }
 
-func (c PackageConfig) isGroupedTransform(fnName string) *string {
+func (c PackageConfig) IsGroupedReturnTransform(fnName string) *string {
 	for _, t := range c.GroupedMethodTransforms {
 		for _, a := range t.AppliesTo {
 			if strings.EqualFold(a, fnName) {
 				return &t.ReturnTransforms
 
+			}
+		}
+	}
+	return nil
+}
+
+func (c PackageConfig) IsGroupedArgTransform(fnName string) *map[string]string {
+	for _, t := range c.GroupedMethodTransforms {
+		for _, a := range t.AppliesTo {
+			if strings.EqualFold(a, fnName) {
+				return &t.ArgTransforms
 			}
 		}
 	}

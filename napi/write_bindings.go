@@ -58,7 +58,23 @@ func (g *PackageGenerator) writeArgChecks(sb *strings.Builder, name string, args
 	}
 	g.writeArgCountChecker(sb, name, expected_arg_count)
 	// write arg checks, transforms, and declare arg variable as possible
-	if v, ok := g.conf.MethodTransforms[name]; ok && v.ArgCheckTransforms != "" {
+	isGroupedArgTransform := g.conf.IsGroupedArgTransform(name)
+	if isGroupedArgTransform != nil {
+		transforms := *isGroupedArgTransform
+		for i, arg := range *args {
+			if i > expected_arg_count {
+				break
+			}
+			// write arg transform only if it doesn't rely on other args
+			if v2, ok2 := transforms[*arg.Ident]; ok2 && !strings.Contains(v2, "/arg_") {
+				g.writeIndent(sb, 1)
+				// `/arg/` is template for argument's index in the Napi callback info
+				parsedTransform := strings.ReplaceAll(v2, "/arg/", fmt.Sprintf("info[%d]", i))
+				sb.WriteString(parsedTransform)
+			}
+		}
+		return
+	} else if v, ok := g.conf.MethodTransforms[name]; ok && v.ArgCheckTransforms != "" {
 		sb.WriteString(v.ArgCheckTransforms)
 		for i, arg := range *args {
 			if i > expected_arg_count {
@@ -109,7 +125,7 @@ func (g *PackageGenerator) writeArgChecks(sb *strings.Builder, name string, args
 			}
 			g.writeArgTypeChecker(sb, name, napiTypeHandler, i, fmt.Sprintf("typeof `%s`)", jsTypeEquivalent), 1, nil)
 			// handle any necessary transformations
-			if _, ok := g.conf.MethodTransforms[name].ArgTransforms[*arg.Ident]; !ok {
+			if _, ok := g.conf.MethodTransforms[name].ArgTransforms[*arg.Ident]; !ok && isGroupedArgTransform == nil {
 				g.writeIndent(sb, 1)
 				sb.WriteString(fmt.Sprintf("%s %s = ", *arg.Type, *arg.Ident))
 				// only cast when necessary
@@ -124,7 +140,7 @@ func (g *PackageGenerator) writeArgChecks(sb *strings.Builder, name string, args
 			}
 		} else if isClass(*arg.Type, classes) {
 			g.writeArgTypeChecker(sb, name, "IsExternal", i, fmt.Sprintf("native `%s` (typeof `Napi::External<%s::%s>`)", *arg.Type, *g.NameSpace, *arg.Type), 1, nil)
-			if _, ok := g.conf.MethodTransforms[name].ArgTransforms[*arg.Ident]; !ok {
+			if _, ok := g.conf.MethodTransforms[name].ArgTransforms[*arg.Ident]; !ok && isGroupedArgTransform == nil {
 				g.writeIndent(sb, 1)
 				sb.WriteString(fmt.Sprintf("%s::%s* %s = UnExternalize<%s::%s>(info[%d]);\n", *g.NameSpace, *arg.Type, *arg.Ident, *g.NameSpace, *arg.Type, i))
 			}
@@ -171,6 +187,8 @@ func (g *PackageGenerator) writeArgChecks(sb *strings.Builder, name string, args
 }
 
 func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classes map[string]*CPPClass) {
+	isGroupedArgTransform := g.conf.IsGroupedArgTransform(*m.Ident)
+
 	parsedName := "_" + *m.Ident
 	sb.WriteString(fmt.Sprintf("static Napi::Value %s(const Napi::CallbackInfo& info) {\n", parsedName))
 	g.writeIndent(sb, 1)
@@ -194,7 +212,18 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 			break
 		}
 		tmpType := *arg.Type
-		if v, ok := g.conf.MethodTransforms[*m.Ident].ArgTransforms[*arg.Ident]; ok && strings.Contains(v, "/arg_") {
+		if isGroupedArgTransform != nil {
+			argTransforms := *isGroupedArgTransform
+			if v, ok := argTransforms[*arg.Ident]; ok && strings.Contains(v, "/arg_") {
+				g.writeIndent(sb, 2)
+				if strings.Contains(v, "/arg_") {
+					for j, val := range *m.Overloads[0] {
+						v = strings.ReplaceAll(v, fmt.Sprintf("/arg_%d/", j), *val.Ident)
+					}
+				}
+				sb.WriteString(strings.ReplaceAll(v, "/arg/", fmt.Sprintf("info[%d]", i)))
+			}
+		} else if v, ok := g.conf.MethodTransforms[*m.Ident].ArgTransforms[*arg.Ident]; ok && strings.Contains(v, "/arg_") {
 			g.writeIndent(sb, 2)
 			if strings.Contains(v, "/arg_") {
 				for j, val := range *m.Overloads[0] {
@@ -219,7 +248,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 	g.writeIndent(sb, 2)
 	sb.WriteString(fmt.Sprintf("%s::%s _res;\n", *g.NameSpace, outType))
 
-	isGroupedTransform := g.conf.isGroupedTransform(*m.Ident)
+	isGroupedTransform := g.conf.IsGroupedReturnTransform(*m.Ident)
 	// grouped transforms take precedence
 	if isGroupedTransform != nil {
 		g.writeIndent(sb, 2)
