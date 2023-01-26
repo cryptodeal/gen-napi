@@ -190,7 +190,7 @@ func (c PackageConfig) IsGroupedReturnTransform(fnName string) *string {
 func (c PackageConfig) IsGroupedArgTransform(fnName string) *map[string]string {
 	for _, t := range c.GroupedMethodTransforms {
 		for _, a := range t.AppliesTo {
-			if strings.EqualFold(a, fnName) {
+			if strings.EqualFold(a, fnName) && len(t.ArgTransforms) > 0 {
 				return &t.ArgTransforms
 			}
 		}
