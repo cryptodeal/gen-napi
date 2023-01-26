@@ -7,9 +7,11 @@ const {
 
 export class Tensor {
   #native_self: any
+  #underlying
 
   constructor(t) {
     if (t instanceof Float32Array || t.constructor === Float32Array) {
+      this.#underlying = t
       this.#native_self = _tensorFromFloat32Buffer(t.buffer)
     } else {
       this.#native_self = t

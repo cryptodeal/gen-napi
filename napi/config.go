@@ -71,6 +71,11 @@ type VectorOrientationOpts struct {
 	DimAccessor     string `yaml:"dim_accessor"`
 }
 
+type GroupedMethodTransforms struct {
+	AppliesTo        []string `yaml:"applies_to"`
+	ReturnTransforms string   `yaml:"return_transforms"`
+}
+
 type PackageConfig struct {
 	// The package path just like you would import it in Go
 	Path string `yaml:"path"`
@@ -85,6 +90,8 @@ type PackageConfig struct {
 
 	// Customize the indentation (use \t if you want tabs)
 	Indent string `yaml:"indent"`
+
+	GroupedMethodTransforms []GroupedMethodTransforms `yaml:"grouped_method_transforms"`
 
 	// Specify your own custom type translations, useful for custom types, `time.Time` and `null.String`.
 	// Be default unrecognized types will be output as `any /* name */`.
@@ -164,6 +171,18 @@ func (c Config) PackageConfig(packagePath string) *PackageConfig {
 		}
 	}
 	log.Fatalf("Config not found for package %s", packagePath)
+	return nil
+}
+
+func (c PackageConfig) isGroupedTransform(fnName string) *string {
+	for _, t := range c.GroupedMethodTransforms {
+		for _, a := range t.AppliesTo {
+			if strings.EqualFold(a, fnName) {
+				return &t.ReturnTransforms
+
+			}
+		}
+	}
 	return nil
 }
 
