@@ -1,5 +1,6 @@
 packages:
-  - path: 'test/TensorBase.h'
+  - path: test/TensorBase.h
+    # - path: '../flashlight/flashlight/fl/tensor/TensorBase.h'
     bindings_out_path: 'test/out'
     indent: "\t"
     vector_opts:
@@ -34,8 +35,29 @@ packages:
         auto _out_byte_count = /return/.bytes();
         g_bytes_used += _out_byte_count;
         Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
-    # WIP: allow grouping duplicate transforms to simplify
+    # simplifies cases where multiple methods require transforming the generated logic (starting from after function call; useful when need to transform value before returning to JS)
     grouped_method_transforms:
+      - return_transforms: |
+          auto axes_set = std::unordered_set<int>{static_cast<int>(/arg_1/)};
+          auto base_shape = (/arg_0/).shape().get();
+          std::vector<fl::Dim> new_shape;
+          for (size_t idx = 0; idx < base_shape.size(); ++idx) {
+            if (axes_set.count(idx) || (axes_set.size() == 0)) {
+              if (/arg_2/) {
+                new_shape.emplace_back(1);
+              }
+              continue;
+            }
+            new_shape.emplace_back(base_shape[idx]);
+          }
+          const auto& shape = fl::Shape(new_shape);
+          /return/ = fl::reshape(/return/, shape);
+        arg_transforms:
+          axis: |
+            auto axis = axisArg(/arg/.As<Napi::Number>().Uint32Value(), g_row_major, /arg_0/->ndim());
+        applies_to:
+          - argmin
+          - argmax
       - return_transforms: |
           auto axes_set = std::unordered_set<int>(/arg_1/.begin(), /arg_1/.end());
           auto base_shape = (/arg_0/).shape().get();
@@ -86,48 +108,6 @@ packages:
             float end = /arg/.As<Napi::Number>().FloatValue();
           step: |
             float step = /arg/.As<Napi::Number>().FloatValue();
-      argmin:
-        arg_count: 3
-        return_transforms: |
-          /return/ = fl::argmin(/arg_0/, /arg_1/, /arg_2/);
-          auto axes_set = std::unordered_set<int>{static_cast<int>(/arg_1/)};
-          auto base_shape = (/arg_0/).shape().get();
-          std::vector<fl::Dim> new_shape;
-          for (size_t idx = 0; idx < base_shape.size(); ++idx) {
-            if (axes_set.count(idx) || (axes_set.size() == 0)) {
-              if (/arg_2/) {
-                new_shape.emplace_back(1);
-              }
-              continue;
-            }
-            new_shape.emplace_back(base_shape[idx]);
-          }
-          const auto& shape = fl::Shape(new_shape);
-          /return/ = fl::reshape(/return/, shape);
-        arg_transforms:
-          axis: |
-            auto axis = axisArg(/arg/.As<Napi::Number>().Uint32Value(), g_row_major, /arg_0/->ndim());
-      argmax:
-        arg_count: 3
-        return_transforms: |
-          /return/ = fl::argmax(/arg_0/, /arg_1/, /arg_2/);
-          auto axes_set = std::unordered_set<int>{static_cast<int>(/arg_1/)};
-          auto base_shape = (/arg_0/).shape().get();
-          std::vector<fl::Dim> new_shape;
-          for (size_t idx = 0; idx < base_shape.size(); ++idx) {
-            if (axes_set.count(idx) || (axes_set.size() == 0)) {
-              if (/arg_2/) {
-                new_shape.emplace_back(1);
-              }
-              continue;
-            }
-            new_shape.emplace_back(base_shape[idx]);
-          }
-          const auto& shape = fl::Shape(new_shape);
-          /return/ = fl::reshape(/return/, shape);
-        arg_transforms:
-          axis: |
-            auto axis = axisArg(/arg/.As<Napi::Number>().Uint32Value(), g_row_major, /arg_0/->ndim());
       var:
         arg_count: 4
         return_transforms: |
@@ -186,7 +166,6 @@ packages:
             int64_t dim = /arg/.As<Napi::Number>().Int64Value();
       iota:
         arg_count: 2
-        ts_return_type: 'Tensor'
         return_transforms: |
           /return/ = fl::iota(fl::Shape(/arg_0/), fl::Shape(/arg_1/));
         arg_transforms:
@@ -198,7 +177,7 @@ packages:
         arg_count: 2
         arg_transforms:
           axis: |
-            auto axis = axisArg(/arg/.As<Napi::Number>().Int32Value(), g_row_major, (&tensors[0])->ndim());
+            auto axis = axisArg(/arg/.As<Napi::Number>().Int32Value(), g_row_major, (&/arg_0/[0])->ndim());
           tensors: |
             auto tensors = jsTensorArrayArg<fl::Tensor>(/arg/.As<Napi::Array>());
       tril:

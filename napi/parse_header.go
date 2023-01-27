@@ -110,6 +110,32 @@ type ParsedMethod struct {
 	Returns *string
 }
 
+func parseLocalIncludes(n *sitter.Node, input []byte) []*string {
+	includes := []*string{}
+	q, err := sitter.NewQuery([]byte("(preproc_include) @includes"), cpp.GetLanguage())
+	if err != nil {
+		fmt.Println(err)
+		panic(err)
+	}
+
+	qc := sitter.NewQueryCursor()
+	qc.Exec(q, n)
+
+	for {
+		m, ok := qc.NextMatch()
+		if !ok {
+			break
+		}
+		for _, c := range m.Captures {
+			content := c.Node.Content(input)
+			if strings.Contains(content, "\"") {
+				includes = append(includes, &content)
+			}
+		}
+	}
+	return includes
+}
+
 func (g *PackageGenerator) parseMethods(n *sitter.Node, input []byte) map[string]*CPPMethod {
 	methods := map[string]*CPPMethod{}
 	q, err := sitter.NewQuery([]byte("(declaration type: (type_identifier) @type declarator: (function_declarator) @func)"), cpp.GetLanguage())

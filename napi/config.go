@@ -195,7 +195,6 @@ func (c PackageConfig) IsArgTransform(fnName string, argName string) (bool, *str
 			return true, &mv
 		}
 	}
-
 	for _, t := range c.GroupedMethodTransforms {
 		for _, a := range t.AppliesTo {
 			if strings.EqualFold(a, fnName) {

@@ -17,7 +17,7 @@ func (g *PackageGenerator) writeJsArrayToVectorFn(sb *strings.Builder) {
 	g.writeIndent(sb, 1)
 	sb.WriteString("for(size_t i = 0; i < len; ++i) {\n")
 	g.writeIndent(sb, 2)
-	sb.WriteString("auto idx = reverse ? len - i - 1 : i;\n")
+	sb.WriteString("const auto idx = reverse ? len - i - 1 : i;\n")
 	g.writeIndent(sb, 2)
 	sb.WriteString("Napi::Value val = arr[idx];\n")
 	g.writeIndent(sb, 2)

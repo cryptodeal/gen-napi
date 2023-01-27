@@ -261,6 +261,9 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 		g.writeIndent(sb, 2)
 		sb.WriteString(fmt.Sprintf("_res = %s::%s(", *g.NameSpace, *m.Ident))
 		for i, arg := range *m.Overloads[0] {
+			if i > arg_count {
+				break
+			}
 			if i > 0 {
 				sb.WriteString(", ")
 			}
@@ -398,10 +401,12 @@ func (g *PackageGenerator) writeBindings(sb *strings.Builder, classes map[string
 	g.writeHelpers(sb, classes)
 
 	sb.WriteString("// exported functions\n\n")
+	// write methods (not requiring preprocessing)
 	for _, f := range methods {
 		g.writeMethod(sb, f, classes)
 	}
 
+	// write methods that required preprocessing
 	for _, f := range processedMethods {
 		g.writeMethod(sb, f, classes)
 	}
