@@ -189,27 +189,23 @@ func (c PackageConfig) IsReturnTransform(method *CPPMethod) (bool, bool, *string
 	return false, false, nil
 }
 
-func (c PackageConfig) IsGroupedReturnTransform(fnName string) *string {
+func (c PackageConfig) IsArgTransform(fnName string, argName string) (bool, *string) {
+	if v, ok := c.MethodTransforms[fnName]; ok {
+		if mv, ok := v.ArgTransforms[argName]; ok {
+			return true, &mv
+		}
+	}
+
 	for _, t := range c.GroupedMethodTransforms {
 		for _, a := range t.AppliesTo {
 			if strings.EqualFold(a, fnName) {
-				return &t.ReturnTransforms
-
+				if v, ok := t.ArgTransforms[argName]; ok {
+					return true, &v
+				}
 			}
 		}
 	}
-	return nil
-}
-
-func (c PackageConfig) IsGroupedArgTransform(fnName string) *map[string]string {
-	for _, t := range c.GroupedMethodTransforms {
-		for _, a := range t.AppliesTo {
-			if strings.EqualFold(a, fnName) && len(t.ArgTransforms) > 0 {
-				return &t.ArgTransforms
-			}
-		}
-	}
-	return nil
+	return false, nil
 }
 
 func (c PackageConfig) IsEnvTS() bool {

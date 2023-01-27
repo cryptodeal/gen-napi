@@ -80,7 +80,7 @@ func (g *PackageGenerator) writeArgChecks(sb *strings.Builder, name string, args
 		if i > expected_arg_count {
 			break
 		}
-
+		isArgTransform, _ := g.conf.IsArgTransform(name, *arg.Ident)
 		if arg.IsPrimitive {
 			napiTypeHandler := "IsNumber"
 			jsTypeEquivalent := "number"
@@ -108,8 +108,8 @@ func (g *PackageGenerator) writeArgChecks(sb *strings.Builder, name string, args
 				jsTypeEquivalent = "boolean"
 			}
 			g.writeArgTypeChecker(sb, name, napiTypeHandler, i, fmt.Sprintf("typeof `%s`)", jsTypeEquivalent), 1, nil)
-			// handle any necessary transformations
-			if _, ok := g.conf.MethodTransforms[name].ArgTransforms[*arg.Ident]; !ok {
+			// get val from arg if no transform is specified
+			if !isArgTransform {
 				g.writeIndent(sb, 1)
 				sb.WriteString(fmt.Sprintf("%s %s = ", *arg.Type, *arg.Ident))
 				// only cast when necessary
@@ -124,7 +124,7 @@ func (g *PackageGenerator) writeArgChecks(sb *strings.Builder, name string, args
 			}
 		} else if isClass(*arg.Type, classes) {
 			g.writeArgTypeChecker(sb, name, "IsExternal", i, fmt.Sprintf("native `%s` (typeof `Napi::External<%s::%s>`)", *arg.Type, *g.NameSpace, *arg.Type), 1, nil)
-			if _, ok := g.conf.MethodTransforms[name].ArgTransforms[*arg.Ident]; !ok {
+			if !isArgTransform {
 				g.writeIndent(sb, 1)
 				sb.WriteString(fmt.Sprintf("%s::%s* %s = UnExternalize<%s::%s>(info[%d]);\n", *g.NameSpace, *arg.Type, *arg.Ident, *g.NameSpace, *arg.Type, i))
 			}
