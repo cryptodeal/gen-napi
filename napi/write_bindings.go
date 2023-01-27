@@ -219,47 +219,26 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 	g.writeIndent(sb, 2)
 	sb.WriteString(fmt.Sprintf("%s::%s _res;\n", *g.NameSpace, outType))
 
-	isGroupedTransform := g.conf.IsGroupedReturnTransform(*m.Ident)
-	// grouped transforms take precedence
-	if isGroupedTransform != nil {
-		g.writeIndent(sb, 2)
-		sb.WriteString(fmt.Sprintf("_res = %s::%s(", *g.NameSpace, *m.Ident))
-		for i, arg := range *m.Overloads[0] {
-			if i > 0 {
-				sb.WriteString(", ")
-			}
-			if _, ok := g.conf.TypeMappings[*arg.Type]; ok {
-				sb.WriteString(fmt.Sprintf("%s::%s(%s)", *g.NameSpace, *arg.Type, *arg.Ident))
-			} else if isClass(*arg.Type, classes) {
-				sb.WriteString(fmt.Sprintf("*(%s)", *arg.Ident))
-			} else {
-				sb.WriteString(*arg.Ident)
-			}
-		}
-		sb.WriteString(");\n")
-		parsed_transform := strings.ReplaceAll(*isGroupedTransform, "/return/", "_res")
-		for i, arg := range *m.Overloads[0] {
-			fmtd_arg := ""
-			if isClass(*arg.Type, classes) {
-				fmtd_arg = fmt.Sprintf("*(%s)", *arg.Ident)
-			} else {
-				fmtd_arg = *arg.Ident
-			}
-			parsed_transform = strings.ReplaceAll(parsed_transform, fmt.Sprintf("/arg_%d/", i), fmtd_arg)
-		}
-		transformed_lines := strings.Split(parsed_transform, "\n")
-		length := len(transformed_lines)
-		for i, line := range transformed_lines {
+	isReturnTransform, isGrouped, transform := g.conf.IsReturnTransform(m)
+	if isReturnTransform {
+		if isGrouped {
 			g.writeIndent(sb, 2)
-			if i == length-1 {
-				sb.WriteString(line)
-			} else {
-				sb.WriteString(fmt.Sprintf("%s\n", line))
+			sb.WriteString(fmt.Sprintf("_res = %s::%s(", *g.NameSpace, *m.Ident))
+			for i, arg := range *m.Overloads[0] {
+				if i > 0 {
+					sb.WriteString(", ")
+				}
+				if _, ok := g.conf.TypeMappings[*arg.Type]; ok {
+					sb.WriteString(fmt.Sprintf("%s::%s(%s)", *g.NameSpace, *arg.Type, *arg.Ident))
+				} else if isClass(*arg.Type, classes) {
+					sb.WriteString(fmt.Sprintf("*(%s)", *arg.Ident))
+				} else {
+					sb.WriteString(*arg.Ident)
+				}
 			}
+			sb.WriteString(");\n")
 		}
-		// if no group transform, check for method transform
-	} else if v, ok := g.conf.MethodTransforms[*m.Ident]; ok && v.ReturnTransforms != "" {
-		parsed_transform := strings.ReplaceAll(v.ReturnTransforms, "/return/", "_res")
+		parsed_transform := strings.ReplaceAll(*transform, "/return/", "_res")
 		for i, arg := range *m.Overloads[0] {
 			fmtd_arg := ""
 			if isClass(*arg.Type, classes) {

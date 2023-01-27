@@ -175,6 +175,20 @@ func (c Config) PackageConfig(packagePath string) *PackageConfig {
 	return nil
 }
 
+func (c PackageConfig) IsReturnTransform(method *CPPMethod) (bool, bool, *string) {
+	for _, t := range c.GroupedMethodTransforms {
+		for _, a := range t.AppliesTo {
+			if strings.EqualFold(a, *method.Ident) {
+				return true, true, &t.ReturnTransforms
+			}
+		}
+	}
+	if v, ok := c.MethodTransforms[*method.Ident]; ok && v.ReturnTransforms != "" {
+		return true, false, &v.ReturnTransforms
+	}
+	return false, false, nil
+}
+
 func (c PackageConfig) IsGroupedReturnTransform(fnName string) *string {
 	for _, t := range c.GroupedMethodTransforms {
 		for _, a := range t.AppliesTo {
