@@ -80,7 +80,7 @@ func (g *PackageGenerator) writeArgChecks(sb *strings.Builder, name string, args
 		if i > expected_arg_count {
 			break
 		}
-		isArgTransform, _ := g.conf.IsArgTransform(name, *arg.Ident)
+		isArgTransform, argTransformVal := g.conf.IsArgTransform(name, *arg.Ident)
 		if arg.IsPrimitive {
 			napiTypeHandler := "IsNumber"
 			jsTypeEquivalent := "number"
@@ -161,11 +161,9 @@ func (g *PackageGenerator) writeArgChecks(sb *strings.Builder, name string, args
 				g.writeArgTypeChecker(sb, name, "IsNumber", i, errMsg, 1, nil)
 			}
 		}
-		if v, ok := g.conf.MethodTransforms[name].ArgTransforms[*arg.Ident]; ok {
-			if !strings.Contains(v, "/arg_") {
-				g.writeIndent(sb, 1)
-				sb.WriteString(strings.ReplaceAll(v, "/arg/", fmt.Sprintf("info[%d]", i)))
-			}
+		if isArgTransform && !strings.Contains(*argTransformVal, "/arg_") {
+			g.writeIndent(sb, 1)
+			sb.WriteString(strings.ReplaceAll(*argTransformVal, "/arg/", fmt.Sprintf("info[%d]", i)))
 		}
 	}
 }
@@ -193,16 +191,16 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 		if i > arg_count {
 			break
 		}
+		isArgTransform, argTransformVal := g.conf.IsArgTransform(*m.Ident, *arg.Ident)
+
 		tmpType := *arg.Type
-		if v, ok := g.conf.MethodTransforms[*m.Ident].ArgTransforms[*arg.Ident]; ok && strings.Contains(v, "/arg_") {
+		if isArgTransform && strings.Contains(*argTransformVal, "/arg_") {
 			g.writeIndent(sb, 2)
-			if strings.Contains(v, "/arg_") {
-				for j, val := range *m.Overloads[0] {
-					v = strings.ReplaceAll(v, fmt.Sprintf("/arg_%d/", j), *val.Ident)
-				}
+			for j, val := range *m.Overloads[0] {
+				*argTransformVal = strings.ReplaceAll(*argTransformVal, fmt.Sprintf("/arg_%d/", j), *val.Ident)
 			}
+			sb.WriteString(strings.ReplaceAll(*argTransformVal, "/arg/", fmt.Sprintf("info[%d]", i)))
 			// TODO: this might need better handling for class wrappers
-			sb.WriteString(strings.ReplaceAll(v, "/arg/", fmt.Sprintf("info[%d]", i)))
 		} else if isClass(*arg.Type, classes) {
 			obj_name = *arg.Ident
 		} else if strings.Contains(*arg.Type, "std::vector") && !strings.EqualFold(tmpType[strings.Index(*arg.Type, "<")+1:strings.Index(*arg.Type, ">")], *m.Returns) {
