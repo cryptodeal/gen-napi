@@ -19,6 +19,8 @@ _Docs are pending testing against other header libraries, removing the one(?) ha
 **Prerequisite**
 
 - `go` (see Golang [installation instructions](https://go.dev/doc/install))
+- `Node.js` / `npm` (see [Node.js installation instructions](https://nodejs.org/en/download/))
+- Alternatively, you can use [Bun](https://bun.sh) (see [Bun installation instructions](https://bun.sh))
 
 Clone the repository (use branch: `external_main` at present for latest changes):
 
@@ -49,6 +51,12 @@ gen-napi generate
 ```
 
 To build, run:
+
+```sh
+npm install
+```
+
+Or, to use [Bun](https://bun.sh):
 
 ```sh
 bun install
