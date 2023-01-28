@@ -44,13 +44,14 @@ type Casers struct {
 
 // Responsible for generating the code for an input package
 type PackageGenerator struct {
-	casers    Casers
-	conf      *PackageConfig
-	NameSpace *string
-	Name      *string
-	Path      *string
-	RootNode  *sitter.Node
-	Input     *[]byte
+	casers        Casers
+	conf          *PackageConfig
+	LocalIncludes []*string
+	NameSpace     *string
+	Name          *string
+	Path          *string
+	RootNode      *sitter.Node
+	Input         *[]byte
 }
 
 type EnumField struct {
@@ -88,6 +89,7 @@ func (g *TSGo) Generate() error {
 
 		napiConfig := g.conf.PackageConfig(path)
 		namespace := parseNamespace(n, input)
+		localIncludes := parseLocalIncludes(n, input)
 
 		split_path := strings.Split(path, "/")
 		name := strings.Replace(split_path[len(split_path)-1], ".h", "", 1)
@@ -97,13 +99,14 @@ func (g *TSGo) Generate() error {
 			upper: cases.Upper(language.AmericanEnglish),
 		}
 		napiGen := &PackageGenerator{
-			casers:    casers,
-			conf:      napiConfig,
-			NameSpace: &namespace,
-			Name:      &name,
-			RootNode:  n,
-			Path:      &path,
-			Input:     &input,
+			casers:        casers,
+			conf:          napiConfig,
+			NameSpace:     &namespace,
+			Name:          &name,
+			LocalIncludes: localIncludes,
+			RootNode:      n,
+			Path:          &path,
+			Input:         &input,
 		}
 		g.packageGenerators[*napiGen.Path] = napiGen
 		bindings, env_wrapper, err := napiGen.Generate()
