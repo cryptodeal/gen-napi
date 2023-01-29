@@ -218,7 +218,10 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 		}
 	}
 	g.writeIndent(sb, 2)
-	sb.WriteString(fmt.Sprintf("%s::%s _res;\n", *g.NameSpace, outType))
+	if !m.ReturnsPrimitive {
+		sb.WriteString(fmt.Sprintf("%s::", *g.NameSpace))
+	}
+	sb.WriteString(fmt.Sprintf("%s _res;\n", outType))
 
 	isReturnTransform, isGrouped, transform := g.conf.IsReturnTransform(m)
 	if isReturnTransform {

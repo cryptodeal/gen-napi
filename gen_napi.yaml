@@ -31,8 +31,10 @@ packages:
       wrapper_out_path: 'test/ts/index.ts'
     ignored_methods:
       - 'scalar'
+      - 'device'
       - 'pad'
       - 'argsort'
+      - 'host'
       - 'fromScalar'
     path_to_forced_logic: test/ForcedLogic.cc
     global_type_out_transforms:

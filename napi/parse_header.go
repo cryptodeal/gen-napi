@@ -78,10 +78,11 @@ type CPPArg struct {
 }
 
 type CPPMethod struct {
-	Ident        *string
-	Overloads    []*[]*CPPArg
-	Returns      *string
-	ExpectedArgs int
+	Ident            *string
+	Overloads        []*[]*CPPArg
+	Returns          *string
+	ReturnsPrimitive bool
+	ExpectedArgs     int
 }
 
 type TemplateMethod struct {
@@ -105,9 +106,10 @@ type ParsedClassDecl struct {
 }
 
 type ParsedMethod struct {
-	Ident   *string
-	Args    *[]*CPPArg
-	Returns *string
+	Ident            *string
+	Args             *[]*CPPArg
+	Returns          *string
+	ReturnsPrimitive bool
 }
 
 func parseLocalIncludes(n *sitter.Node, input []byte) []*string {
@@ -160,9 +162,10 @@ func (g *PackageGenerator) parseMethods(n *sitter.Node, input []byte) map[string
 		} else {
 			// first time having encountered this method, so create a new entry
 			new_method := &CPPMethod{
-				Ident:     parsed.Ident,
-				Overloads: []*[]*CPPArg{parsed.Args},
-				Returns:   parsed.Returns,
+				Ident:            parsed.Ident,
+				Overloads:        []*[]*CPPArg{parsed.Args},
+				Returns:          parsed.Returns,
+				ReturnsPrimitive: parsed.ReturnsPrimitive,
 			}
 			if !g.conf.IsMethodIgnored(*parsed.Ident) {
 				methods[*parsed.Ident] = new_method
@@ -205,6 +208,10 @@ func parseCPPMethod(r *sitter.Node, b *sitter.Node, content []byte) *ParsedMetho
 		Ident: &name,
 	}
 	if r != nil {
+		nodeType := r.Type()
+		if nodeType == "primitive_type" || nodeType == "sized_type_specifier" {
+			parsed.ReturnsPrimitive = true
+		}
 		tempReturns := r.Content(content)
 		parsed.Returns = &tempReturns
 	}
