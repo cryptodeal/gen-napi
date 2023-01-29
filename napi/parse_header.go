@@ -128,7 +128,7 @@ func parseLocalIncludes(n *sitter.Node, input []byte) []*string {
 		}
 		for _, c := range m.Captures {
 			content := c.Node.Content(input)
-			if strings.Contains(content, "\"") {
+			if strings.Contains(content, "\"") && strings.Contains(content, ".h") {
 				includes = append(includes, &content)
 			}
 		}
@@ -138,7 +138,7 @@ func parseLocalIncludes(n *sitter.Node, input []byte) []*string {
 
 func (g *PackageGenerator) parseMethods(n *sitter.Node, input []byte) map[string]*CPPMethod {
 	methods := map[string]*CPPMethod{}
-	q, err := sitter.NewQuery([]byte("(declaration type: (type_identifier) @type declarator: (function_declarator) @func)"), cpp.GetLanguage())
+	q, err := sitter.NewQuery([]byte("(declaration [type: (type_identifier) @type type: (primitive_type) @primitive] declarator: (function_declarator) @func)"), cpp.GetLanguage())
 	if err != nil {
 		fmt.Println(err)
 		panic(err)
