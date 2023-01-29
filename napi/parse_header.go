@@ -73,6 +73,7 @@ type CPPArg struct {
 	IsPrimitive   bool
 	Type          *string
 	RefDecl       *string
+	IsPointer     bool
 	Ident         *string
 	DefaultValue  *CPPArgDefault
 }
@@ -255,6 +256,15 @@ func parseCPPArg(content []byte, arg_list *sitter.Node) *[]*CPPArg {
 		refNode := scoped_arg.ChildByFieldName("declarator")
 		// switch case to handle per node type
 		switch refNode.Type() {
+		case "pointer_declarator":
+			{
+				identNode := refNode.ChildByFieldName("declarator")
+				if identNode != nil {
+					identStr := identNode.Content(content)
+					parsed_arg.Ident = &identStr
+					parsed_arg.IsPointer = true
+				}
+			}
 		case "reference_declarator":
 			{
 				identNode := findChildNodeByType(refNode, "identifier")
