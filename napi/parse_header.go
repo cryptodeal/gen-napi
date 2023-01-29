@@ -82,6 +82,7 @@ type CPPMethod struct {
 	Overloads        []*[]*CPPArg
 	Returns          *string
 	ReturnsPrimitive bool
+	ReturnsPointer   bool
 	ExpectedArgs     int
 }
 
@@ -110,6 +111,7 @@ type ParsedMethod struct {
 	Args             *[]*CPPArg
 	Returns          *string
 	ReturnsPrimitive bool
+	ReturnsPointer   bool
 }
 
 func parseLocalIncludes(n *sitter.Node, input []byte) []*string {
@@ -140,7 +142,7 @@ func parseLocalIncludes(n *sitter.Node, input []byte) []*string {
 
 func (g *PackageGenerator) parseMethods(n *sitter.Node, input []byte) map[string]*CPPMethod {
 	methods := map[string]*CPPMethod{}
-	q, err := sitter.NewQuery([]byte("(declaration [type: (type_identifier) @type type: (primitive_type) @primitive] declarator: (function_declarator) @func)"), cpp.GetLanguage())
+	q, err := sitter.NewQuery([]byte("(declaration [type: (type_identifier) @type type: (primitive_type) @primitive] [declarator: (function_declarator) @func declarator: (pointer_declarator) @ptr_func])"), cpp.GetLanguage())
 	if err != nil {
 		fmt.Println(err)
 		panic(err)
@@ -166,6 +168,7 @@ func (g *PackageGenerator) parseMethods(n *sitter.Node, input []byte) map[string
 				Overloads:        []*[]*CPPArg{parsed.Args},
 				Returns:          parsed.Returns,
 				ReturnsPrimitive: parsed.ReturnsPrimitive,
+				ReturnsPointer:   parsed.ReturnsPointer,
 			}
 			if !g.conf.IsMethodIgnored(*parsed.Ident) {
 				methods[*parsed.Ident] = new_method
@@ -201,11 +204,18 @@ func parseNamespace(n *sitter.Node, input []byte) string {
 }
 
 func parseCPPMethod(r *sitter.Node, b *sitter.Node, content []byte) *ParsedMethod {
-	args := parseCPPArg(content, b.ChildByFieldName("parameters"))
-	name := b.ChildByFieldName("declarator").Content(content)
+	funcDeclNode := b
+	returnsPointer := false
+	if b.Type() == "pointer_declarator" {
+		returnsPointer = true
+		funcDeclNode = b.ChildByFieldName("declarator")
+	}
+	args := parseCPPArg(content, funcDeclNode.ChildByFieldName("parameters"))
+	name := funcDeclNode.ChildByFieldName("declarator").Content(content)
 	parsed := &ParsedMethod{
-		Args:  args,
-		Ident: &name,
+		Args:           args,
+		ReturnsPointer: returnsPointer,
+		Ident:          &name,
 	}
 	if r != nil {
 		nodeType := r.Type()
