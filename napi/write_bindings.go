@@ -263,7 +263,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 			}
 		}
 		// handle w/o any transformations
-	} else {
+	} else if *m.Returns != "void" {
 		g.writeIndent(sb, 2)
 		sb.WriteString(fmt.Sprintf("_res = %s::%s(", *g.NameSpace, *m.Ident))
 		for i, arg := range *m.Overloads[0] {
@@ -283,17 +283,18 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 		}
 		sb.WriteString(");\n")
 	}
-	if v, ok := g.conf.GlobalTypeOutTransforms[*m.Returns]; ok {
+	if *m.Returns != "void" {
+		if v, ok := g.conf.GlobalTypeOutTransforms[*m.Returns]; ok {
+			g.writeIndent(sb, 2)
+			sb.WriteString(strings.ReplaceAll(v, "/return/", "_res"))
+		}
 		g.writeIndent(sb, 2)
-		sb.WriteString(strings.ReplaceAll(v, "/return/", "_res"))
+		sb.WriteString(fmt.Sprintf("auto* out = new %s::%s(_res);\n", *g.NameSpace, outType))
+		g.writeIndent(sb, 2)
+		sb.WriteString(fmt.Sprintf("Napi::External<%s::%s> _external_out = Externalize%s(env, out);\n", *g.NameSpace, outType, outType))
+		g.writeIndent(sb, 2)
+		sb.WriteString("return _external_out;\n")
 	}
-	g.writeIndent(sb, 2)
-	sb.WriteString(fmt.Sprintf("auto* out = new %s::%s(_res);\n", *g.NameSpace, outType))
-	g.writeIndent(sb, 2)
-	sb.WriteString(fmt.Sprintf("Napi::External<%s::%s> _external_out = Externalize%s(env, out);\n", *g.NameSpace, outType, outType))
-	g.writeIndent(sb, 2)
-	sb.WriteString("return _external_out;\n")
-
 	/* TODO: Handle cases w multiple overloads
 	} else {
 		// TODO: handle cases w multiple overloads
