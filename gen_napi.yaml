@@ -36,6 +36,7 @@ packages:
       - 'argsort'
       - 'host'
       - 'fromScalar'
+      - 'areTensorTypesEqual'
     path_to_forced_logic: test/ForcedLogic.cc
     global_type_out_transforms:
       Tensor: |

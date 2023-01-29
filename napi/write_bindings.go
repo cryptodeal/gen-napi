@@ -263,7 +263,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 			}
 		}
 		// handle w/o any transformations
-	} else if *m.Returns != "void" {
+	} else {
 		g.writeIndent(sb, 2)
 		sb.WriteString(fmt.Sprintf("_res = %s::%s(", *g.NameSpace, *m.Ident))
 		for i, arg := range *m.Overloads[0] {
@@ -283,17 +283,33 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 		}
 		sb.WriteString(");\n")
 	}
-	if *m.Returns != "void" {
+	if *m.Returns != "void" && !isReturnTransform {
 		if v, ok := g.conf.GlobalTypeOutTransforms[*m.Returns]; ok {
 			g.writeIndent(sb, 2)
 			sb.WriteString(strings.ReplaceAll(v, "/return/", "_res"))
 		}
 		g.writeIndent(sb, 2)
-		sb.WriteString(fmt.Sprintf("auto* out = new %s::%s(_res);\n", *g.NameSpace, outType))
-		g.writeIndent(sb, 2)
-		sb.WriteString(fmt.Sprintf("Napi::External<%s::%s> _external_out = Externalize%s(env, out);\n", *g.NameSpace, outType, outType))
-		g.writeIndent(sb, 2)
-		sb.WriteString("return _external_out;\n")
+		returnType := *m.Returns
+		jsType, isObject := CPPTypeToTS(returnType)
+		if g.conf.TypeHasHandler(returnType) != nil {
+			t := g.conf.TypeHasHandler(returnType)
+			g.writeIndent(sb, 1)
+			sb.WriteString(strings.ReplaceAll(t.Handler, "/val/", "_res"))
+			g.writeIndent(sb, 1)
+			sb.WriteString(fmt.Sprintf("return %s;\n", t.OutVar))
+		} else if isObject && isClass(returnType, classes) {
+			if v, ok := g.conf.GlobalTypeOutTransforms[returnType]; ok {
+				g.writeIndent(sb, 1)
+				sb.WriteString(strings.ReplaceAll(v, "/return/", "_res"))
+			}
+			g.writeIndent(sb, 1)
+			sb.WriteString(fmt.Sprintf("auto* out = new %s::%s(_res);\n", *g.NameSpace, returnType))
+			g.writeIndent(sb, 1)
+			sb.WriteString(fmt.Sprintf("return Externalize%s(env, out);", returnType))
+		} else {
+			napiHandler := g.casers.upper.String(jsType[0:1]) + jsType[1:]
+			sb.WriteString(fmt.Sprintf("return Napi::%s::New(env, %s);\n", napiHandler, "_res"))
+		}
 	}
 	/* TODO: Handle cases w multiple overloads
 	} else {
