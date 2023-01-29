@@ -283,7 +283,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 		}
 		sb.WriteString(");\n")
 	}
-	if *m.Returns != "void" && !isReturnTransform {
+	if *m.Returns != "void" || isReturnTransform {
 		g.writeIndent(sb, 2)
 		returnType := *m.Returns
 		jsType, isObject := CPPTypeToTS(returnType)

@@ -2,41 +2,46 @@ packages:
   - path: test2/BasicLogic.h
     bindings_out_path: test2/out
     js_wrapper_opts:
-      addon_path: 'build/Release/test.node'
+      addon_path: build/Release/test.node
       wrapper_out_path: test2/ts/index.ts
   - path: test/TensorBase.h
-    # - path: '../flashlight/flashlight/fl/tensor/TensorBase.h'
-    bindings_out_path: 'test/out'
+    # - path: ../flashlight/flashlight/fl/tensor/TensorBase.h
+    bindings_out_path: test/out
     indent: "\t"
     vector_opts:
       row_major_default: true
       dim_accessor: ndim()
     type_mappings:
       Shape:
-        ts: 'number[]'
+        ts: number[]
       Dim:
-        ts: 'number'
+        ts: number
       dtype:
-        ts: 'number'
-        napi: 'Number'
-        casts_to: 'fl::dtype'
-        cast_napi: 'Int32Value'
+        ts: number
+        napi: Number
+        casts_to: fl::dtype
+        cast_napi: Int32Value
       T:
-        ts: 'number'
-        napi: 'Number'
+        ts: number
+        napi: Number
     js_wrapper_opts:
       front_matter: |
         import { Tensor } from './tensor'
-      addon_path: 'build/Release/shumai_bindings.node'
-      wrapper_out_path: 'test/ts/index.ts'
+      addon_path: build/Release/shumai_bindings.node
+      wrapper_out_path: test/ts/index.ts
     ignored_methods:
-      - 'scalar'
-      - 'device'
-      - 'pad'
-      - 'argsort'
-      - 'host'
-      - 'fromScalar'
-      - 'areTensorTypesEqual'
+      - scalar
+      - device
+      - pad
+      - argsort
+      - host
+      - fromScalar
+      - areTensorTypesEqual
+      - min
+      - max
+      - topk
+      - allClose
+      - print
     path_to_forced_logic: test/ForcedLogic.cc
     global_type_out_transforms:
       Tensor: |
@@ -236,13 +241,13 @@ packages:
             auto shape = jsArrayToVector<long long>(/arg/.As<Napi::Array>(), g_row_major, false);
     type_handlers:
       dtype:
-        out_type: 'Napi::Number'
-        out_var: '_out'
+        out_type: Napi::Number
+        out_var: _out
         handler: |
           Napi::Number _out = Napi::Number::New(env, static_cast<double>(/val/));
       Shape:
-        out_type: 'Napi::TypedArrayOf<int64_t>'
-        out_var: '_out'
+        out_type: Napi::TypedArrayOf<int64_t>
+        out_var: _out
         handler: |
           const size_t length = static_cast<const size_t>(UnExternalize<fl::Tensor>(info[0])->ndim());
           Napi::TypedArrayOf<int64_t> _out =
@@ -261,16 +266,16 @@ packages:
             Napi::MemoryManagement::AdjustExternalMemory(env, -byte_count);
           }
         fields:
-          - name: 'copy'
-          - name: 'shape'
-          - name: 'elements'
-          - name: 'ndim'
-          - name: 'isEmpty'
-          - name: 'bytes'
-          - name: 'strides'
-          - name: 'astype'
-          - name: 'type'
-          - name: 'isSparse'
-          - name: 'flatten'
-          - name: 'asContiguousTensor'
-          - name: 'isContiguous'
+          - name: copy
+          - name: shape
+          - name: elements
+          - name: ndim
+          - name: isEmpty
+          - name: bytes
+          - name: strides
+          - name: astype
+          - name: type
+          - name: isSparse
+          - name: flatten
+          - name: asContiguousTensor
+          - name: isContiguous
