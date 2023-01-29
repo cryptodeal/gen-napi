@@ -64,9 +64,6 @@ func (g *PackageGenerator) writeArgChecks(sb *strings.Builder, name string, args
 			if i > expected_arg_count {
 				break
 			}
-			if arg.Ident == nil {
-				fmt.Printf("WARNING: arg.Ident is nil for %q", name)
-			}
 			// write arg transform only if it doesn't rely on other args
 			if v2, ok2 := v.ArgTransforms[*arg.Ident]; ok2 && !strings.Contains(v2, "/arg_") {
 				g.writeIndent(sb, 1)
@@ -82,6 +79,9 @@ func (g *PackageGenerator) writeArgChecks(sb *strings.Builder, name string, args
 	for i, arg := range *args {
 		if i > expected_arg_count {
 			break
+		}
+		if arg.Ident == nil {
+			fmt.Printf("WARNING: arg.Ident is nil for %q", name)
 		}
 		isArgTransform, argTransformVal := g.conf.IsArgTransform(name, *arg.Ident)
 		if arg.IsPrimitive {
