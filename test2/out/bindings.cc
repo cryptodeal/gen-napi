@@ -54,9 +54,7 @@ static Napi::Value _foo(const Napi::CallbackInfo& info) {
   int8_t a = static_cast<int8_t>(info[0].As<Napi::Number>().Int32Value());
   int8_t _res;
   _res = test2::foo(a);
-  auto* out = new test2::int8_t(_res);
-  Napi::External<test2::int8_t> _external_out = Externalizeint8_t(env, out);
-  return _external_out;
+  return Napi::Number::New(env, _res);
 }
 
 // NAPI exports
