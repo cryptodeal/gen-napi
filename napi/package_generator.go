@@ -12,7 +12,7 @@ func (g *PackageGenerator) Generate() (string, string, error) {
 	methods := g.parseMethods(g.RootNode, *g.Input)
 	classes := parseClasses(g.RootNode, *g.Input)
 	lits := g.parseLiterals(g.RootNode, *g.Input)
-	enums := g.parseEnums(g.RootNode, *g.Input)
+	enums := g.parseEnums(g.RootNode, *g.Input, true)
 	for _, enum := range enums {
 		fmt.Printf("Name: %q; Values:\n", *enum.Ident)
 		for _, v := range enum.Values {

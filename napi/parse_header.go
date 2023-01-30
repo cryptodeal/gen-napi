@@ -149,7 +149,7 @@ func getRootNode(path string) (*sitter.Node, []byte) {
 	return n, nil
 }
 
-func (g *PackageGenerator) parseEnums(n *sitter.Node, input []byte) []*ParsedEnum {
+func (g *PackageGenerator) parseEnums(n *sitter.Node, input []byte, parseIncludes bool) []*ParsedEnum {
 	enums := []*ParsedEnum{}
 	q, err := sitter.NewQuery([]byte("(enum_specifier) @enums"), cpp.GetLanguage())
 	if err != nil {
@@ -169,11 +169,14 @@ func (g *PackageGenerator) parseEnums(n *sitter.Node, input []byte) []*ParsedEnu
 			enums = append(enums, parseEnum(c.Node, input))
 		}
 	}
-
-	for _, local := range g.LocalIncludes {
-		fmt.Printf("Parsing enums in: %q\n", *local)
-		rootNode, byteData := getRootNode(filepath.Join(g.conf.LibRootDir, *local))
-		enums = append(enums, g.parseEnums(rootNode, byteData)...)
+	if parseIncludes {
+		for _, local := range g.LocalIncludes {
+			usedPath := filepath.Join(g.conf.LibRootDir, *local)
+			fmt.Printf("Parsing enums in: %q\n", usedPath)
+			rootNode, byteData := getRootNode(usedPath)
+			tmp_enums := g.parseEnums(rootNode, byteData, false)
+			enums = append(enums, tmp_enums...)
+		}
 	}
 	return enums
 }
