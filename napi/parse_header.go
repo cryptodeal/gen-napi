@@ -253,9 +253,8 @@ func parseCPPArg(content []byte, arg_list *sitter.Node) *[]*CPPArg {
 		if tmp_type == "primitive_type" || tmp_type == "sized_type_specifier" {
 			isPrimitive = true
 		} else if tmp_type == "qualified_identifier" {
-			tmpType := type_node.Content(content)
 			// flag `std::string` as primitive
-			if tmpType == "std::string" || tmpType == "string" {
+			if argType == "std::string" || argType == "string" {
 				isPrimitive = true
 			}
 		}

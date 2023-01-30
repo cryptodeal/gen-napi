@@ -93,6 +93,14 @@ func (g *PackageGenerator) writeArgChecks(sb *strings.Builder, name string, args
 				switch *arg.Type {
 				case "float":
 					valGetter = "FloatValue"
+				case "std::string":
+					valGetter = "Utf8Value"
+					napiTypeHandler = "IsString"
+					jsTypeEquivalent = "string"
+				case "string":
+					valGetter = "Utf8Value"
+					napiTypeHandler = "IsString"
+					jsTypeEquivalent = "string"
 				case "double":
 					valGetter = "DoubleValue"
 				case "long long", "char", "signed", "int8_t", "int32_t", "int16_t", "short":
