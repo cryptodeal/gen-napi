@@ -39,6 +39,18 @@ static inline void DeleteArrayBuffer(Napi::Env env,
 
 // exported functions
 
+static Napi::Value _test(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  if (info.Length() != 1) {
+    Napi::TypeError::New(env, "`test` expects exactly 1 arg")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  std::string _res;
+  _res = test2::test(a);
+  return Napi::String::New(env, _res);
+}
+
 static Napi::Value _foo(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   if (info.Length() != 1) {
@@ -205,6 +217,7 @@ Napi::Object Init(Napi::Env env, Napi::Object exports) {
   exports.Set(Napi::String::New(env, "_baz"), Napi::Function::New(env, _baz));
   exports.Set(Napi::String::New(env, "_qux"), Napi::Function::New(env, _qux));
   exports.Set(Napi::String::New(env, "_quux"), Napi::Function::New(env, _quux));
+  exports.Set(Napi::String::New(env, "_test"), Napi::Function::New(env, _test));
   return exports;
 }
 

@@ -29,6 +29,7 @@ packages:
         import { Tensor } from './tensor'
       addon_path: build/Release/shumai_bindings.node
       wrapper_out_path: test/ts/index.ts
+    # TODO: need to debug (should not be necessary??)
     ignored_methods:
       - scalar
       - device
@@ -37,6 +38,11 @@ packages:
       - host
       - fromScalar
       - areTensorTypesEqual
+      - releaseAdapter
+      - tensorBackendTypeToString
+      - releaseAdapterUnsafe
+      - detail::releaseAdapter
+      - detail::releaseAdapterUnsafe
       - min
       - max
       - topk

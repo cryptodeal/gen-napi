@@ -249,8 +249,15 @@ func parseCPPArg(content []byte, arg_list *sitter.Node) *[]*CPPArg {
 		argType := type_node.Content(content)
 		typeQualifier := getTypeQualifier(scoped_arg, content)
 		isPrimitive := false
-		if type_node.Type() == "primitive_type" || type_node.Type() == "sized_type_specifier" {
+		tmp_type := type_node.Type()
+		if tmp_type == "primitive_type" || tmp_type == "sized_type_specifier" {
 			isPrimitive = true
+		} else if tmp_type == "qualified_identifier" {
+			tmpType := type_node.Content(content)
+			// flag `std::string` as primitive
+			if tmpType == "std::string" || tmpType == "string" {
+				isPrimitive = true
+			}
 		}
 		parsed_arg := &CPPArg{
 			Type:          &argType,
@@ -260,6 +267,7 @@ func parseCPPArg(content []byte, arg_list *sitter.Node) *[]*CPPArg {
 		refNode := scoped_arg.ChildByFieldName("declarator")
 		// switch case to handle per node type
 		switch refNode.Type() {
+
 		case "pointer_declarator":
 			{
 				identNode := refNode.ChildByFieldName("declarator")
