@@ -143,7 +143,7 @@ func parseLocalIncludes(n *sitter.Node, input []byte) []*string {
 
 func (g *PackageGenerator) parseMethods(n *sitter.Node, input []byte) map[string]*CPPMethod {
 	methods := map[string]*CPPMethod{}
-	q, err := sitter.NewQuery([]byte("(declaration [type: (type_identifier) @type type: (primitive_type) @primitive type: (sized_type_specifier) @sized] [declarator: (function_declarator) @func declarator: (pointer_declarator) @ptr_func])"), cpp.GetLanguage())
+	q, err := sitter.NewQuery([]byte("(declaration [type: (type_identifier) @type type: (primitive_type) @primitive type: (sized_type_specifier) @sized type: (qualified_identifier) @qual_type] [declarator: (function_declarator) @func declarator: (pointer_declarator) @ptr_func])"), cpp.GetLanguage())
 	if err != nil {
 		fmt.Println(err)
 		panic(err)
@@ -225,6 +225,10 @@ func parseCPPMethod(r *sitter.Node, b *sitter.Node, content []byte) *ParsedMetho
 		}
 		tempReturns := r.Content(content)
 		parsed.Returns = &tempReturns
+		// mark `primitive` if it's a string (simplifies stuff a bit)
+		if nodeType == "qualified_identifier" && (tempReturns == "std::string" || tempReturns == "string") {
+			parsed.ReturnsPrimitive = true
+		}
 	}
 	return parsed
 }

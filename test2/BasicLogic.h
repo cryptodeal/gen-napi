@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <string>
 
 namespace test2 {
 int8_t foo(int8_t a);
@@ -10,4 +11,6 @@ float* baz(float* a, int b);
 long long* qux(long long* a, int b);
 
 bool* quux(bool a, bool b);
+
+std::string test(std::string a);
 }
