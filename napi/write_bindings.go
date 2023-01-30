@@ -457,10 +457,12 @@ func (g *PackageGenerator) writeClassField(sb *strings.Builder, f *CPPFieldDecl,
 				sb.WriteString(fmt.Sprintf("return Externalize%s(env, out);", returnType))
 			} else {
 				napiHandler := g.casers.upper.String(jsType[0:1]) + jsType[1:]
+				usedVar := "_res"
 				if napiHandler == "Bigint" {
 					napiHandler = "BigInt"
+					usedVar = "(int64_t)_res"
 				}
-				sb.WriteString(fmt.Sprintf("return Napi::%s::New(env, %s);\n", napiHandler, "_res"))
+				sb.WriteString(fmt.Sprintf("return Napi::%s::New(env, %s);\n", napiHandler, usedVar))
 			}
 		}
 		sb.WriteString("}\n\n")
