@@ -23,7 +23,7 @@ func PrimitivePtrToTS(t string) (string, string, *string, string) {
 		arrayType = "uint8_t"
 		napi_short_type = "uint8"
 		jsTypeEquivalent = "Uint8Array"
-	case "unsigned char":
+	case "unsigned char", "bool":
 		arrayType = "uint8_t"
 		napi_short_type = "uint8"
 		jsTypeEquivalent = "Uint8Array"
@@ -32,7 +32,7 @@ func PrimitivePtrToTS(t string) (string, string, *string, string) {
 		arrayType = "int8_t"
 		napi_short_type = "int8"
 		jsTypeEquivalent = "Int8Array"
-	case "bool", "char", "signed char":
+	case "char", "signed char":
 		arrayType = "int8_t"
 		napi_short_type = "int8"
 		jsTypeEquivalent = "Int8Array"
