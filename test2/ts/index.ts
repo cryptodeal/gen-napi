@@ -2,7 +2,8 @@
 const {
 ,
   _foo,
-  _bar
+  _bar,
+  _baz
 } = require("../../build/Release/test.node")
 
 export const foo = (a: number): number => {
@@ -11,5 +12,9 @@ export const foo = (a: number): number => {
 
 export const bar = (a: number, b: number): number => {
   return _bar(a, b);
+}
+
+export const baz = (a: number, b: number): number => {
+  return _baz(a, b);
 }
 
