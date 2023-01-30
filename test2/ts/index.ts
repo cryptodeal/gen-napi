@@ -8,10 +8,6 @@ const {
   _baz
 } = require("../../build/Release/test.node")
 
-export const bar = (a: Float64Array, b: number): Float64Array => {
-  return _bar(a, b);
-}
-
 export const baz = (a: Float32Array, b: number): Float32Array => {
   return _baz(a, b);
 }
@@ -30,5 +26,9 @@ export const test = (a: string): string => {
 
 export const foo = (a: number): number => {
   return _foo(a);
+}
+
+export const bar = (a: Float64Array, b: number): Float64Array => {
+  return _bar(a, b);
 }
 
