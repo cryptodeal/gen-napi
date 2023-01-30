@@ -3,6 +3,8 @@ package napi
 import (
 	"context"
 	"fmt"
+	"os"
+	"path"
 	"strconv"
 	"strings"
 
@@ -127,7 +129,26 @@ type ParsedEnum struct {
 	Values    []*Enum
 }
 
-func parseEnums(n *sitter.Node, input []byte) []*ParsedEnum {
+func getRootNode(path string) (*sitter.Node, []byte) {
+	input, err := os.ReadFile(path)
+	if err != nil {
+		fmt.Println(err)
+		panic(err)
+	}
+
+	parser := sitter.NewParser()
+	parser.SetLanguage(cpp.GetLanguage())
+
+	tree, err := parser.ParseCtx(context.Background(), nil, input)
+	if err != nil {
+		fmt.Println(err)
+		panic(err)
+	}
+
+	n := tree.RootNode()
+	return n, nil
+}
+func (g *PackageGenerator) parseEnums(n *sitter.Node, input []byte) []*ParsedEnum {
 	enums := []*ParsedEnum{}
 	q, err := sitter.NewQuery([]byte("(enum_specifier) @enums"), cpp.GetLanguage())
 	if err != nil {
@@ -146,6 +167,14 @@ func parseEnums(n *sitter.Node, input []byte) []*ParsedEnum {
 		for _, c := range m.Captures {
 			enums = append(enums, parseEnum(c.Node, input))
 		}
+	}
+
+	for _, local := range g.LocalIncludes {
+		fmt.Printf("Parsing enums in: %q\n", *local)
+		usedPath := path.Join(g.conf.Path, *local)
+		fmt.Printf("Using path (path.Join): %q\n", usedPath)
+		rootNode, byteData := getRootNode(*local)
+		enums = append(enums, g.parseEnums(rootNode, byteData)...)
 	}
 	return enums
 }
@@ -175,18 +204,22 @@ func parseEnum(n *sitter.Node, input []byte) *ParsedEnum {
 	bodyNode := n.ChildByFieldName("body")
 	if bodyNode != nil && bodyNode.Type() == "enumerator_list" {
 		child_count := int(bodyNode.ChildCount())
+		enum_children := []*sitter.Node{}
 		for i := 0; i < child_count; i++ {
 			tmp_child := bodyNode.Child(i)
 			if tmp_child.Type() != "enumerator" {
 				continue
 			}
+			enum_children = append(enum_children, tmp_child)
+		}
+		for i, child := range enum_children {
 			parsedEnum := &Enum{}
-			val_name_node := tmp_child.ChildByFieldName("name")
+			val_name_node := child.ChildByFieldName("name")
 			if val_name_node != nil {
 				name := val_name_node.Content(input)
 				parsedEnum.Ident = &name
 			}
-			val_node := tmp_child.ChildByFieldName("value")
+			val_node := child.ChildByFieldName("value")
 			if val_node != nil {
 				v, err := strconv.Atoi(val_node.Content(input))
 				if err == nil {
