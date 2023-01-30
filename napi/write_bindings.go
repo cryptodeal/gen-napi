@@ -115,7 +115,6 @@ func (g *PackageGenerator) writeArgChecks(sb *strings.Builder, name string, args
 				// get val from arg if no transform is specified
 				if !isArgTransform {
 					g.writeIndent(sb, 1)
-					sb.WriteString(*arg.Type)
 					sb.WriteString(fmt.Sprintf("%s %s = ", *arg.Type, *arg.Ident))
 					// only cast when necessary
 					if needsCast != nil {
@@ -166,8 +165,7 @@ func (g *PackageGenerator) writeArgChecks(sb *strings.Builder, name string, args
 				// get val from arg if no transform is specified
 				if !isArgTransform {
 					g.writeIndent(sb, 1)
-					sb.WriteString(*arg.Type)
-					sb.WriteString(fmt.Sprintf("%s *%s = reinterpret_cast<%s *>(info[%d].As<Napi::TypeArrayOf<%s>>().Data());\n", *arg.Type, *arg.Ident, *arg.Type, i, arrayType))
+					sb.WriteString(fmt.Sprintf("%s *%s = reinterpret_cast<%s *>(info[%d].As<Napi::TypedArrayOf<%s>>().Data());\n", *arg.Type, *arg.Ident, *arg.Type, i, arrayType))
 				}
 			}
 		} else if isClass(*arg.Type, classes) {
