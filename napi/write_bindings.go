@@ -231,12 +231,13 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 				invertVal = fmt.Sprintf("%s->%s", obj_name, g.conf.VectorOpts.DimAccessor)
 			}
 			sb.WriteString(fmt.Sprintf("auto %s = jsArrayToVector<%s>(info[%d].As<Napi::Array>(), g_row_major, %s);\n", *arg.Ident, tmpType[strings.Index(*arg.Type, "<")+1:strings.Index(*arg.Type, ">")], i, invertVal))
-		} else {
+		} else if !arg.IsPrimitive {
+			// TODO: all arg coercions should probably be written in a single place to prevent duplication
 			var ptrType string
 			if arg.IsPointer {
 				ptrType = "*"
 			}
-			fmt.Printf("TODO: Method %q has unhandle argument: `%s %s%s`\n", *m.Ident, *arg.Type, ptrType, *arg.Ident)
+			fmt.Printf("TODO: Method %q has unhandled argument: `%s %s%s`\n", *m.Ident, *arg.Type, ptrType, *arg.Ident)
 		}
 	}
 	g.writeIndent(sb, 2)
@@ -291,7 +292,12 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 		// handle w/o any transformations
 	} else {
 		g.writeIndent(sb, 2)
-		sb.WriteString(fmt.Sprintf("_res = %s::%s(", *g.NameSpace, *m.Ident))
+		sb.WriteString("_res = ")
+		_, arrayType, needsCast, _ := PrimitivePtrToTS(*m.Returns)
+		if m.ReturnsPointer && needsCast != nil && arrayType != "" {
+			sb.WriteString(fmt.Sprintf("reinterpret_cast<%s *>(", arrayType))
+		}
+		sb.WriteString(fmt.Sprintf("%s::%s(", *g.NameSpace, *m.Ident))
 		for i, arg := range *m.Overloads[0] {
 			if i > arg_count {
 				break
@@ -307,7 +313,11 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 				sb.WriteString(*arg.Ident)
 			}
 		}
-		sb.WriteString(");\n")
+		sb.WriteByte(')')
+		if m.ReturnsPointer && needsCast != nil && arrayType != "" {
+			sb.WriteByte(')')
+		}
+		sb.WriteString(";\n")
 	}
 	if *m.Returns != "void" || isReturnTransform {
 		g.writeIndent(sb, 2)

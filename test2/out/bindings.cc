@@ -39,6 +39,24 @@ static inline void DeleteArrayBuffer(Napi::Env env,
 
 // exported functions
 
+static Napi::Value _foo(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  if (info.Length() != 1) {
+    Napi::TypeError::New(env, "`foo` expects exactly 1 arg")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  if (!info[0].IsNumber()) {
+    Napi::TypeError::New(env, "`foo` expects args[0] to be typeof `number`)")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  int8_t a = static_cast<int8_t>(info[0].As<Napi::Number>().Int32Value());
+  int8_t _res;
+  _res = test2::foo(a);
+  return Napi::Number::New(env, _res);
+}
+
 static Napi::Value _bar(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   if (info.Length() != 2) {
@@ -145,31 +163,38 @@ static Napi::Value _qux(const Napi::CallbackInfo& info) {
                                           0, napi_bigint64_array);
 }
 
-static Napi::Value _foo(const Napi::CallbackInfo& info) {
+static Napi::Value _quux(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
-  if (info.Length() != 1) {
-    Napi::TypeError::New(env, "`foo` expects exactly 1 arg")
+  if (info.Length() != 2) {
+    Napi::TypeError::New(env, "`quux` expects exactly 2 args")
         .ThrowAsJavaScriptException();
     return env.Undefined();
   }
-  if (!info[0].IsNumber()) {
-    Napi::TypeError::New(env, "`foo` expects args[0] to be typeof `number`)")
+  if (!info[0].IsBoolean()) {
+    Napi::TypeError::New(env, "`quux` expects args[0] to be typeof `boolean`)")
         .ThrowAsJavaScriptException();
     return env.Undefined();
   }
-  int8_t a = static_cast<int8_t>(info[0].As<Napi::Number>().Int32Value());
-  int8_t _res;
-  _res = test2::foo(a);
-  return Napi::Number::New(env, _res);
+  bool a = info[0].As<Napi::Boolean>().Value();
+  if (!info[1].IsBoolean()) {
+    Napi::TypeError::New(env, "`quux` expects args[1] to be typeof `boolean`)")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  bool b = info[1].As<Napi::Boolean>().Value();
+  bool _res;
+  _res = test2::quux(a, b);
+  return Napi::Boolean::New(env, _res);
 }
 
 // NAPI exports
 
 Napi::Object Init(Napi::Env env, Napi::Object exports) {
-  exports.Set(Napi::String::New(env, "_baz"), Napi::Function::New(env, _baz));
-  exports.Set(Napi::String::New(env, "_qux"), Napi::Function::New(env, _qux));
   exports.Set(Napi::String::New(env, "_foo"), Napi::Function::New(env, _foo));
   exports.Set(Napi::String::New(env, "_bar"), Napi::Function::New(env, _bar));
+  exports.Set(Napi::String::New(env, "_baz"), Napi::Function::New(env, _baz));
+  exports.Set(Napi::String::New(env, "_qux"), Napi::Function::New(env, _qux));
+  exports.Set(Napi::String::New(env, "_quux"), Napi::Function::New(env, _quux));
   return exports;
 }
 

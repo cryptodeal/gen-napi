@@ -27,7 +27,7 @@ func PrimitivePtrToTS(t string) (string, string, *string, string) {
 		arrayType = "uint8_t"
 		napi_short_type = "uint8"
 		jsTypeEquivalent = "Uint8Array"
-		needsCast = &arrayType
+		needsCast = &t
 	case "int8_t":
 		arrayType = "int8_t"
 		napi_short_type = "int8"
@@ -36,7 +36,7 @@ func PrimitivePtrToTS(t string) (string, string, *string, string) {
 		arrayType = "int8_t"
 		napi_short_type = "int8"
 		jsTypeEquivalent = "Int8Array"
-		needsCast = &arrayType
+		needsCast = &t
 	case "uint16_t":
 		arrayType = "uint16_t"
 		napi_short_type = "uint16"
@@ -45,7 +45,7 @@ func PrimitivePtrToTS(t string) (string, string, *string, string) {
 		arrayType = "uint16_t"
 		napi_short_type = "uint16"
 		jsTypeEquivalent = "Uint16Array"
-		needsCast = &arrayType
+		needsCast = &t
 	case "int16_t":
 		arrayType = "int16_t"
 		napi_short_type = "int16"
@@ -54,7 +54,7 @@ func PrimitivePtrToTS(t string) (string, string, *string, string) {
 		arrayType = "int16_t"
 		napi_short_type = "int16"
 		jsTypeEquivalent = "Int16Array"
-		needsCast = &arrayType
+		needsCast = &t
 	case "uint32_t":
 		arrayType = "uint32_t"
 		napi_short_type = "uint32"
@@ -63,7 +63,7 @@ func PrimitivePtrToTS(t string) (string, string, *string, string) {
 		arrayType = "uint32_t"
 		napi_short_type = "uint32"
 		jsTypeEquivalent = "Uint32Array"
-		needsCast = &arrayType
+		needsCast = &t
 	case "int32_t":
 		arrayType = "int32_t"
 		napi_short_type = "int32"
@@ -72,7 +72,7 @@ func PrimitivePtrToTS(t string) (string, string, *string, string) {
 		arrayType = "int32_t"
 		napi_short_type = "int32"
 		jsTypeEquivalent = "Int32Array"
-		needsCast = &arrayType
+		needsCast = &t
 	case "int64_t":
 		arrayType = "int64_t"
 		napi_short_type = "bigint64"
@@ -81,7 +81,7 @@ func PrimitivePtrToTS(t string) (string, string, *string, string) {
 		arrayType = "int64_t"
 		napi_short_type = "bigint64"
 		jsTypeEquivalent = "BigInt64Array"
-		needsCast = &arrayType
+		needsCast = &t
 	case "uint64_t":
 		napi_short_type = "biguint64"
 		arrayType = "uint64_t"
@@ -90,7 +90,7 @@ func PrimitivePtrToTS(t string) (string, string, *string, string) {
 		arrayType = "uint64_t"
 		napi_short_type = "biguint64"
 		jsTypeEquivalent = "BigUint64Array"
-		needsCast = &arrayType
+		needsCast = &t
 	}
 	return jsTypeEquivalent, arrayType, needsCast, napi_short_type
 }
