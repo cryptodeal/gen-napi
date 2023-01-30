@@ -152,7 +152,7 @@ func (g *PackageGenerator) writeArgChecks(sb *strings.Builder, name string, args
 		} else if strings.Contains(*arg.Type, "std::vector") {
 			argType := *arg.Type
 			type_test := argType[strings.Index(argType, "<")+1 : strings.Index(argType, ">")]
-			tsType, isObject := CPPTypeToTS(type_test)
+			tsType, isObject := CPPTypeToTS(type_test, false)
 			g.writeArgTypeChecker(sb, name, "IsArray", i, fmt.Sprintf("typeof `%s[]`)", tsType), 1, nil)
 			g.writeIndent(sb, 1)
 			arrName := fmt.Sprintf("_tmp_parsed_%s", *arg.Ident)
@@ -344,7 +344,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 			g.writeIndent(sb, 2)
 			sb.WriteString(fmt.Sprintf("return Napi::TypedArrayOf<%s>::New(env, _res_elem_len, _res_arraybuffer, 0, napi_%s_array);\n", arrayType, napi_short_type))
 		} else {
-			jsType, isObject := CPPTypeToTS(returnType)
+			jsType, isObject := CPPTypeToTS(returnType, false)
 			if g.conf.TypeHasHandler(returnType) != nil {
 				t := g.conf.TypeHasHandler(returnType)
 				g.writeIndent(sb, 1)
@@ -407,7 +407,7 @@ func (g *PackageGenerator) writeClassField(sb *strings.Builder, f *CPPFieldDecl,
 		sb.WriteString(fmt.Sprintf("%s::%s* _tmp_external = UnExternalize<%s::%s>(info[%d]);\n", *g.NameSpace, className, *g.NameSpace, className, 0))
 		if f.Args != nil {
 			for i, arg := range *f.Args {
-				typeHandler, _ := CPPTypeToTS(*arg.Type)
+				typeHandler, _ := CPPTypeToTS(*arg.Type, false)
 				if v, ok := g.conf.TypeMappings[*arg.Type]; ok {
 					g.writeArgTypeChecker(sb, *f.Ident, fmt.Sprintf("Is%s", v.NapiType), i+1, fmt.Sprintf("typeof `%s`)", typeHandler), 1, nil)
 					g.writeIndent(sb, 1)
@@ -439,7 +439,7 @@ func (g *PackageGenerator) writeClassField(sb *strings.Builder, f *CPPFieldDecl,
 		sb.WriteString(");\n")
 
 		if f.Returns != nil && *f.Returns.FullType != "void" {
-			jsType, isObject := CPPTypeToTS(returnType)
+			jsType, isObject := CPPTypeToTS(returnType, false)
 			if g.conf.TypeHasHandler(returnType) != nil {
 				t := g.conf.TypeHasHandler(returnType)
 				g.writeIndent(sb, 1)

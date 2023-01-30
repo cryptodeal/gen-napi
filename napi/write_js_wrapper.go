@@ -223,20 +223,20 @@ func (g *PackageGenerator) WriteEnvWrappedFns(methods map[string]*CPPMethod, pro
 				}
 				sb.WriteString(*p.Ident)
 				if g.conf.IsEnvTS() {
-					tsType, _ := CPPTypeToTS(*p.Type)
+					tsType, _ := CPPTypeToTS(*p.Type, false)
 					if v, ok := g.conf.TypeMappings[tsType]; ok {
 						sb.WriteString(fmt.Sprintf(": %s", v.TSType))
 					} else {
 						if strings.Contains(tsType, "std::vector") {
 							vectorType := tsType[strings.Index(tsType, "<")+1 : strings.Index(tsType, ">")]
-							tsType, _ = CPPTypeToTS(vectorType)
+							tsType, _ = CPPTypeToTS(vectorType, false)
 							tsType = tsType + "[]"
 						}
 						sb.WriteString(fmt.Sprintf(": %s", tsType))
 					}
 				}
 			}
-			tsType, _ := CPPTypeToTS(*m.Returns)
+			tsType, _ := CPPTypeToTS(*m.Returns, m.ReturnsPointer)
 			if g.conf.IsEnvTS() {
 				if v, ok := g.conf.TypeMappings[tsType]; ok {
 					sb.WriteString(fmt.Sprintf("): %s {\n", v.TSType))
@@ -354,7 +354,7 @@ func (g *PackageGenerator) WriteEnvWrappedFns(methods map[string]*CPPMethod, pro
 					}
 					sb.WriteString(*p.Ident)
 					if g.conf.IsEnvTS() {
-						tsType, _ := CPPTypeToTS(*p.Type)
+						tsType, _ := CPPTypeToTS(*p.Type, false)
 						if v, ok := g.conf.TypeMappings[tsType]; ok {
 							sb.WriteString(fmt.Sprintf(": %s", v.TSType))
 						} else {
@@ -362,7 +362,7 @@ func (g *PackageGenerator) WriteEnvWrappedFns(methods map[string]*CPPMethod, pro
 						}
 					}
 				}
-				tsType, _ := CPPTypeToTS(*m.Returns)
+				tsType, _ := CPPTypeToTS(*m.Returns, m.ReturnsPointer)
 				if g.conf.IsEnvTS() {
 					if v, ok := g.conf.TypeMappings[tsType]; ok {
 						sb.WriteString(fmt.Sprintf("): %s {\n", v.TSType))

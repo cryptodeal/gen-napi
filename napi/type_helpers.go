@@ -95,7 +95,13 @@ func PrimitivePtrToTS(t string) (string, string, *string, string) {
 	return jsTypeEquivalent, arrayType, needsCast, napi_short_type
 }
 
-func CPPTypeToTS(t string) (string, bool) {
+func CPPTypeToTS(t string, isPointer bool) (string, bool) {
+	if isPointer {
+		jsArrayType, _, _, _ := PrimitivePtrToTS(t)
+		if jsArrayType != "" {
+			return jsArrayType, false
+		}
+	}
 	switch t {
 	case "int", "int8_t", "char", "uint8_t", "signed", "unsigned", "short", "long", "long int", "signed long", "signed long int", "unsigned long", "unsigned long int", "long double", "signed char", "unsigned char", "short int", "signed short", "unsigned_short", "signed int", "unsigned int", "unsigned short int", "signed short int", "uint16_t", "uint32_t", "int16_t", "int32_t", "float", "double":
 		return "number", false
