@@ -128,6 +128,7 @@ func (g *PackageGenerator) writeArgChecks(sb *strings.Builder, name string, args
 				}
 			} else {
 				jsTypeEquivalent := ""
+				var needsCast *string
 				arrayType := ""
 				switch *arg.Type {
 				case "float":
@@ -136,36 +137,76 @@ func (g *PackageGenerator) writeArgChecks(sb *strings.Builder, name string, args
 				case "double":
 					arrayType = "double"
 					jsTypeEquivalent = "Float64Array"
-				case "uint8_t", "unsigned char":
+				case "uint8_t":
 					arrayType = "uint8_t"
 					jsTypeEquivalent = "Uint8Array"
-				case "int8_t", "char":
+				case "unsigned char":
+					arrayType = "uint8_t"
+					jsTypeEquivalent = "Uint8Array"
+					needsCast = &arrayType
+				case "int8_t":
 					arrayType = "int8_t"
 					jsTypeEquivalent = "Int8Array"
-				case "uint16_t", "unsigned short":
+				case "char", "signed char":
+					arrayType = "int8_t"
+					jsTypeEquivalent = "Int8Array"
+					needsCast = &arrayType
+				case "uint16_t":
 					arrayType = "uint16_t"
 					jsTypeEquivalent = "Uint16Array"
-				case "int16_t", "short":
+				case "unsigned short":
+					arrayType = "uint16_t"
+					jsTypeEquivalent = "Uint16Array"
+					needsCast = &arrayType
+				case "int16_t":
 					arrayType = "int16_t"
 					jsTypeEquivalent = "Int16Array"
-				case "uint32_t", "unsigned int":
+				case "short", "signed short":
+					arrayType = "int16_t"
+					jsTypeEquivalent = "Int16Array"
+					needsCast = &arrayType
+				case "uint32_t":
 					arrayType = "uint32_t"
 					jsTypeEquivalent = "Uint32Array"
-				case "int32_t", "int":
+				case "unsigned int":
+					arrayType = "uint32_t"
+					jsTypeEquivalent = "Uint32Array"
+					needsCast = &arrayType
+				case "int32_t":
 					arrayType = "int32_t"
 					jsTypeEquivalent = "Int32Array"
-				case "int64_t", "long long", "long long int":
+				case "int", "signed int":
+					arrayType = "int32_t"
+					jsTypeEquivalent = "Int32Array"
+					needsCast = &arrayType
+				case "int64_t":
 					arrayType = "int64_t"
 					jsTypeEquivalent = "BigInt64Array"
-				case "uint64_t", "unsigned long long", "unsigned long long int", "size_t":
+				case "long long", "long long int", "signed long long", "signed long long int":
+					arrayType = "int64_t"
+					jsTypeEquivalent = "BigInt64Array"
+					needsCast = &arrayType
+				case "uint64_t":
 					arrayType = "uint64_t"
 					jsTypeEquivalent = "BigUint64Array"
+				case "unsigned long long", "unsigned long long int", "size_t":
+					arrayType = "uint64_t"
+					jsTypeEquivalent = "BigUint64Array"
+					needsCast = &arrayType
 				}
 				g.writeArgTypeChecker(sb, name, "IsTypedArray", i, fmt.Sprintf("typeof `%s`)", jsTypeEquivalent), 1, nil)
 				// get val from arg if no transform is specified
 				if !isArgTransform {
 					g.writeIndent(sb, 1)
-					sb.WriteString(fmt.Sprintf("%s *%s = reinterpret_cast<%s *>(info[%d].As<Napi::TypedArrayOf<%s>>().Data());\n", *arg.Type, *arg.Ident, *arg.Type, i, arrayType))
+					sb.WriteString(fmt.Sprintf("%s *%s = ", *arg.Type, *arg.Ident))
+					if needsCast != nil {
+						sb.WriteString(fmt.Sprintf("reinterpret_cast<%s *>(", *needsCast))
+					}
+					sb.WriteString(fmt.Sprintf("info[%d].As<Napi::TypedArrayOf<%s>>().Data()", i, arrayType))
+					if needsCast != nil {
+						sb.WriteByte(')')
+					}
+					sb.WriteString(";\n")
 				}
 			}
 		} else if isClass(*arg.Type, classes) {
