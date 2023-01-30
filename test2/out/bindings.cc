@@ -182,29 +182,29 @@ static Napi::Value _quux(const Napi::CallbackInfo& info) {
     return env.Undefined();
   }
   bool b = info[1].As<Napi::Boolean>().Value();
-  bool* _res;
-  _res = test2::quux(a, b);
+  int8_t* _res;
+  _res = reinterpret_cast<int8_t*>(test2::quux(a, b));
   size_t _res_byte_len = sizeof(_res);
   size_t _res_elem_len = _res_byte_len / sizeof(*_res);
-  std::unique_ptr<std::vector<>> _res_native_array =
-      std::make_unique<std::vector<>>(_res, _res + _res_elem_len);
-  Napi::ArrayBuffer _res_arraybuffer =
-      Napi::ArrayBuffer::New(env, _res_native_array->data(), _res_byte_len,
-                             DeleteArrayBuffer<>, _res_native_array.get());
+  std::unique_ptr<std::vector<int8_t>> _res_native_array =
+      std::make_unique<std::vector<int8_t>>(_res, _res + _res_elem_len);
+  Napi::ArrayBuffer _res_arraybuffer = Napi::ArrayBuffer::New(
+      env, _res_native_array->data(), _res_byte_len, DeleteArrayBuffer<int8_t>,
+      _res_native_array.get());
   _res_native_array.release();
   Napi::MemoryManagement::AdjustExternalMemory(env, _res_byte_len);
-  return Napi::TypedArrayOf<>::New(env, _res_elem_len, _res_arraybuffer, 0,
-                                   napi__array);
+  return Napi::TypedArrayOf<int8_t>::New(env, _res_elem_len, _res_arraybuffer,
+                                         0, napi_int8_array);
 }
 
 // NAPI exports
 
 Napi::Object Init(Napi::Env env, Napi::Object exports) {
-  exports.Set(Napi::String::New(env, "_foo"), Napi::Function::New(env, _foo));
-  exports.Set(Napi::String::New(env, "_bar"), Napi::Function::New(env, _bar));
   exports.Set(Napi::String::New(env, "_baz"), Napi::Function::New(env, _baz));
   exports.Set(Napi::String::New(env, "_qux"), Napi::Function::New(env, _qux));
   exports.Set(Napi::String::New(env, "_quux"), Napi::Function::New(env, _quux));
+  exports.Set(Napi::String::New(env, "_foo"), Napi::Function::New(env, _foo));
+  exports.Set(Napi::String::New(env, "_bar"), Napi::Function::New(env, _bar));
   return exports;
 }
 

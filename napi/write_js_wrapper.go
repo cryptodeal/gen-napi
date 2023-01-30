@@ -118,12 +118,14 @@ func (g *PackageGenerator) WriteEnvExports(classes map[string]*CPPClass, methods
 }
 
 func (g *PackageGenerator) WriteEnvImports(classes map[string]*CPPClass, methods map[string]*CPPMethod, processedMethods map[string]*CPPMethod) string {
+	hasClassImports := false
 	sb := new(strings.Builder)
 	sb.WriteString("const {\n")
 	for name, c := range classes {
 		if c.Decl != nil {
 			if v, ok := g.conf.ClassOpts[name]; ok && len(v.ForcedMethods) > 0 {
 				for i, m := range v.ForcedMethods {
+					hasClassImports = false
 					if i > 0 {
 						sb.WriteString(",\n")
 					}
@@ -146,7 +148,7 @@ func (g *PackageGenerator) WriteEnvImports(classes map[string]*CPPClass, methods
 
 	used_len := len(used)
 	for i, name := range used {
-		if i == 0 {
+		if i == 0 && hasClassImports {
 			sb.WriteString(",\n")
 		}
 		g.writeIndent(sb, 1)
