@@ -9,5 +9,5 @@ float* baz(float* a, int b);
 
 long long* qux(long long* a, int b);
 
-bool quux(bool a, bool b);
+bool* quux(bool a, bool b);
 }

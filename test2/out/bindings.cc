@@ -148,7 +148,7 @@ static Napi::Value _qux(const Napi::CallbackInfo& info) {
     return env.Undefined();
   }
   int b = static_cast<int>(info[1].As<Napi::Number>().Int64Value());
-  long long* _res;
+  int64_t* _res;
   _res = reinterpret_cast<int64_t*>(test2::qux(a, b));
   size_t _res_byte_len = sizeof(_res);
   size_t _res_elem_len = _res_byte_len / sizeof(*_res);
@@ -182,9 +182,19 @@ static Napi::Value _quux(const Napi::CallbackInfo& info) {
     return env.Undefined();
   }
   bool b = info[1].As<Napi::Boolean>().Value();
-  bool _res;
+  bool* _res;
   _res = test2::quux(a, b);
-  return Napi::Boolean::New(env, _res);
+  size_t _res_byte_len = sizeof(_res);
+  size_t _res_elem_len = _res_byte_len / sizeof(*_res);
+  std::unique_ptr<std::vector<>> _res_native_array =
+      std::make_unique<std::vector<>>(_res, _res + _res_elem_len);
+  Napi::ArrayBuffer _res_arraybuffer =
+      Napi::ArrayBuffer::New(env, _res_native_array->data(), _res_byte_len,
+                             DeleteArrayBuffer<>, _res_native_array.get());
+  _res_native_array.release();
+  Napi::MemoryManagement::AdjustExternalMemory(env, _res_byte_len);
+  return Napi::TypedArrayOf<>::New(env, _res_elem_len, _res_arraybuffer, 0,
+                                   napi__array);
 }
 
 // NAPI exports
