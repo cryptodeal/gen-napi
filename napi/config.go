@@ -79,7 +79,8 @@ type GroupedMethodTransforms struct {
 
 type PackageConfig struct {
 	// The package path just like you would import it in Go
-	Path string `yaml:"path"`
+	Path       string `yaml:"path"`
+	LibRootDir string `yaml:"lib_root_dir"`
 
 	// Where this output should be written to.
 	// If you specify a folder it will be written to a file `index.ts` within that folder. By default it is written into the Golang package folder.
