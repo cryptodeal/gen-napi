@@ -125,7 +125,7 @@ func (g *PackageGenerator) WriteEnvImports(classes map[string]*CPPClass, methods
 		if c.Decl != nil {
 			if v, ok := g.conf.ClassOpts[name]; ok && len(v.ForcedMethods) > 0 {
 				for i, m := range v.ForcedMethods {
-					hasClassImports = false
+					hasClassImports = true
 					if i > 0 {
 						sb.WriteString(",\n")
 					}

@@ -39,24 +39,6 @@ static inline void DeleteArrayBuffer(Napi::Env env,
 
 // exported functions
 
-static Napi::Value _foo(const Napi::CallbackInfo& info) {
-  Napi::Env env = info.Env();
-  if (info.Length() != 1) {
-    Napi::TypeError::New(env, "`foo` expects exactly 1 arg")
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  if (!info[0].IsNumber()) {
-    Napi::TypeError::New(env, "`foo` expects args[0] to be typeof `number`)")
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  int8_t a = static_cast<int8_t>(info[0].As<Napi::Number>().Int32Value());
-  int8_t _res;
-  _res = test2::foo(a);
-  return Napi::Number::New(env, _res);
-}
-
 static Napi::Value _bar(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   if (info.Length() != 2) {
@@ -195,6 +177,24 @@ static Napi::Value _quux(const Napi::CallbackInfo& info) {
   Napi::MemoryManagement::AdjustExternalMemory(env, _res_byte_len);
   return Napi::TypedArrayOf<int8_t>::New(env, _res_elem_len, _res_arraybuffer,
                                          0, napi_int8_array);
+}
+
+static Napi::Value _foo(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  if (info.Length() != 1) {
+    Napi::TypeError::New(env, "`foo` expects exactly 1 arg")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  if (!info[0].IsNumber()) {
+    Napi::TypeError::New(env, "`foo` expects args[0] to be typeof `number`)")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  int8_t a = static_cast<int8_t>(info[0].As<Napi::Number>().Int32Value());
+  int8_t _res;
+  _res = test2::foo(a);
+  return Napi::Number::New(env, _res);
 }
 
 // NAPI exports
