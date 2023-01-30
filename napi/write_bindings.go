@@ -232,7 +232,11 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 			}
 			sb.WriteString(fmt.Sprintf("auto %s = jsArrayToVector<%s>(info[%d].As<Napi::Array>(), g_row_major, %s);\n", *arg.Ident, tmpType[strings.Index(*arg.Type, "<")+1:strings.Index(*arg.Type, ">")], i, invertVal))
 		} else {
-			fmt.Printf("TODO: Handle type %q (Method: %q; Arg: %q)", *arg.Type, *m.Ident, *arg.Ident)
+			var ptrType string
+			if arg.IsPointer {
+				ptrType = "*"
+			}
+			fmt.Printf("TODO: Method %q has unhandle argument: `%s %s%s`\n", *m.Ident, *arg.Type, ptrType, *arg.Ident)
 		}
 	}
 	g.writeIndent(sb, 2)

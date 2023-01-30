@@ -109,6 +109,42 @@ static Napi::Value _baz(const Napi::CallbackInfo& info) {
                                         napi_float32_array);
 }
 
+static Napi::Value _qux(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  if (info.Length() != 2) {
+    Napi::TypeError::New(env, "`qux` expects exactly 2 args")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  if (!info[0].IsTypedArray()) {
+    Napi::TypeError::New(env,
+                         "`qux` expects args[0] to be typeof `BigInt64Array`)")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  long long* a = reinterpret_cast<int64_t*>(
+      info[0].As<Napi::TypedArrayOf<int64_t>>().Data());
+  if (!info[1].IsNumber()) {
+    Napi::TypeError::New(env, "`qux` expects args[1] to be typeof `number`)")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  int b = static_cast<int>(info[1].As<Napi::Number>().Int64Value());
+  long long* _res;
+  _res = test2::qux(a, b);
+  size_t _res_byte_len = sizeof(_res);
+  size_t _res_elem_len = _res_byte_len / sizeof(*_res);
+  std::unique_ptr<std::vector<int64_t>> _res_native_array =
+      std::make_unique<std::vector<int64_t>>(_res, _res + _res_elem_len);
+  Napi::ArrayBuffer _res_arraybuffer = Napi::ArrayBuffer::New(
+      env, _res_native_array->data(), _res_byte_len, DeleteArrayBuffer<int64_t>,
+      _res_native_array.get());
+  _res_native_array.release();
+  Napi::MemoryManagement::AdjustExternalMemory(env, _res_byte_len);
+  return Napi::TypedArrayOf<int64_t>::New(env, _res_elem_len, _res_arraybuffer,
+                                          0, napi_bigint64_array);
+}
+
 static Napi::Value _foo(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   if (info.Length() != 1) {
@@ -130,9 +166,10 @@ static Napi::Value _foo(const Napi::CallbackInfo& info) {
 // NAPI exports
 
 Napi::Object Init(Napi::Env env, Napi::Object exports) {
+  exports.Set(Napi::String::New(env, "_baz"), Napi::Function::New(env, _baz));
+  exports.Set(Napi::String::New(env, "_qux"), Napi::Function::New(env, _qux));
   exports.Set(Napi::String::New(env, "_foo"), Napi::Function::New(env, _foo));
   exports.Set(Napi::String::New(env, "_bar"), Napi::Function::New(env, _bar));
-  exports.Set(Napi::String::New(env, "_baz"), Napi::Function::New(env, _baz));
   return exports;
 }
 
