@@ -4,8 +4,8 @@ packages:
     js_wrapper_opts:
       addon_path: build/Release/test.node
       wrapper_out_path: test2/ts/index.ts
-  - path: test/TensorBase.h
-    # - path: ../flashlight/flashlight/fl/tensor/TensorBase.h
+  # - path: test/TensorBase.h
+  - path: ../flashlight/flashlight/fl/tensor/TensorBase.h
     bindings_out_path: test/out
     indent: "\t"
     vector_opts:

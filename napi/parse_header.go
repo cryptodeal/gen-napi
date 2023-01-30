@@ -173,7 +173,7 @@ func (g *PackageGenerator) parseEnums(n *sitter.Node, input []byte) []*ParsedEnu
 		fmt.Printf("Parsing enums in: %q\n", *local)
 		usedPath := path.Join(g.conf.Path, *local)
 		fmt.Printf("Using path (path.Join): %q\n", usedPath)
-		rootNode, byteData := getRootNode(*local)
+		rootNode, byteData := getRootNode(usedPath)
 		enums = append(enums, g.parseEnums(rootNode, byteData)...)
 	}
 	return enums
@@ -253,6 +253,9 @@ func parseLocalIncludes(n *sitter.Node, input []byte) []*string {
 		for _, c := range m.Captures {
 			content := c.Node.Content(input)
 			if strings.Contains(content, "\"") && strings.Contains(content, ".h") {
+				content = strings.ReplaceAll(content, "\"", "")
+				content = strings.ReplaceAll(content, "#include", "")
+				content = strings.TrimSpace(content)
 				includes = append(includes, &content)
 			}
 		}
