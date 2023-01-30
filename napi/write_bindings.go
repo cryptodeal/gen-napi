@@ -85,45 +85,90 @@ func (g *PackageGenerator) writeArgChecks(sb *strings.Builder, name string, args
 		}
 		isArgTransform, argTransformVal := g.conf.IsArgTransform(name, *arg.Ident)
 		if arg.IsPrimitive {
-			napiTypeHandler := "IsNumber"
-			jsTypeEquivalent := "number"
-			valGetter := "Value"
-			var needsCast *string
-			switch *arg.Type {
-			case "float":
-				valGetter = "FloatValue"
-			case "double":
-				valGetter = "DoubleValue"
-			case "long long", "char", "signed", "int8_t", "int32_t", "int16_t", "short":
-				valGetter = "Int32Value"
-				needsCast = arg.Type
-			case "int", "int64_t":
-				valGetter = "Int64Value"
-				needsCast = arg.Type
-			case "unsigned long long", "unsigned char", "unsigned", "uint8_t", "uint16_t", "unsigned short", "uint32_t":
-				valGetter = "Uint32Value"
-				needsCast = arg.Type
-			case "unsigned int", "uint64_t", "size_t", "uintptr_t":
-				valGetter = "Uint64Value"
-				needsCast = arg.Type
-			case "bool":
-				napiTypeHandler = "IsBoolean"
-				jsTypeEquivalent = "boolean"
-			}
-			g.writeArgTypeChecker(sb, name, napiTypeHandler, i, fmt.Sprintf("typeof `%s`)", jsTypeEquivalent), 1, nil)
-			// get val from arg if no transform is specified
-			if !isArgTransform {
-				g.writeIndent(sb, 1)
-				sb.WriteString(fmt.Sprintf("%s %s = ", *arg.Type, *arg.Ident))
-				// only cast when necessary
-				if needsCast != nil {
-					sb.WriteString(fmt.Sprintf("static_cast<%s>(", *needsCast))
+			if !arg.IsPointer {
+				napiTypeHandler := "IsNumber"
+				jsTypeEquivalent := "number"
+				valGetter := "Value"
+				var needsCast *string
+				switch *arg.Type {
+				case "float":
+					valGetter = "FloatValue"
+				case "double":
+					valGetter = "DoubleValue"
+				case "long long", "char", "signed", "int8_t", "int32_t", "int16_t", "short":
+					valGetter = "Int32Value"
+					needsCast = arg.Type
+				case "int", "int64_t":
+					valGetter = "Int64Value"
+					needsCast = arg.Type
+				case "unsigned long long", "unsigned char", "unsigned", "uint8_t", "uint16_t", "unsigned short", "uint32_t":
+					valGetter = "Uint32Value"
+					needsCast = arg.Type
+				case "unsigned int", "uint64_t", "size_t", "uintptr_t":
+					valGetter = "Uint64Value"
+					needsCast = arg.Type
+				case "bool":
+					napiTypeHandler = "IsBoolean"
+					jsTypeEquivalent = "boolean"
 				}
-				sb.WriteString(fmt.Sprintf("info[%d].As<Napi::%s>().%s()", i, strings.ReplaceAll(napiTypeHandler, "Is", ""), valGetter))
-				if needsCast != nil {
-					sb.WriteByte(')')
+				g.writeArgTypeChecker(sb, name, napiTypeHandler, i, fmt.Sprintf("typeof `%s`)", jsTypeEquivalent), 1, nil)
+				// get val from arg if no transform is specified
+				if !isArgTransform {
+					g.writeIndent(sb, 1)
+					sb.WriteString(*arg.Type)
+					sb.WriteString(fmt.Sprintf("%s %s = ", *arg.Type, *arg.Ident))
+					// only cast when necessary
+					if needsCast != nil {
+						sb.WriteString(fmt.Sprintf("static_cast<%s>(", *needsCast))
+					}
+					sb.WriteString(fmt.Sprintf("info[%d].As<Napi::%s>().%s()", i, strings.ReplaceAll(napiTypeHandler, "Is", ""), valGetter))
+					if needsCast != nil {
+						sb.WriteByte(')')
+					}
+					sb.WriteString(";\n")
 				}
-				sb.WriteString(";\n")
+			} else {
+				jsTypeEquivalent := ""
+				arrayType := ""
+				switch *arg.Type {
+				case "float":
+					arrayType = "float"
+					jsTypeEquivalent = "Float32Array"
+				case "double":
+					arrayType = "double"
+					jsTypeEquivalent = "Float64Array"
+				case "uint8_t", "unsigned char":
+					arrayType = "uint8_t"
+					jsTypeEquivalent = "Uint8Array"
+				case "int8_t", "char":
+					arrayType = "int8_t"
+					jsTypeEquivalent = "Int8Array"
+				case "uint16_t", "unsigned short":
+					arrayType = "uint16_t"
+					jsTypeEquivalent = "Uint16Array"
+				case "int16_t", "short":
+					arrayType = "int16_t"
+					jsTypeEquivalent = "Int16Array"
+				case "uint32_t", "unsigned int":
+					arrayType = "uint32_t"
+					jsTypeEquivalent = "Uint32Array"
+				case "int32_t", "int":
+					arrayType = "int32_t"
+					jsTypeEquivalent = "Int32Array"
+				case "int64_t", "long long", "long long int":
+					arrayType = "int64_t"
+					jsTypeEquivalent = "BigInt64Array"
+				case "uint64_t", "unsigned long long", "unsigned long long int", "size_t":
+					arrayType = "uint64_t"
+					jsTypeEquivalent = "BigUint64Array"
+				}
+				g.writeArgTypeChecker(sb, name, "IsTypedArray", i, fmt.Sprintf("typeof `%s`)", jsTypeEquivalent), 1, nil)
+				// get val from arg if no transform is specified
+				if !isArgTransform {
+					g.writeIndent(sb, 1)
+					sb.WriteString(*arg.Type)
+					sb.WriteString(fmt.Sprintf("%s *%s = reinterpret_cast<%s *>(info[%d].As<Napi::TypeArrayOf<%s>>().Data());\n", *arg.Type, *arg.Ident, *arg.Type, i, arrayType))
+				}
 			}
 		} else if isClass(*arg.Type, classes) {
 			g.writeArgTypeChecker(sb, name, "IsExternal", i, fmt.Sprintf("native `%s` (typeof `Napi::External<%s::%s>`)", *arg.Type, *g.NameSpace, *arg.Type), 1, nil)
