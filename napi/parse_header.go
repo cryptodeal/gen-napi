@@ -166,7 +166,7 @@ func parseEnum(n *sitter.Node, input []byte) *ParsedEnum {
 	}
 	// parse enum name
 	nameNode := n.ChildByFieldName("name")
-	if nameNode != nil && nameNode.Type() == "identifier" {
+	if nameNode != nil {
 		name := nameNode.Content(input)
 		enum_val.Ident = &name
 	}
