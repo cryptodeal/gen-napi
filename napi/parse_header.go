@@ -192,8 +192,11 @@ func parseEnum(n *sitter.Node, input []byte) *ParsedEnum {
 		}
 	}
 	if namespace_node != nil {
-		namespace := namespace_node.ChildByFieldName("name").Content(input)
-		enum_val.NameSpace = &namespace
+		nameNode := namespace_node.ChildByFieldName("name")
+		if nameNode != nil {
+			name := nameNode.Content(input)
+			enum_val.NameSpace = &name
+		}
 	}
 	// parse enum name
 	nameNode := n.ChildByFieldName("name")
