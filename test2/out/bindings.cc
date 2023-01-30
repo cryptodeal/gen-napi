@@ -77,9 +77,17 @@ static Napi::Value _bar(const Napi::CallbackInfo& info) {
     return env.Undefined();
   }
   int32_t b = static_cast<int32_t>(info[1].As<Napi::Number>().Int32Value());
-  double _res;
+  double* _res;
   _res = test2::bar(a, b);
-  return Napi::Number::New(env, _res);
+  size_t _res_byte_len = sizeof(_res);
+  size_t _res_elem_len = _res_byte_len / sizeof(*_res);
+  std::unique_ptr<std::vector<double>> _res_native_array =
+      std::make_unique<std::vector<double>>(_res, _res + _res_elem_len);
+  Napi::ArrayBuffer _res_arraybuffer = Napi::ArrayBuffer::New(
+      env, _res_native_array->data(), _res_byte_len, DeleteArrayBuffer<double>,
+      _res_native_array.get());
+  _res_native_array.release();
+  Napi::MemoryManagement::AdjustExternalMemory(env, _res_byte_len);    return Napi::TypedArrayOf<double>::New(env, _res_elem_len, _res_arraybuffer, 0, napi_float64_array
 }
 
 // NAPI exports

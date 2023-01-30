@@ -316,13 +316,13 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 			g.writeIndent(sb, 2)
 			sb.WriteString(fmt.Sprintf("std::unique_ptr<std::vector<%s>> _res_native_array = std::make_unique<std::vector<%s>>(_res, _res + _res_elem_len);\n", arrayType, arrayType))
 			g.writeIndent(sb, 2)
-			sb.WriteString(fmt.Sprintf("Napi::ArrayBuffer _res_arraybuffer = Napi::ArrayBuffer::New(env, _res_native_array->data(), _res_byte_len, DeleteArrayBuffer<%s>, _res_native_array.get());\n", arrayType, arrayType))
+			sb.WriteString(fmt.Sprintf("Napi::ArrayBuffer _res_arraybuffer = Napi::ArrayBuffer::New(env, _res_native_array->data(), _res_byte_len, DeleteArrayBuffer<%s>, _res_native_array.get());\n", arrayType))
 			g.writeIndent(sb, 2)
 			sb.WriteString("_res_native_array.release();\n")
 			g.writeIndent(sb, 2)
-			sb.WriteString("Napi::MemoryManagement::AdjustExternalMemory(env, _res_byte_len);")
+			sb.WriteString("Napi::MemoryManagement::AdjustExternalMemory(env, _res_byte_len);\n")
 			g.writeIndent(sb, 2)
-			sb.WriteString(fmt.Sprintf("return Napi::TypedArrayOf<%s>::New(env, _res_elem_len, _res_arraybuffer, 0, napi_%s_array", arrayType, napi_short_type))
+			sb.WriteString(fmt.Sprintf("return Napi::TypedArrayOf<%s>::New(env, _res_elem_len, _res_arraybuffer, 0, napi_%s_array);\n", arrayType, napi_short_type))
 		} else {
 			jsType, isObject := CPPTypeToTS(returnType)
 			if g.conf.TypeHasHandler(returnType) != nil {
