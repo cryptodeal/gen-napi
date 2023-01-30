@@ -146,7 +146,7 @@ func getRootNode(path string) (*sitter.Node, []byte) {
 	}
 
 	n := tree.RootNode()
-	return n, nil
+	return n, input
 }
 
 func (g *PackageGenerator) parseEnums(n *sitter.Node, input []byte, parseIncludes bool) []*ParsedEnum {
