@@ -39,32 +39,6 @@ static inline void DeleteArrayBuffer(Napi::Env env,
 
 // exported functions
 
-static Napi::Value _bar(const Napi::CallbackInfo& info) {
-  Napi::Env env = info.Env();
-  if (info.Length() != 2) {
-    Napi::TypeError::New(env, "`bar` expects exactly 2 args")
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  if (!info[0].IsTypedArray()) {
-    Napi::TypeError::New(env,
-                         "`bar` expects args[0] to be typeof `Float64Array`)")
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  double* a = reinterpret_cast<double*>(
-      info[0].As<Napi::TypedArrayOf<double>>().Data());
-  if (!info[1].IsNumber()) {
-    Napi::TypeError::New(env, "`bar` expects args[1] to be typeof `number`)")
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  int32_t b = static_cast<int32_t>(info[1].As<Napi::Number>().Int32Value());
-  double _res;
-  _res = test2::bar(a, b);
-  return Napi::Number::New(env, _res);
-}
-
 static Napi::Value _foo(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   if (info.Length() != 1) {
@@ -80,6 +54,31 @@ static Napi::Value _foo(const Napi::CallbackInfo& info) {
   int8_t a = static_cast<int8_t>(info[0].As<Napi::Number>().Int32Value());
   int8_t _res;
   _res = test2::foo(a);
+  return Napi::Number::New(env, _res);
+}
+
+static Napi::Value _bar(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  if (info.Length() != 2) {
+    Napi::TypeError::New(env, "`bar` expects exactly 2 args")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  if (!info[0].IsTypedArray()) {
+    Napi::TypeError::New(env,
+                         "`bar` expects args[0] to be typeof `Float64Array`)")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  double* a = info[0].As<Napi::TypedArrayOf<double>>().Data();
+  if (!info[1].IsNumber()) {
+    Napi::TypeError::New(env, "`bar` expects args[1] to be typeof `number`)")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  int32_t b = static_cast<int32_t>(info[1].As<Napi::Number>().Int32Value());
+  double _res;
+  _res = test2::bar(a, b);
   return Napi::Number::New(env, _res);
 }
 

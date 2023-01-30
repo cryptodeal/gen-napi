@@ -127,73 +127,7 @@ func (g *PackageGenerator) writeArgChecks(sb *strings.Builder, name string, args
 					sb.WriteString(";\n")
 				}
 			} else {
-				jsTypeEquivalent := ""
-				var needsCast *string
-				arrayType := ""
-				switch *arg.Type {
-				case "float":
-					arrayType = "float"
-					jsTypeEquivalent = "Float32Array"
-				case "double":
-					arrayType = "double"
-					jsTypeEquivalent = "Float64Array"
-				case "uint8_t":
-					arrayType = "uint8_t"
-					jsTypeEquivalent = "Uint8Array"
-				case "unsigned char":
-					arrayType = "uint8_t"
-					jsTypeEquivalent = "Uint8Array"
-					needsCast = &arrayType
-				case "int8_t":
-					arrayType = "int8_t"
-					jsTypeEquivalent = "Int8Array"
-				case "char", "signed char":
-					arrayType = "int8_t"
-					jsTypeEquivalent = "Int8Array"
-					needsCast = &arrayType
-				case "uint16_t":
-					arrayType = "uint16_t"
-					jsTypeEquivalent = "Uint16Array"
-				case "unsigned short":
-					arrayType = "uint16_t"
-					jsTypeEquivalent = "Uint16Array"
-					needsCast = &arrayType
-				case "int16_t":
-					arrayType = "int16_t"
-					jsTypeEquivalent = "Int16Array"
-				case "short", "signed short":
-					arrayType = "int16_t"
-					jsTypeEquivalent = "Int16Array"
-					needsCast = &arrayType
-				case "uint32_t":
-					arrayType = "uint32_t"
-					jsTypeEquivalent = "Uint32Array"
-				case "unsigned int":
-					arrayType = "uint32_t"
-					jsTypeEquivalent = "Uint32Array"
-					needsCast = &arrayType
-				case "int32_t":
-					arrayType = "int32_t"
-					jsTypeEquivalent = "Int32Array"
-				case "int", "signed int":
-					arrayType = "int32_t"
-					jsTypeEquivalent = "Int32Array"
-					needsCast = &arrayType
-				case "int64_t":
-					arrayType = "int64_t"
-					jsTypeEquivalent = "BigInt64Array"
-				case "long long", "long long int", "signed long long", "signed long long int":
-					arrayType = "int64_t"
-					jsTypeEquivalent = "BigInt64Array"
-					needsCast = &arrayType
-				case "uint64_t":
-					arrayType = "uint64_t"
-					jsTypeEquivalent = "BigUint64Array"
-				case "unsigned long long", "unsigned long long int", "size_t":
-					arrayType = "uint64_t"
-					jsTypeEquivalent = "BigUint64Array"
-					needsCast = &arrayType
-				}
+				jsTypeEquivalent, arrayType, needsCast, _ := PrimitivePtrToTS(*arg.Type)
 				g.writeArgTypeChecker(sb, name, "IsTypedArray", i, fmt.Sprintf("typeof `%s`)", jsTypeEquivalent), 1, nil)
 				// get val from arg if no transform is specified
 				if !isArgTransform {
@@ -305,7 +239,11 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 	if !m.ReturnsPrimitive {
 		sb.WriteString(fmt.Sprintf("%s::", *g.NameSpace))
 	}
-	sb.WriteString(fmt.Sprintf("%s _res;\n", outType))
+	sb.WriteString(fmt.Sprintf("%s ", outType))
+	if m.ReturnsPointer {
+		sb.WriteByte('*')
+	}
+	sb.WriteString("_res;\n")
 
 	isReturnTransform, isGrouped, transform := g.conf.IsReturnTransform(m)
 	if isReturnTransform {
@@ -370,25 +308,42 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 	if *m.Returns != "void" || isReturnTransform {
 		g.writeIndent(sb, 2)
 		returnType := *m.Returns
-		jsType, isObject := CPPTypeToTS(returnType)
-		if g.conf.TypeHasHandler(returnType) != nil {
-			t := g.conf.TypeHasHandler(returnType)
-			g.writeIndent(sb, 1)
-			sb.WriteString(strings.ReplaceAll(t.Handler, "/val/", "_res"))
-			g.writeIndent(sb, 1)
-			sb.WriteString(fmt.Sprintf("return %s;\n", t.OutVar))
-		} else if isObject && isClass(returnType, classes) {
-			if v, ok := g.conf.GlobalTypeOutTransforms[returnType]; ok {
-				g.writeIndent(sb, 1)
-				sb.WriteString(strings.ReplaceAll(v, "/return/", "_res"))
-			}
-			g.writeIndent(sb, 1)
-			sb.WriteString(fmt.Sprintf("auto* out = new %s::%s(_res);\n", *g.NameSpace, returnType))
-			g.writeIndent(sb, 1)
-			sb.WriteString(fmt.Sprintf("return Externalize%s(env, out);", returnType))
+		if m.ReturnsPrimitive && m.ReturnsPointer {
+			_, arrayType, _, napi_short_type := PrimitivePtrToTS(returnType)
+			sb.WriteString("size_t _res_byte_len = sizeof(_res);\n")
+			g.writeIndent(sb, 2)
+			sb.WriteString("size_t _res_elem_len = _res_byte_len / sizeof(*_res);\n")
+			g.writeIndent(sb, 2)
+			sb.WriteString(fmt.Sprintf("std::unique_ptr<std::vector<%s>> _res_native_array = std::make_unique<std::vector<%s>>(_res, _res + _res_elem_len);\n", arrayType, arrayType))
+			g.writeIndent(sb, 2)
+			sb.WriteString(fmt.Sprintf("Napi::ArrayBuffer _res_arraybuffer = Napi::ArrayBuffer::New(env, _res_native_array->data(), _res_byte_len, DeleteArrayBuffer<%s>, _res_native_array.get());\n", arrayType, arrayType))
+			g.writeIndent(sb, 2)
+			sb.WriteString("_res_native_array.release();\n")
+			g.writeIndent(sb, 2)
+			sb.WriteString("Napi::MemoryManagement::AdjustExternalMemory(env, _res_byte_len);")
+			g.writeIndent(sb, 2)
+			sb.WriteString(fmt.Sprintf("return Napi::TypedArrayOf<%s>::New(env, _res_elem_len, _res_arraybuffer, 0, napi_%s_array", arrayType, napi_short_type))
 		} else {
-			napiHandler := g.casers.upper.String(jsType[0:1]) + jsType[1:]
-			sb.WriteString(fmt.Sprintf("return Napi::%s::New(env, %s);\n", napiHandler, "_res"))
+			jsType, isObject := CPPTypeToTS(returnType)
+			if g.conf.TypeHasHandler(returnType) != nil {
+				t := g.conf.TypeHasHandler(returnType)
+				g.writeIndent(sb, 1)
+				sb.WriteString(strings.ReplaceAll(t.Handler, "/val/", "_res"))
+				g.writeIndent(sb, 1)
+				sb.WriteString(fmt.Sprintf("return %s;\n", t.OutVar))
+			} else if isObject && isClass(returnType, classes) {
+				if v, ok := g.conf.GlobalTypeOutTransforms[returnType]; ok {
+					g.writeIndent(sb, 1)
+					sb.WriteString(strings.ReplaceAll(v, "/return/", "_res"))
+				}
+				g.writeIndent(sb, 1)
+				sb.WriteString(fmt.Sprintf("auto* out = new %s::%s(_res);\n", *g.NameSpace, returnType))
+				g.writeIndent(sb, 1)
+				sb.WriteString(fmt.Sprintf("return Externalize%s(env, out);", returnType))
+			} else {
+				napiHandler := g.casers.upper.String(jsType[0:1]) + jsType[1:]
+				sb.WriteString(fmt.Sprintf("return Napi::%s::New(env, %s);\n", napiHandler, "_res"))
+			}
 		}
 	}
 	/* TODO: Handle cases w multiple overloads
