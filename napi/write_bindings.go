@@ -243,12 +243,11 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 	g.writeIndent(sb, 2)
 	_, arrayType, needsCast, _ := PrimitivePtrToTS(*m.Returns)
 	if !m.ReturnsPrimitive {
-		sb.WriteString(fmt.Sprintf("%s::", *g.NameSpace))
+		sb.WriteString(fmt.Sprintf("%s::%s ", *g.NameSpace, outType))
 	} else if m.ReturnsPointer && needsCast != nil && arrayType != "" {
 		sb.WriteString(fmt.Sprintf("%s ", arrayType))
-	} else {
-		sb.WriteString(fmt.Sprintf("%s ", outType))
 	}
+
 	if m.ReturnsPointer {
 		sb.WriteByte('*')
 	}
@@ -360,6 +359,9 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 				sb.WriteString(fmt.Sprintf("return Externalize%s(env, out);", returnType))
 			} else {
 				napiHandler := g.casers.upper.String(jsType[0:1]) + jsType[1:]
+				if napiHandler == "Bigint" {
+					napiHandler = "BigInt"
+				}
 				sb.WriteString(fmt.Sprintf("return Napi::%s::New(env, %s);\n", napiHandler, "_res"))
 			}
 		}
