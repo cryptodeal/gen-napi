@@ -140,7 +140,7 @@ static Napi::Value _qux(const Napi::CallbackInfo& info) {
         .ThrowAsJavaScriptException();
     return env.Undefined();
   }
-  long long* a = reinterpret_cast<int64_t*>(
+  long long* a = reinterpret_cast<long long*>(
       info[0].As<Napi::TypedArrayOf<int64_t>>().Data());
   if (!info[1].IsNumber()) {
     Napi::TypeError::New(env, "`qux` expects args[1] to be typeof `number`)")
@@ -149,7 +149,7 @@ static Napi::Value _qux(const Napi::CallbackInfo& info) {
   }
   int b = static_cast<int>(info[1].As<Napi::Number>().Int64Value());
   long long* _res;
-  _res = test2::qux(a, b);
+  _res = reinterpret_cast<int64_t*>(test2::qux(a, b));
   size_t _res_byte_len = sizeof(_res);
   size_t _res_elem_len = _res_byte_len / sizeof(*_res);
   std::unique_ptr<std::vector<int64_t>> _res_native_array =
