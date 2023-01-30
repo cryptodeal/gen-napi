@@ -3,6 +3,7 @@ package napi
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 
 	sitter "github.com/smacker/go-tree-sitter"
@@ -113,6 +114,91 @@ type ParsedMethod struct {
 	Returns          *string
 	ReturnsPrimitive bool
 	ReturnsPointer   bool
+}
+
+type Enum struct {
+	Ident *string
+	Value int
+}
+
+type ParsedEnum struct {
+	Ident     *string
+	NameSpace *string
+	Values    []*Enum
+}
+
+func parseEnums(n *sitter.Node, input []byte) []*ParsedEnum {
+	enums := []*ParsedEnum{}
+	q, err := sitter.NewQuery([]byte("(enum_specifier) @enums"), cpp.GetLanguage())
+	if err != nil {
+		fmt.Println(err)
+		panic(err)
+	}
+
+	qc := sitter.NewQueryCursor()
+	qc.Exec(q, n)
+
+	for {
+		m, ok := qc.NextMatch()
+		if !ok {
+			break
+		}
+		for _, c := range m.Captures {
+			enums = append(enums, parseEnum(c.Node, input))
+		}
+	}
+	return enums
+}
+
+func parseEnum(n *sitter.Node, input []byte) *ParsedEnum {
+	enum_val := &ParsedEnum{}
+	// parse enum namespace
+	var namespace_node *sitter.Node
+	for p := n.Parent(); p != nil; p = p.Parent() {
+		if p.Type() == "namespace_definition" {
+			namespace_node = p
+			break
+		}
+	}
+	if namespace_node != nil {
+		namespace := namespace_node.ChildByFieldName("name").Content(input)
+		enum_val.NameSpace = &namespace
+	}
+	// parse enum name
+	nameNode := n.ChildByFieldName("name")
+	if nameNode != nil && nameNode.Type() == "identifier" {
+		name := nameNode.Content(input)
+		enum_val.Ident = &name
+	}
+
+	// parse enum values
+	bodyNode := n.ChildByFieldName("body")
+	if bodyNode != nil && bodyNode.Type() == "enumerator_list" {
+		child_count := int(bodyNode.ChildCount())
+		for i := 0; i < child_count; i++ {
+			tmp_child := bodyNode.Child(i)
+			if tmp_child.Type() != "enumerator" {
+				continue
+			}
+			parsedEnum := &Enum{}
+			val_name_node := tmp_child.ChildByFieldName("name")
+			if val_name_node != nil {
+				name := val_name_node.Content(input)
+				parsedEnum.Ident = &name
+			}
+			val_node := tmp_child.ChildByFieldName("value")
+			if val_node != nil {
+				v, err := strconv.Atoi(val_node.Content(input))
+				if err == nil {
+					parsedEnum.Value = v
+				}
+			} else {
+				parsedEnum.Value = i
+			}
+			enum_val.Values = append(enum_val.Values, parsedEnum)
+		}
+	}
+	return enum_val
 }
 
 func parseLocalIncludes(n *sitter.Node, input []byte) []*string {
