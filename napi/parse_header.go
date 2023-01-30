@@ -171,7 +171,7 @@ func (g *PackageGenerator) parseEnums(n *sitter.Node, input []byte) []*ParsedEnu
 
 	for _, local := range g.LocalIncludes {
 		fmt.Printf("Parsing enums in: %q\n", *local)
-		usedPath := path.Join(g.conf.Path, *local)
+		usedPath := path.Join(path.Dir(*local), g.conf.Path)
 		fmt.Printf("Using path (path.Join): %q\n", usedPath)
 		rootNode, byteData := getRootNode(usedPath)
 		enums = append(enums, g.parseEnums(rootNode, byteData)...)
