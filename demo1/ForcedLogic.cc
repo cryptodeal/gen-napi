@@ -257,14 +257,15 @@ static Napi::Value toFloat64Array(const Napi::CallbackInfo& info) {
   }
   size_t elemLen = contig_tensor->elements();
   size_t byteLen = elemLen * sizeof(double);
-  double* ptr;
+  void* ptr;
   if (contig_tensor->type() == fl::dtype::f64) {
-    ptr = contig_tensor->host<double>();
+    ptr = contig_tensor->host<float>();
   } else {
-    ptr = contig_tensor->astype(fl::dtype::f64).host<double>();
+    ptr = contig_tensor->astype(fl::dtype::f64).host<float>();
   }
   std::unique_ptr<std::vector<double>> nativeArray =
-      std::make_unique<std::vector<double>>(ptr, ptr + elemLen);
+      std::make_unique<std::vector<double>>((double*)ptr,
+                                            (double*)ptr + elemLen);
   if (!isContiguous) {
     delete contig_tensor;
   }
@@ -563,13 +564,6 @@ static Napi::Value toUint64Array(const Napi::CallbackInfo& info) {
 */
 static Napi::Value toFloat32Scalar(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
-  if (!info[0].IsExternal()) {
-    Napi::TypeError::New(env,
-                         "`toFloat32Scalar` expects args[0] to be native "
-                         "`Tensor` (typeof `Napi::External<fl::Tensor>`)")
-        .ThrowAsJavaScriptException();
-    return env.Null();
-  }
   fl::Tensor* t = UnExternalize<fl::Tensor>(info[0]);
   return Napi::Number::New(env, t->asScalar<float>());
 }
@@ -580,15 +574,8 @@ static Napi::Value toFloat32Scalar(const Napi::CallbackInfo& info) {
 */
 static Napi::Value toFloat64Scalar(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
-  if (!info[0].IsExternal()) {
-    Napi::TypeError::New(env,
-                         "`toFloat64Scalar` expects args[0] to be native "
-                         "`Tensor` (typeof `Napi::External<fl::Tensor>`)")
-        .ThrowAsJavaScriptException();
-    return env.Null();
-  }
   fl::Tensor* t = UnExternalize<fl::Tensor>(info[0]);
-  return Napi::Number::New(env, t->asScalar<double>());
+  return Napi::Number::New(env, t->asScalar<float>());
 }
 
 /*
@@ -597,13 +584,6 @@ static Napi::Value toFloat64Scalar(const Napi::CallbackInfo& info) {
 */
 static Napi::Value toBoolInt8Scalar(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
-  if (!info[0].IsExternal()) {
-    Napi::TypeError::New(env,
-                         "`toBoolInt8Scalar` expects args[0] to be native "
-                         "`Tensor` (typeof `Napi::External<fl::Tensor>`)")
-        .ThrowAsJavaScriptException();
-    return env.Null();
-  }
   fl::Tensor* t = UnExternalize<fl::Tensor>(info[0]);
   return Napi::Number::New(env, t->asScalar<char>());
 }
@@ -631,13 +611,6 @@ static Napi::Value toInt16Scalar(const Napi::CallbackInfo& info) {
 */
 static Napi::Value toInt32Scalar(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
-  if (!info[0].IsExternal()) {
-    Napi::TypeError::New(env,
-                         "`toInt32Scalar` expects args[0] to be native "
-                         "`Tensor` (typeof `Napi::External<fl::Tensor>`)")
-        .ThrowAsJavaScriptException();
-    return env.Null();
-  }
   fl::Tensor* t = UnExternalize<fl::Tensor>(info[0]);
   return Napi::Number::New(env, t->asScalar<int32_t>());
 }
@@ -648,13 +621,6 @@ static Napi::Value toInt32Scalar(const Napi::CallbackInfo& info) {
 */
 static Napi::Value toInt64Scalar(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
-  if (!info[0].IsExternal()) {
-    Napi::TypeError::New(env,
-                         "`toInt64Scalar` expects args[0] to be native "
-                         "`Tensor` (typeof `Napi::External<fl::Tensor>`)")
-        .ThrowAsJavaScriptException();
-    return env.Null();
-  }
   fl::Tensor* t = UnExternalize<fl::Tensor>(info[0]);
   return Napi::BigInt::New(env, t->asScalar<int64_t>());
 }
@@ -665,13 +631,6 @@ static Napi::Value toInt64Scalar(const Napi::CallbackInfo& info) {
 */
 static Napi::Value toUint8Scalar(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
-  if (!info[0].IsExternal()) {
-    Napi::TypeError::New(env,
-                         "`toUint8Scalar` expects args[0] to be native "
-                         "`Tensor` (typeof `Napi::External<fl::Tensor>`)")
-        .ThrowAsJavaScriptException();
-    return env.Null();
-  }
   fl::Tensor* t = UnExternalize<fl::Tensor>(info[0]);
   return Napi::Number::New(env, t->asScalar<uint8_t>());
 }
@@ -682,13 +641,6 @@ static Napi::Value toUint8Scalar(const Napi::CallbackInfo& info) {
 */
 static Napi::Value toUint16Scalar(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
-  if (!info[0].IsExternal()) {
-    Napi::TypeError::New(env,
-                         "`toUint16Scalar` expects args[0] to be native "
-                         "`Tensor` (typeof `Napi::External<fl::Tensor>`)")
-        .ThrowAsJavaScriptException();
-    return env.Null();
-  }
   fl::Tensor* t = UnExternalize<fl::Tensor>(info[0]);
   return Napi::Number::New(env, t->asScalar<uint16_t>());
 }
@@ -699,13 +651,6 @@ static Napi::Value toUint16Scalar(const Napi::CallbackInfo& info) {
 */
 static Napi::Value toUint32Scalar(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
-  if (!info[0].IsExternal()) {
-    Napi::TypeError::New(env,
-                         "`toUint32Scalar` expects args[0] to be native "
-                         "`Tensor` (typeof `Napi::External<fl::Tensor>`)")
-        .ThrowAsJavaScriptException();
-    return env.Null();
-  }
   fl::Tensor* t = UnExternalize<fl::Tensor>(info[0]);
   return Napi::Number::New(env, t->asScalar<uint32_t>());
 }
@@ -716,13 +661,6 @@ static Napi::Value toUint32Scalar(const Napi::CallbackInfo& info) {
 */
 static Napi::Value toUint64Scalar(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
-  if (!info[0].IsExternal()) {
-    Napi::TypeError::New(env,
-                         "`toUint64Scalar` expects args[0] to be native "
-                         "`Tensor` (typeof `Napi::External<fl::Tensor>`)")
-        .ThrowAsJavaScriptException();
-    return env.Null();
-  }
   fl::Tensor* t = UnExternalize<fl::Tensor>(info[0]);
   return Napi::BigInt::New(env, t->asScalar<uint64_t>());
 }
@@ -733,13 +671,6 @@ static Napi::Value toUint64Scalar(const Napi::CallbackInfo& info) {
 */
 static void eval(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
-  if (!info[0].IsExternal()) {
-    Napi::TypeError::New(env,
-                         "`eval` expects args[0] to be native `Tensor` (typeof "
-                         "`Napi::External<fl::Tensor>`)")
-        .ThrowAsJavaScriptException();
-    return;
-  }
   fl::Tensor* t = UnExternalize<fl::Tensor>(info[0]);
   fl::eval(*(t));
 }
@@ -750,13 +681,6 @@ static void eval(const Napi::CallbackInfo& info) {
 */
 static void dispose(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
-  if (!info[0].IsExternal()) {
-    Napi::TypeError::New(env,
-                         "`dispose` expects args[0] to be native `Tensor` "
-                         "(typeof `Napi::External<fl::Tensor>`)")
-        .ThrowAsJavaScriptException();
-    return;
-  }
   fl::Tensor& t = *UnExternalize<fl::Tensor>(info[0]);
   auto byte_count = static_cast<int64_t>(t.bytes());
   g_bytes_used -= byte_count;
@@ -769,13 +693,6 @@ static void dispose(const Napi::CallbackInfo& info) {
 */
 static Napi::Value tensorFromFloat32Buffer(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
-  if (!info[0].IsArrayBuffer()) {
-    Napi::Error::New(env,
-                     "`tensorFromFloat32Buffer` epects args[0] to be "
-                     "instanceof `ArrayBuffer`")
-        .ThrowAsJavaScriptException();
-    return env.Null();
-  }
   Napi::ArrayBuffer buf = info[0].As<Napi::ArrayBuffer>();
   int64_t length = static_cast<int64_t>(buf.ByteLength() / sizeof(float));
   float* ptr = reinterpret_cast<float*>(buf.Data());
@@ -792,13 +709,6 @@ static Napi::Value tensorFromFloat32Buffer(const Napi::CallbackInfo& info) {
 */
 static Napi::Value tensorFromFloat64Buffer(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
-  if (!info[0].IsArrayBuffer()) {
-    Napi::Error::New(env,
-                     "`tensorFromFloat64Buffer` epects args[0] to be "
-                     "instanceof `ArrayBuffer`")
-        .ThrowAsJavaScriptException();
-    return env.Null();
-  }
   Napi::ArrayBuffer buf = info[0].As<Napi::ArrayBuffer>();
   int64_t length = static_cast<int64_t>(buf.ByteLength() / sizeof(double));
   double* ptr = reinterpret_cast<double*>(buf.Data());
@@ -815,13 +725,6 @@ static Napi::Value tensorFromFloat64Buffer(const Napi::CallbackInfo& info) {
 */
 static Napi::Value tensorFromBoolInt8Buffer(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
-  if (!info[0].IsArrayBuffer()) {
-    Napi::Error::New(env,
-                     "`tensorFromBoolInt8Buffer` epects args[0] to be "
-                     "instanceof `ArrayBuffer`")
-        .ThrowAsJavaScriptException();
-    return env.Null();
-  }
   Napi::ArrayBuffer buf = info[0].As<Napi::ArrayBuffer>();
   int64_t length = static_cast<int64_t>(buf.ByteLength() / sizeof(int8_t));
   char* ptr = reinterpret_cast<char*>(buf.Data());
@@ -838,13 +741,6 @@ static Napi::Value tensorFromBoolInt8Buffer(const Napi::CallbackInfo& info) {
 */
 static Napi::Value tensorFromInt16Buffer(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
-  if (!info[0].IsArrayBuffer()) {
-    Napi::Error::New(
-        env,
-        "`tensorFromInt16Buffer` epects args[0] to be instanceof `ArrayBuffer`")
-        .ThrowAsJavaScriptException();
-    return env.Null();
-  }
   Napi::ArrayBuffer buf = info[0].As<Napi::ArrayBuffer>();
   int64_t length = static_cast<int64_t>(buf.ByteLength() / sizeof(int16_t));
   int16_t* ptr = reinterpret_cast<int16_t*>(buf.Data());
@@ -861,13 +757,6 @@ static Napi::Value tensorFromInt16Buffer(const Napi::CallbackInfo& info) {
 */
 static Napi::Value tensorFromInt32Buffer(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
-  if (!info[0].IsArrayBuffer()) {
-    Napi::Error::New(
-        env,
-        "`tensorFromInt32Buffer` epects args[0] to be instanceof `ArrayBuffer`")
-        .ThrowAsJavaScriptException();
-    return env.Null();
-  }
   Napi::ArrayBuffer buf = info[0].As<Napi::ArrayBuffer>();
   int64_t length = static_cast<int64_t>(buf.ByteLength() / sizeof(int32_t));
   int32_t* ptr = reinterpret_cast<int32_t*>(buf.Data());
@@ -884,13 +773,6 @@ static Napi::Value tensorFromInt32Buffer(const Napi::CallbackInfo& info) {
 */
 static Napi::Value tensorFromInt64Buffer(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
-  if (!info[0].IsArrayBuffer()) {
-    Napi::Error::New(env,
-                     "`tensorFtensorFromInt64BufferromFloat32Buffer` epects "
-                     "args[0] to be instanceof `ArrayBuffer`")
-        .ThrowAsJavaScriptException();
-    return env.Null();
-  }
   Napi::ArrayBuffer buf = info[0].As<Napi::ArrayBuffer>();
   int64_t length = static_cast<int64_t>(buf.ByteLength() / sizeof(int64_t));
   int64_t* ptr = reinterpret_cast<int64_t*>(buf.Data());
@@ -907,13 +789,6 @@ static Napi::Value tensorFromInt64Buffer(const Napi::CallbackInfo& info) {
 */
 static Napi::Value tensorFromUint8Buffer(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
-  if (!info[0].IsArrayBuffer()) {
-    Napi::Error::New(
-        env,
-        "`tensorFromUint8Buffer` epects args[0] to be instanceof `ArrayBuffer`")
-        .ThrowAsJavaScriptException();
-    return env.Null();
-  }
   Napi::ArrayBuffer buf = info[0].As<Napi::ArrayBuffer>();
   int64_t length = static_cast<int64_t>(buf.ByteLength() / sizeof(uint8_t));
   uint8_t* ptr = reinterpret_cast<uint8_t*>(buf.Data());
@@ -930,13 +805,6 @@ static Napi::Value tensorFromUint8Buffer(const Napi::CallbackInfo& info) {
 */
 static Napi::Value tensorFromUint16Buffer(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
-  if (!info[0].IsArrayBuffer()) {
-    Napi::Error::New(env,
-                     "`tensorFromUint16Buffer` epects args[0] to be instanceof "
-                     "`ArrayBuffer`")
-        .ThrowAsJavaScriptException();
-    return env.Null();
-  }
   Napi::ArrayBuffer buf = info[0].As<Napi::ArrayBuffer>();
   int64_t length = static_cast<int64_t>(buf.ByteLength() / sizeof(uint16_t));
   uint16_t* ptr = reinterpret_cast<uint16_t*>(buf.Data());
@@ -953,13 +821,6 @@ static Napi::Value tensorFromUint16Buffer(const Napi::CallbackInfo& info) {
 */
 static Napi::Value tensorFromUint32Buffer(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
-  if (!info[0].IsArrayBuffer()) {
-    Napi::Error::New(env,
-                     "`tensorFromUint32Buffer` epects args[0] to be instanceof "
-                     "`ArrayBuffer`")
-        .ThrowAsJavaScriptException();
-    return env.Null();
-  }
   Napi::ArrayBuffer buf = info[0].As<Napi::ArrayBuffer>();
   int64_t length = static_cast<int64_t>(buf.ByteLength() / sizeof(uint32_t));
   uint32_t* ptr = reinterpret_cast<uint32_t*>(buf.Data());
@@ -976,13 +837,6 @@ static Napi::Value tensorFromUint32Buffer(const Napi::CallbackInfo& info) {
 */
 static Napi::Value tensorFromUint64Buffer(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
-  if (!info[0].IsArrayBuffer()) {
-    Napi::Error::New(env,
-                     "`tensorFromUint64Buffer` epects args[0] to be instanceof "
-                     "`ArrayBuffer`")
-        .ThrowAsJavaScriptException();
-    return env.Null();
-  }
   Napi::ArrayBuffer buf = info[0].As<Napi::ArrayBuffer>();
   int64_t length = static_cast<int64_t>(buf.ByteLength() / sizeof(uint64_t));
   uint64_t* ptr = reinterpret_cast<uint64_t*>(buf.Data());
