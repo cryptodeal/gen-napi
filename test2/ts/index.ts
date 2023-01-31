@@ -8,10 +8,6 @@ const {
   _test
 } = require("../../build/Release/test.node")
 
-export const test = (a: string): string => {
-  return _test(a);
-}
-
 export const foo = (a: number): number => {
   return _foo(a);
 }
@@ -30,5 +26,9 @@ export const qux = (a: BigInt64Array, b: number): BigInt64Array => {
 
 export const quux = (a: boolean, b: boolean): Uint8Array => {
   return _quux(a, b);
+}
+
+export const test = (a: string): string => {
+  return _test(a);
 }
 

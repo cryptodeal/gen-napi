@@ -28,6 +28,7 @@ func isTypedArray(typeName string) bool {
 func (g *PackageGenerator) WriteEnvWrapper(sb *strings.Builder) {
 	sb.WriteString(g.conf.JSWrapperOpts.FrontMatter)
 	sb.WriteString(g.WriteEnvImports())
+	sb.WriteString(g.WriteEnums())
 	sb.WriteString(g.WriteEnvWrappedFns())
 	if !g.conf.IsEnvTS() {
 		sb.WriteString(g.WriteEnvExports())
@@ -111,6 +112,17 @@ func (g *PackageGenerator) WriteEnvExports() string {
 					}
 				}
 			}
+		}
+	}
+
+	for i, e := range g.ParsedData.Enums {
+		if i == 0 {
+			sb.WriteString(",\n")
+		}
+		g.writeIndent(sb, 1)
+		sb.WriteString(*e.Ident)
+		if i < used_len-1 {
+			sb.WriteString(",\n")
 		}
 	}
 	sb.WriteString("\n}\n")
@@ -202,6 +214,34 @@ func (g *PackageGenerator) WriteEnvImports() string {
 	return sb.String()
 }
 
+func (g *PackageGenerator) WriteEnums() string {
+	sb := new(strings.Builder)
+	for _, e := range g.ParsedData.Enums {
+		if g.conf.IsEnvTS() {
+			sb.WriteString(fmt.Sprintf("export enum %s {\n", *e.Ident))
+			count := len(e.Values)
+			for i, v := range e.Values {
+				g.writeIndent(sb, 1)
+				sb.WriteString(fmt.Sprintf("%s = %d", *v.Ident, v.Value))
+				if i < count-1 {
+					sb.WriteByte(',')
+				}
+				sb.WriteByte('\n')
+			}
+			sb.WriteString("}\n\n")
+		} else {
+			// write as if it's a compiled typescript enum if JS out type
+			sb.WriteString(fmt.Sprintf("let %s;\n", *e.Ident))
+			sb.WriteString(fmt.Sprintf("(function (%s) {\n", *e.Ident))
+			for _, v := range e.Values {
+				g.writeIndent(sb, 1)
+				sb.WriteString(fmt.Sprintf("%s[%s[%q] = %d] = %q;\n", *e.Ident, *e.Ident, *v.Ident, v.Value, *v.Ident))
+			}
+			sb.WriteString(fmt.Sprintf("})(%s || (%s = {}));\n\n", *e.Ident, *e.Ident))
+		}
+	}
+	return sb.String()
+}
 func (g *PackageGenerator) WriteEnvWrappedFns() string {
 	sb := new(strings.Builder)
 	for _, m := range g.ParsedData.Methods {
