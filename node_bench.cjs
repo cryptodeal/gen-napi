@@ -1,5 +1,5 @@
-const { Tensor } = require('./test/js/tensor.cjs')
-const sm = require('./test/js/index.cjs')
+const { Tensor } = require('./demo1/js/tensor.cjs')
+const sm = require('./demo1/js/index.cjs')
 
 sm.init()
 

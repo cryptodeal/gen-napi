@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "lib": ["ESNext"],
+    "module": "esnext",
+    "target": "esnext",
+    "moduleResolution": "node",
+    "skipLibCheck": true,
+
+    // so that if your project isn't using TypeScript, it still has autocomplete
+    "allowJs": true,
+    "checkJs": false,
+
+    // "bun-types" is the important part
+    "types": ["bun-types", "@types/node"],
+    "paths": {
+      "@ops/ts": ["./demo1/ts/index.ts"],
+      "@ops/js": ["./demo1/js/index.js"],
+      "@tensor/ts": ["./demo1/ts/tensor.ts"],
+      "@tensor/js": ["./demo1/js/tensor.js"],
+    }
+  },
+  "include": ["demo1/**/*.ts"]
+}

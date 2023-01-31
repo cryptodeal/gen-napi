@@ -210,7 +210,13 @@ func (g *PackageGenerator) WriteEnvImports() string {
 			sb.WriteString(",\n")
 		}
 	}
-	sb.WriteString(fmt.Sprintf("\n} = require(%q)\n\n", g.conf.ResolvedBindingsImportPath(g.conf.Path)))
+	sb.WriteString("\n} = ")
+	if g.conf.IsEnvTS() {
+		sb.WriteString("import.meta.require(")
+	} else {
+		sb.WriteString("require(")
+	}
+	sb.WriteString(fmt.Sprintf("%q)\n\n", g.conf.ResolvedBindingsImportPath(g.conf.Path)))
 	return sb.String()
 }
 

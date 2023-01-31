@@ -1,7 +1,6 @@
 package napi
 
 import (
-	"fmt"
 	"strings"
 )
 
@@ -13,13 +12,6 @@ func (g *PackageGenerator) Generate() (string, string, error) {
 	g.ParsedData.Classes = parseClasses(g.RootNode, *g.Input)
 	g.ParsedData.Lits = g.parseLiterals(g.RootNode, *g.Input)
 	g.ParsedData.Enums = g.parseEnums(g.RootNode, *g.Input, true)
-	for _, enum := range g.ParsedData.Enums {
-		fmt.Printf("Name: %q; Values:\n", *enum.Ident)
-		for _, v := range enum.Values {
-			fmt.Printf("\t%s = %d\n", *v.Ident, v.Value)
-		}
-	}
-
 	g.writeFileCodegenHeader(bindings)
 	g.writeFileCodegenHeader(env_wrapper)
 

@@ -1,5 +1,5 @@
-import * as sm from './test/ts/index'
-import { Tensor } from './test/ts/tensor'
+import * as sm from './demo1/ts/index'
+import { Tensor } from './demo1/ts/tensor'
 
 sm.init()
 

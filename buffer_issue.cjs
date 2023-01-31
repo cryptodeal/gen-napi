@@ -1,5 +1,5 @@
-const { Tensor } = require('./test/js/tensor.cjs')
-const { bytesUsed } = require('./test/js/index.cjs')
+const { Tensor } = require('./demo1/js/tensor.cjs')
+const { bytesUsed } = require('./demo1/js/index.cjs')
 
 const fillArray = (arr) => {
   const len = arr.length
