@@ -6,7 +6,6 @@ const {
   _toBoolInt8Array,
   _toInt16Array,
   _toInt32Array,
-  _save,
   _toInt64Array,
   _toUint8Array,
   _toUint16Array,
@@ -34,76 +33,78 @@ const {
   _tensorFromUint16Buffer,
   _tensorFromUint32Buffer,
   _tensorFromUint64Buffer,
-  _reshape,
-  _absolute,
-  _power,
-  _argmin,
-  _countNonzero,
-  _full,
-  _rint,
-  _sort,
-  _identity,
-  _logicalNot,
-  _isinf,
-  _tril,
-  _argmax,
-  _ceil,
-  _clip,
-  _where,
-  _maximum,
-  _amax,
-  _std,
-  _cumsum,
-  _transpose,
-  _exp,
-  _log,
+  _save,
   _sin,
-  _sigmoid,
-  _matmul,
-  _amin,
-  _var: __var,
-  _norm,
-  _all,
-  _mean,
-  _concatenate,
-  _floor,
-  _erf,
-  _flip,
-  _roll,
-  _sign,
-  _triu,
-  _median,
-  _tile,
-  _log1p,
-  _tanh,
-  _isnan,
   _minimum,
-  _any,
-  _arange,
-  _iota,
-  _nonzero,
-  _negative,
+  _amin,
   _cos,
   _sqrt,
+  _rint,
+  _sign,
+  _tril,
+  _all,
+  _isInvalidArray,
+  _iota,
+  _exp,
+  _floor,
+  _nonzero,
+  _sort,
   _sum,
-  _lessThan,
-  _lessThanEqual,
-  _logicalAnd,
-  _mod,
-  _bitwiseOr,
-  _div,
-  _neq,
+  _tile,
+  _matmul,
+  _norm,
+  _identity,
+  _isnan,
+  _ceil,
+  _var: __var,
+  _argmax,
+  _full,
+  _roll,
+  _transpose,
+  _amax,
+  _countNonzero,
+  _reshape,
+  _negative,
+  _logicalNot,
+  _sigmoid,
+  _clip,
+  _any,
+  _absolute,
+  _erf,
+  _isinf,
+  _where,
+  _median,
+  _arange,
+  _log,
+  _tanh,
+  _concatenate,
+  _log1p,
+  _flip,
+  _triu,
+  _maximum,
+  _power,
+  _argmin,
+  _cumsum,
+  _mean,
+  _std,
   _mul,
-  _rShift,
-  _lShift,
-  _greaterThanEqual,
-  _logicalOr,
   _add,
-  _bitwiseXor,
-  _eq,
-  _sub,
-  _bitwiseAnd,
+  _lShift,
   _greaterThan,
+  _logicalOr,
+  _lessThanEqual,
+  _bitwiseXor,
+  _sub,
+  _logicalAnd,
+  _bitwiseOr,
+  _bitwiseAnd,
+  _div,
+  _eq,
+  _greaterThanEqual,
+  _lessThan,
+  _rShift,
+  _neq,
+  _mod,
   _init,
   _bytesUsed,
   _setRowMajor,
@@ -122,62 +123,79 @@ const {
   _dtypeUint64,
   _rand,
   _randn
-} = require('../../build/Release/shumai_bindings.node')
+} = require('build/Release/shumai_bindings.node')
 
-const isnan = (tensor) => {
-  return new Tensor(_isnan(tensor._native_self))
+let TensorBackendType
+;(function (TensorBackendType) {
+  TensorBackendType[(TensorBackendType['Stub'] = 0)] = 'Stub'
+  TensorBackendType[(TensorBackendType['Tracer'] = 1)] = 'Tracer'
+  TensorBackendType[(TensorBackendType['ArrayFire'] = 2)] = 'ArrayFire'
+  TensorBackendType[(TensorBackendType['OneDnn'] = 3)] = 'OneDnn'
+  TensorBackendType[(TensorBackendType['Jit'] = 4)] = 'Jit'
+})(TensorBackendType || (TensorBackendType = {}))
+
+let Location
+;(function (Location) {
+  Location[(Location['Host'] = 0)] = 'Host'
+  Location[(Location['Device'] = 1)] = 'Device'
+})(Location || (Location = {}))
+
+let StorageType
+;(function (StorageType) {
+  StorageType[(StorageType['Dense'] = 0)] = 'Dense'
+  StorageType[(StorageType['CSR'] = 1)] = 'CSR'
+  StorageType[(StorageType['CSC'] = 2)] = 'CSC'
+  StorageType[(StorageType['COO'] = 3)] = 'COO'
+})(StorageType || (StorageType = {}))
+
+let PadType
+;(function (PadType) {
+  PadType[(PadType['Constant'] = 0)] = 'Constant'
+  PadType[(PadType['Edge'] = 1)] = 'Edge'
+  PadType[(PadType['Symmetric'] = 2)] = 'Symmetric'
+})(PadType || (PadType = {}))
+
+let SortMode
+;(function (SortMode) {
+  SortMode[(SortMode['Descending'] = 0)] = 'Descending'
+  SortMode[(SortMode['Ascending'] = 1)] = 'Ascending'
+})(SortMode || (SortMode = {}))
+
+let MatrixProperty
+;(function (MatrixProperty) {
+  MatrixProperty[(MatrixProperty['None'] = 0)] = 'None'
+  MatrixProperty[(MatrixProperty['Transpose'] = 1)] = 'Transpose'
+})(MatrixProperty || (MatrixProperty = {}))
+
+let dtype
+;(function (dtype) {
+  dtype[(dtype['f16'] = 0)] = 'f16'
+  dtype[(dtype['f32'] = 1)] = 'f32'
+  dtype[(dtype['f64'] = 2)] = 'f64'
+  dtype[(dtype['b8'] = 3)] = 'b8'
+  dtype[(dtype['s16'] = 4)] = 's16'
+  dtype[(dtype['s32'] = 5)] = 's32'
+  dtype[(dtype['s64'] = 6)] = 's64'
+  dtype[(dtype['u8'] = 7)] = 'u8'
+  dtype[(dtype['u16'] = 8)] = 'u16'
+  dtype[(dtype['u32'] = 9)] = 'u32'
+  dtype[(dtype['u64'] = 10)] = 'u64'
+})(dtype || (dtype = {}))
+
+const full = (dims, val) => {
+  return new Tensor(_full(dims, val))
 }
 
-const minimum = (lhs, rhs) => {
-  return new Tensor(_minimum(lhs._native_self, rhs._native_self))
+const roll = (tensor, shift, axis) => {
+  return new Tensor(_roll(tensor._native_self, shift, axis))
 }
 
-const any = (input, axes, keepDims) => {
-  return new Tensor(_any(input._native_self, axes, keepDims))
+const transpose = (tensor, axes) => {
+  return new Tensor(_transpose(tensor._native_self, axes))
 }
 
-const tile = (tensor, shape) => {
-  return new Tensor(_tile(tensor._native_self, shape))
-}
-
-const log1p = (tensor) => {
-  return new Tensor(_log1p(tensor._native_self))
-}
-
-const tanh = (tensor) => {
-  return new Tensor(_tanh(tensor._native_self))
-}
-
-const negative = (tensor) => {
-  return new Tensor(_negative(tensor._native_self))
-}
-
-const cos = (tensor) => {
-  return new Tensor(_cos(tensor._native_self))
-}
-
-const sqrt = (tensor) => {
-  return new Tensor(_sqrt(tensor._native_self))
-}
-
-const sum = (input, axes, keepDims) => {
-  return new Tensor(_sum(input._native_self, axes, keepDims))
-}
-
-const arange = (start, end, step) => {
-  return new Tensor(_arange(start, end, step))
-}
-
-const iota = (dims, tileDims) => {
-  return new Tensor(_iota(dims, tileDims))
-}
-
-const nonzero = (tensor) => {
-  return new Tensor(_nonzero(tensor._native_self))
-}
-
-const argmin = (input, axis, keepDims) => {
-  return new Tensor(_argmin(input._native_self, axis, keepDims))
+const amax = (input, axes, keepDims) => {
+  return new Tensor(_amax(input._native_self, axes, keepDims))
 }
 
 const countNonzero = (input, axes, keepDims) => {
@@ -188,148 +206,192 @@ const reshape = (tensor, shape) => {
   return new Tensor(_reshape(tensor._native_self, shape))
 }
 
-const absolute = (tensor) => {
-  return new Tensor(_absolute(tensor._native_self))
-}
-
-const power = (lhs, rhs) => {
-  return new Tensor(_power(lhs._native_self, rhs._native_self))
-}
-
-const full = (dims, val) => {
-  return new Tensor(_full(dims, val))
-}
-
-const rint = (tensor) => {
-  return new Tensor(_rint(tensor._native_self))
-}
-
-const sort = (input, axis) => {
-  return new Tensor(_sort(input._native_self, axis))
-}
-
-const tril = (tensor) => {
-  return new Tensor(_tril(tensor._native_self))
-}
-
-const argmax = (input, axis, keepDims) => {
-  return new Tensor(_argmax(input._native_self, axis, keepDims))
-}
-
-const identity = (dim) => {
-  return new Tensor(_identity(dim))
+const negative = (tensor) => {
+  return new Tensor(_negative(tensor._native_self))
 }
 
 const logicalNot = (tensor) => {
   return new Tensor(_logicalNot(tensor._native_self))
 }
 
-const isinf = (tensor) => {
-  return new Tensor(_isinf(tensor._native_self))
-}
-
-const maximum = (lhs, rhs) => {
-  return new Tensor(_maximum(lhs._native_self, rhs._native_self))
-}
-
-const amax = (input, axes, keepDims) => {
-  return new Tensor(_amax(input._native_self, axes, keepDims))
-}
-
-const std = (input, axes, keepDims) => {
-  return new Tensor(_std(input._native_self, axes, keepDims))
-}
-
-const ceil = (tensor) => {
-  return new Tensor(_ceil(tensor._native_self))
+const sigmoid = (tensor) => {
+  return new Tensor(_sigmoid(tensor._native_self))
 }
 
 const clip = (tensor, low, high) => {
   return new Tensor(_clip(tensor._native_self, low._native_self, high._native_self))
 }
 
-const where = (condition, x, y) => {
-  return new Tensor(_where(condition._native_self, x._native_self, y._native_self))
+const any = (input, axes, keepDims) => {
+  return new Tensor(_any(input._native_self, axes, keepDims))
 }
 
-const sin = (tensor) => {
-  return new Tensor(_sin(tensor._native_self))
-}
-
-const sigmoid = (tensor) => {
-  return new Tensor(_sigmoid(tensor._native_self))
-}
-
-const matmul = (lhs, rhs) => {
-  return new Tensor(_matmul(lhs._native_self, rhs._native_self))
-}
-
-const amin = (input, axes, keepDims) => {
-  return new Tensor(_amin(input._native_self, axes, keepDims))
-}
-
-const cumsum = (input, axis) => {
-  return new Tensor(_cumsum(input._native_self, axis))
-}
-
-const transpose = (tensor, axes) => {
-  return new Tensor(_transpose(tensor._native_self, axes))
-}
-
-const exp = (tensor) => {
-  return new Tensor(_exp(tensor._native_self))
-}
-
-const log = (tensor) => {
-  return new Tensor(_log(tensor._native_self))
-}
-
-const _var = (input, axes, bias, keepDims) => {
-  return new Tensor(__var(input._native_self, axes, bias, keepDims))
-}
-
-const norm = (input, axes, p, keepDims) => {
-  return new Tensor(_norm(input._native_self, axes, p, keepDims))
-}
-
-const all = (input, axes, keepDims) => {
-  return new Tensor(_all(input._native_self, axes, keepDims))
-}
-
-const flip = (tensor, dim) => {
-  return new Tensor(_flip(tensor._native_self, dim))
-}
-
-const roll = (tensor, shift, axis) => {
-  return new Tensor(_roll(tensor._native_self, shift, axis))
-}
-
-const sign = (tensor) => {
-  return new Tensor(_sign(tensor._native_self))
-}
-
-const triu = (tensor) => {
-  return new Tensor(_triu(tensor._native_self))
-}
-
-const mean = (input, axes, keepDims) => {
-  return new Tensor(_mean(input._native_self, axes, keepDims))
-}
-
-const concatenate = (tensors, axis) => {
-  return new Tensor(_concatenate(tensors, axis))
-}
-
-const floor = (tensor) => {
-  return new Tensor(_floor(tensor._native_self))
+const absolute = (tensor) => {
+  return new Tensor(_absolute(tensor._native_self))
 }
 
 const erf = (tensor) => {
   return new Tensor(_erf(tensor._native_self))
 }
 
+const isinf = (tensor) => {
+  return new Tensor(_isinf(tensor._native_self))
+}
+
+const where = (condition, x, y) => {
+  return new Tensor(_where(condition._native_self, x._native_self, y._native_self))
+}
+
 const median = (input, axes, keepDims) => {
   return new Tensor(_median(input._native_self, axes, keepDims))
+}
+
+const arange = (start, end, step) => {
+  return new Tensor(_arange(start, end, step))
+}
+
+const log = (tensor) => {
+  return new Tensor(_log(tensor._native_self))
+}
+
+const tanh = (tensor) => {
+  return new Tensor(_tanh(tensor._native_self))
+}
+
+const power = (lhs, rhs) => {
+  return new Tensor(_power(lhs._native_self, rhs._native_self))
+}
+
+const argmin = (input, axis, keepDims) => {
+  return new Tensor(_argmin(input._native_self, axis, keepDims))
+}
+
+const concatenate = (tensors, axis) => {
+  return new Tensor(_concatenate(tensors, axis))
+}
+
+const log1p = (tensor) => {
+  return new Tensor(_log1p(tensor._native_self))
+}
+
+const flip = (tensor, dim) => {
+  return new Tensor(_flip(tensor._native_self, dim))
+}
+
+const triu = (tensor) => {
+  return new Tensor(_triu(tensor._native_self))
+}
+
+const maximum = (lhs, rhs) => {
+  return new Tensor(_maximum(lhs._native_self, rhs._native_self))
+}
+
+const cumsum = (input, axis) => {
+  return new Tensor(_cumsum(input._native_self, axis))
+}
+
+const mean = (input, axes, keepDims) => {
+  return new Tensor(_mean(input._native_self, axes, keepDims))
+}
+
+const std = (input, axes, keepDims) => {
+  return new Tensor(_std(input._native_self, axes, keepDims))
+}
+
+const sin = (tensor) => {
+  return new Tensor(_sin(tensor._native_self))
+}
+
+const minimum = (lhs, rhs) => {
+  return new Tensor(_minimum(lhs._native_self, rhs._native_self))
+}
+
+const amin = (input, axes, keepDims) => {
+  return new Tensor(_amin(input._native_self, axes, keepDims))
+}
+
+const isInvalidArray = (tensor) => {
+  return _isInvalidArray(tensor._native_self)
+}
+
+const cos = (tensor) => {
+  return new Tensor(_cos(tensor._native_self))
+}
+
+const sqrt = (tensor) => {
+  return new Tensor(_sqrt(tensor._native_self))
+}
+
+const rint = (tensor) => {
+  return new Tensor(_rint(tensor._native_self))
+}
+
+const sign = (tensor) => {
+  return new Tensor(_sign(tensor._native_self))
+}
+
+const tril = (tensor) => {
+  return new Tensor(_tril(tensor._native_self))
+}
+
+const all = (input, axes, keepDims) => {
+  return new Tensor(_all(input._native_self, axes, keepDims))
+}
+
+const iota = (dims, tileDims) => {
+  return new Tensor(_iota(dims, tileDims))
+}
+
+const exp = (tensor) => {
+  return new Tensor(_exp(tensor._native_self))
+}
+
+const floor = (tensor) => {
+  return new Tensor(_floor(tensor._native_self))
+}
+
+const sort = (input, axis) => {
+  return new Tensor(_sort(input._native_self, axis))
+}
+
+const sum = (input, axes, keepDims) => {
+  return new Tensor(_sum(input._native_self, axes, keepDims))
+}
+
+const nonzero = (tensor) => {
+  return new Tensor(_nonzero(tensor._native_self))
+}
+
+const tile = (tensor, shape) => {
+  return new Tensor(_tile(tensor._native_self, shape))
+}
+
+const matmul = (lhs, rhs) => {
+  return new Tensor(_matmul(lhs._native_self, rhs._native_self))
+}
+
+const norm = (input, axes, p, keepDims) => {
+  return new Tensor(_norm(input._native_self, axes, p, keepDims))
+}
+
+const identity = (dim) => {
+  return new Tensor(_identity(dim))
+}
+
+const isnan = (tensor) => {
+  return new Tensor(_isnan(tensor._native_self))
+}
+
+const ceil = (tensor) => {
+  return new Tensor(_ceil(tensor._native_self))
+}
+
+const _var = (input, axes, bias, keepDims) => {
+  return new Tensor(__var(input._native_self, axes, bias, keepDims))
+}
+
+const argmax = (input, axis, keepDims) => {
+  return new Tensor(_argmax(input._native_self, axis, keepDims))
 }
 
 const toFloat32Array = (tensor) => {
@@ -350,10 +412,6 @@ const toInt16Array = (tensor) => {
 
 const toInt32Array = (tensor) => {
   return _toInt32Array(tensor._native_self)
-}
-
-const save = (filename) => {
-  return _save(filename)
 }
 
 const toInt64Array = (tensor) => {
@@ -424,104 +482,100 @@ const dispose = (tensor) => {
   return _dispose(tensor._native_self)
 }
 
-const tensorFromFloat32Buffer = (arr) => {
-  return _tensorFromFloat32Buffer(arr.buffer)
+const tensorFromFloat32Buffer = (buffer) => {
+  return _tensorFromFloat32Buffer(buffer)
 }
 
-const tensorFromFloat64Buffer = (arr) => {
-  return _tensorFromFloat64Buffer(arr.buffer)
+const tensorFromFloat64Buffer = (buffer) => {
+  return _tensorFromFloat64Buffer(buffer)
 }
 
-const tensorFromBoolInt8Buffer = (arr) => {
-  return _tensorFromBoolInt8Buffer(arr.buffer)
+const tensorFromBoolInt8Buffer = (buffer) => {
+  return _tensorFromBoolInt8Buffer(buffer)
 }
 
-const tensorFromInt16Buffer = (arr) => {
-  return _tensorFromInt16Buffer(arr.buffer)
+const tensorFromInt16Buffer = (buffer) => {
+  return _tensorFromInt16Buffer(buffer)
 }
 
-const tensorFromInt32Buffer = (arr) => {
-  return _tensorFromInt32Buffer(arr.buffer)
+const tensorFromInt32Buffer = (buffer) => {
+  return _tensorFromInt32Buffer(buffer)
 }
 
-const tensorFromInt64Buffer = (arr) => {
-  return _tensorFromInt64Buffer(arr.buffer)
+const tensorFromInt64Buffer = (buffer) => {
+  return _tensorFromInt64Buffer(buffer)
 }
 
-const tensorFromUint8Buffer = (arr) => {
-  return _tensorFromUint8Buffer(arr.buffer)
+const tensorFromUint8Buffer = (buffer) => {
+  return _tensorFromUint8Buffer(buffer)
 }
 
-const tensorFromUint16Buffer = (arr) => {
-  return _tensorFromUint16Buffer(arr.buffer)
+const tensorFromUint16Buffer = (buffer) => {
+  return _tensorFromUint16Buffer(buffer)
 }
 
-const tensorFromUint32Buffer = (arr) => {
-  return _tensorFromUint32Buffer(arr.buffer)
+const tensorFromUint32Buffer = (buffer) => {
+  return _tensorFromUint32Buffer(buffer)
 }
 
-const tensorFromUint64Buffer = (arr) => {
-  return _tensorFromUint64Buffer(arr.buffer)
+const tensorFromUint64Buffer = (buffer) => {
+  return _tensorFromUint64Buffer(buffer)
 }
 
-const bitwiseXor = (lhs, rhs) => {
-  return new Tensor(_bitwiseXor(lhs._native_self, rhs._native_self))
-}
-
-const greaterThanEqual = (lhs, rhs) => {
-  return new Tensor(_greaterThanEqual(lhs._native_self, rhs._native_self))
+const save = (tensor, path) => {
+  return _save(tensor._native_self, path)
 }
 
 const logicalOr = (lhs, rhs) => {
   return new Tensor(_logicalOr(lhs._native_self, rhs._native_self))
 }
 
-const add = (lhs, rhs) => {
-  return new Tensor(_add(lhs._native_self, rhs._native_self))
+const lessThanEqual = (lhs, rhs) => {
+  return new Tensor(_lessThanEqual(lhs._native_self, rhs._native_self))
 }
 
-const greaterThan = (lhs, rhs) => {
-  return new Tensor(_greaterThan(lhs._native_self, rhs._native_self))
-}
-
-const eq = (lhs, rhs) => {
-  return new Tensor(_eq(lhs._native_self, rhs._native_self))
+const bitwiseXor = (lhs, rhs) => {
+  return new Tensor(_bitwiseXor(lhs._native_self, rhs._native_self))
 }
 
 const sub = (lhs, rhs) => {
   return new Tensor(_sub(lhs._native_self, rhs._native_self))
 }
 
-const bitwiseAnd = (lhs, rhs) => {
-  return new Tensor(_bitwiseAnd(lhs._native_self, rhs._native_self))
+const logicalAnd = (lhs, rhs) => {
+  return new Tensor(_logicalAnd(lhs._native_self, rhs._native_self))
 }
 
 const bitwiseOr = (lhs, rhs) => {
   return new Tensor(_bitwiseOr(lhs._native_self, rhs._native_self))
 }
 
-const lessThan = (lhs, rhs) => {
-  return new Tensor(_lessThan(lhs._native_self, rhs._native_self))
-}
-
-const lessThanEqual = (lhs, rhs) => {
-  return new Tensor(_lessThanEqual(lhs._native_self, rhs._native_self))
-}
-
-const logicalAnd = (lhs, rhs) => {
-  return new Tensor(_logicalAnd(lhs._native_self, rhs._native_self))
-}
-
 const mod = (lhs, rhs) => {
   return new Tensor(_mod(lhs._native_self, rhs._native_self))
 }
 
-const lShift = (lhs, rhs) => {
-  return new Tensor(_lShift(lhs._native_self, rhs._native_self))
+const bitwiseAnd = (lhs, rhs) => {
+  return new Tensor(_bitwiseAnd(lhs._native_self, rhs._native_self))
 }
 
 const div = (lhs, rhs) => {
   return new Tensor(_div(lhs._native_self, rhs._native_self))
+}
+
+const eq = (lhs, rhs) => {
+  return new Tensor(_eq(lhs._native_self, rhs._native_self))
+}
+
+const greaterThanEqual = (lhs, rhs) => {
+  return new Tensor(_greaterThanEqual(lhs._native_self, rhs._native_self))
+}
+
+const lessThan = (lhs, rhs) => {
+  return new Tensor(_lessThan(lhs._native_self, rhs._native_self))
+}
+
+const rShift = (lhs, rhs) => {
+  return new Tensor(_rShift(lhs._native_self, rhs._native_self))
 }
 
 const neq = (lhs, rhs) => {
@@ -532,8 +586,16 @@ const mul = (lhs, rhs) => {
   return new Tensor(_mul(lhs._native_self, rhs._native_self))
 }
 
-const rShift = (lhs, rhs) => {
-  return new Tensor(_rShift(lhs._native_self, rhs._native_self))
+const add = (lhs, rhs) => {
+  return new Tensor(_add(lhs._native_self, rhs._native_self))
+}
+
+const lShift = (lhs, rhs) => {
+  return new Tensor(_lShift(lhs._native_self, rhs._native_self))
+}
+
+const greaterThan = (lhs, rhs) => {
+  return new Tensor(_greaterThan(lhs._native_self, rhs._native_self))
 }
 
 const init = () => {
@@ -609,76 +671,77 @@ const randn = (shape) => {
 }
 
 module.exports = {
+  sin,
   minimum,
-  any,
-  tile,
-  log1p,
-  tanh,
-  isnan,
+  amin,
   cos,
   sqrt,
-  sum,
-  arange,
+  rint,
+  sign,
+  tril,
+  all,
+  isInvalidArray,
   iota,
+  exp,
+  floor,
   nonzero,
-  negative,
+  sort,
+  sum,
+  tile,
+  matmul,
+  norm,
+  identity,
+  isnan,
+  ceil,
+  _var,
+  argmax,
+  full,
+  roll,
+  transpose,
+  amax,
   countNonzero,
   reshape,
+  negative,
+  logicalNot,
+  sigmoid,
+  clip,
+  any,
   absolute,
+  erf,
+  isinf,
+  where,
+  median,
+  arange,
+  log,
+  tanh,
+  concatenate,
+  log1p,
+  flip,
+  triu,
+  maximum,
   power,
   argmin,
-  full,
-  rint,
-  sort,
-  argmax,
-  identity,
-  logicalNot,
-  isinf,
-  tril,
-  amax,
-  std,
-  ceil,
-  clip,
-  where,
-  maximum,
-  sigmoid,
-  matmul,
-  amin,
   cumsum,
-  transpose,
-  exp,
-  log,
-  sin,
-  _var,
-  norm,
-  all,
-  roll,
-  sign,
-  triu,
   mean,
-  concatenate,
-  floor,
-  erf,
-  flip,
-  median,
-  neq,
-  mul,
-  rShift,
-  lShift,
-  div,
-  logicalOr,
-  add,
-  bitwiseXor,
-  greaterThanEqual,
+  std,
   sub,
-  bitwiseAnd,
-  greaterThan,
-  eq,
-  lessThanEqual,
   logicalAnd,
-  mod,
   bitwiseOr,
   lessThan,
+  rShift,
+  neq,
+  mod,
+  bitwiseAnd,
+  div,
+  eq,
+  greaterThanEqual,
+  greaterThan,
+  mul,
+  add,
+  lShift,
+  logicalOr,
+  lessThanEqual,
+  bitwiseXor,
   init,
   bytesUsed,
   setRowMajor,
@@ -702,7 +765,6 @@ module.exports = {
   toBoolInt8Array,
   toInt16Array,
   toInt32Array,
-  save,
   toInt64Array,
   toUint8Array,
   toUint16Array,
@@ -729,5 +791,13 @@ module.exports = {
   tensorFromUint8Buffer,
   tensorFromUint16Buffer,
   tensorFromUint32Buffer,
-  tensorFromUint64Buffer
+  tensorFromUint64Buffer,
+  save,
+  TensorBackendType,
+  Location,
+  StorageType,
+  PadType,
+  SortMode,
+  MatrixProperty,
+  dtype
 }

@@ -231,7 +231,7 @@ func (g *PackageGenerator) WriteEnums() string {
 			sb.WriteString("}\n\n")
 		} else {
 			// write as if it's a compiled typescript enum if JS out type
-			sb.WriteString(fmt.Sprintf("let %s;\n", *e.Ident))
+			sb.WriteString(fmt.Sprintf("var %s;\n", *e.Ident))
 			sb.WriteString(fmt.Sprintf("(function (%s) {\n", *e.Ident))
 			for _, v := range e.Values {
 				g.writeIndent(sb, 1)
