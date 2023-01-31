@@ -6,7 +6,7 @@ packages:
       wrapper_out_path: demo2/ts/index.ts
   - path: demo1/TensorBase.h
     # - path: ../flashlight/flashlight/fl/tensor/TensorBase.h
-    lib_root_dir: ../flashlight
+    # lib_root_dir: ../flashlight
     bindings_out_path: demo1/out
     indent: "\t"
     vector_opts:
