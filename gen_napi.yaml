@@ -2,7 +2,7 @@ packages:
   - path: test2/BasicLogic.h
     bindings_out_path: test2/out
     js_wrapper_opts:
-      addon_path: build/Release/test.node
+      addon_path: ../../build/Release/test.node
       wrapper_out_path: test2/ts/index.ts
   # - path: test/TensorBase.h
   - path: ../flashlight/flashlight/fl/tensor/TensorBase.h
@@ -28,7 +28,7 @@ packages:
     js_wrapper_opts:
       front_matter: |
         import { Tensor } from './tensor'
-      addon_path: build/Release/shumai_bindings.node
+      addon_path: ../../build/Release/shumai_bindings.node
       wrapper_out_path: test/ts/index.ts
     # TODO: need to debug (should not be necessary??)
     ignored_methods:
