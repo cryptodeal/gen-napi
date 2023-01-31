@@ -18,7 +18,7 @@ Using `go-tree-sitter`, we're able to parse a C++ Header file, query the `tree-s
 
 ## Example
 
-_`gen-napi` config (`.gen-napi.yaml`)_
+_`gen-napi` config (`gen_napi.yaml`)_
 
 ```yaml
 packages:
@@ -68,36 +68,7 @@ _Generated `Node-API` bindings (`.cc`)_
 //////////
 // source: BasicLogic.h
 
-// non-exported helpers
-template <typename T>
-static inline std::vector<T> jsArrayToVector(Napi::Array arr,
-                                             bool reverse,
-                                             int invert) {
-  std::vector<T> out;
-  size_t len = arr.Length();
-  out.reserve(len);
-  for (size_t i = 0; i < len; ++i) {
-    const auto idx = reverse ? len - i - 1 : i;
-    Napi::Value val = arr[idx];
-    auto v = static_cast<const T>(val.As<Napi::Number>().Int64Value());
-    if (invert && v < 0) {
-      v = -v - 1;
-    } else if (invert) {
-      v = invert - v - 1;
-    }
-    out.emplace_back(v);
-  }
-  return out;
-}
-
-template <typename T>
-static inline void DeleteArrayBuffer(Napi::Env env,
-                                     void* /*data*/,
-                                     std::vector<T>* hint) {
-  size_t bytes = hint->size() * sizeof(T);
-  std::unique_ptr<std::vector<T>> vectorPtrToDelete(hint);
-  Napi::MemoryManagement::AdjustExternalMemory(env, -bytes);
-}
+// non-exported helpers (omitted for brevity)
 
 // exported functions
 
