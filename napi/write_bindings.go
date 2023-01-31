@@ -84,7 +84,11 @@ func (g *PackageGenerator) writeArgChecks(sb *strings.Builder, name string, args
 			fmt.Printf("WARNING: arg.Ident is nil for %q", name)
 		}
 		isArgTransform, argTransformVal := g.conf.IsArgTransform(name, *arg.Ident)
-		if arg.IsPrimitive {
+		isEnum, enumName := g.IsTypeEnum(*arg.Type)
+		if isEnum {
+			g.writeArgTypeChecker(sb, name, "IsNumber", i, "typeof `number`", 1, nil)
+			sb.WriteString(fmt.Sprintf("%s %s = static_cast<%s>(info[%d].As<Napi::Number>().Int32Value());\n", *enumName, *arg.Ident, *enumName, i))
+		} else if arg.IsPrimitive {
 			if !arg.IsPointer {
 				napiTypeHandler := "IsNumber"
 				jsTypeEquivalent := "number"
@@ -273,7 +277,10 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod) {
 				if i > 0 {
 					sb.WriteString(", ")
 				}
-				if _, ok := g.conf.TypeMappings[*arg.Type]; ok {
+				isEnum, _ := g.IsTypeEnum(*arg.Type)
+				if isEnum {
+					sb.WriteString(*arg.Ident)
+				} else if _, ok := g.conf.TypeMappings[*arg.Type]; ok {
 					sb.WriteString(fmt.Sprintf("%s::%s(%s)", *g.NameSpace, *arg.Type, *arg.Ident))
 				} else if isClass(*arg.Type, g.ParsedData.Classes) {
 					sb.WriteString(fmt.Sprintf("*(%s)", *arg.Ident))

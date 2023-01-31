@@ -121,12 +121,12 @@ func CPPTypeToTS(t string, isPointer bool) (string, bool) {
 	}
 }
 
-func (g *PackageGenerator) IsTypeEnum(t string) bool {
+func (g *PackageGenerator) IsTypeEnum(t string) (bool, *string) {
 	for _, e := range g.ParsedData.Enums {
 		fullName := fmt.Sprintf("%s::%s", *e.NameSpace, *e.Ident)
-		if strings.EqualFold(fullName, t) {
-			return true
+		if strings.EqualFold(fullName, t) || strings.EqualFold(*e.Ident, t) {
+			return true, &fullName
 		}
 	}
-	return false
+	return false, nil
 }
