@@ -12,7 +12,41 @@ Using `go-tree-sitter`, we're able to parse a C++ Header file, query the `tree-s
 
 ## TODO: Documentation
 
-_Docs are pending testing against other header libraries, removing the one(?) hardcoded ref to a shumai global function (row/col major inversion), and general clean up of the logic/config setup._
+_Docs are a WIP; pending testing against other header libraries and general clean up of the logic/config setup; expect breaking changes as we work to flesh out the best opinionated setup for ease of use/quick start up time._
+
+## Usage
+
+### Option A: CLI (recommended)
+
+Create a file `gen-napi.yaml` in which you specify the header file to parse/generate bindings from (as well as additional type handlers, output path, etc.). For instance:
+
+```yaml
+packages:
+  - path: ../flashlight/flashlight/fl/tensor/TensorBase.h
+    lib_root_dir: ../flashlight
+    bindings_out_path: demo1/out
+    indent: "\t"
+    js_wrapper_opts:
+      front_matter: |
+        import { Tensor } from './tensor'
+      addon_path: ../../build/Release/shumai_bindings.node
+      wrapper_out_path: demo1/ts/index.ts
+    type_mappings:
+      Shape:
+        ts: number[]
+      Dim:
+        ts: number
+```
+
+Then run
+
+```shell
+gen-napi generate
+```
+
+The output node native addon logic `.cc` will be generated to the specified `bindings_out_path` and the TS/JS will be generated to the specified `wrapper_out_path`.
+
+### Option B: Library Mode (TODO: Docs)
 
 ## Demo
 

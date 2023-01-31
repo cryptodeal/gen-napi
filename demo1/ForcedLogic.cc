@@ -670,7 +670,6 @@ static Napi::Value toUint64Scalar(const Napi::CallbackInfo& info) {
   @gen-napi-`ts_return_type`: void
 */
 static void eval(const Napi::CallbackInfo& info) {
-  Napi::Env env = info.Env();
   fl::Tensor* t = UnExternalize<fl::Tensor>(info[0]);
   fl::eval(*(t));
 }

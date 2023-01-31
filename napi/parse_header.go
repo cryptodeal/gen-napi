@@ -133,7 +133,7 @@ func getRootNode(path string) (*sitter.Node, []byte) {
 	input, err := os.ReadFile(path)
 	if err != nil {
 		fmt.Println(err)
-		panic(err)
+		return nil, nil
 	}
 
 	parser := sitter.NewParser()
@@ -174,8 +174,10 @@ func (g *PackageGenerator) parseEnums(n *sitter.Node, input []byte, parseInclude
 			usedPath := filepath.Join(g.conf.LibRootDir, *local)
 			fmt.Printf("Parsing enums in: %q\n", usedPath)
 			rootNode, byteData := getRootNode(usedPath)
-			tmp_enums := g.parseEnums(rootNode, byteData, false)
-			enums = append(enums, tmp_enums...)
+			if rootNode != nil {
+				tmp_enums := g.parseEnums(rootNode, byteData, false)
+				enums = append(enums, tmp_enums...)
+			}
 		}
 	}
 	return enums
