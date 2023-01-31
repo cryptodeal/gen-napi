@@ -77,7 +77,7 @@ func (g *PackageGenerator) writeArgChecks(sb *strings.Builder, name string, args
 
 	// TODO: clean up logic/handle more cases
 	for i, arg := range *args {
-		if i > expected_arg_count {
+		if i >= expected_arg_count {
 			break
 		}
 		if arg.Ident == nil {

@@ -187,7 +187,7 @@ packages:
       iota:
         arg_count: 2
         return_transforms: |
-          /return/ = fl::iota(fl::Shape(/arg_0/), fl::Shape(/arg_1/));
+          /return/ = fl::iota(fl::Shape(/arg_0/), fl::Shape(/arg_1/), /arg_2/);
         arg_transforms:
           dims: |
             auto dims = jsArrayToVector<long long>(/arg/.As<Napi::Array>(), g_row_major, false);
