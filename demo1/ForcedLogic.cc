@@ -766,7 +766,6 @@ static void dispose(const Napi::CallbackInfo& info) {
 
 /*
   @gen-napi-`ts_args`: (buffer: ArrayBuffer)
-  @gen-napi-`ts_return_type`: any
 */
 static Napi::Value tensorFromFloat32Buffer(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
@@ -790,7 +789,6 @@ static Napi::Value tensorFromFloat32Buffer(const Napi::CallbackInfo& info) {
 
 /*
   @gen-napi-`ts_args`: (buffer: ArrayBuffer)
-  @gen-napi-`ts_return_type`: any
 */
 static Napi::Value tensorFromFloat64Buffer(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
@@ -814,7 +812,6 @@ static Napi::Value tensorFromFloat64Buffer(const Napi::CallbackInfo& info) {
 
 /*
   @gen-napi-`ts_args`: (buffer: ArrayBuffer)
-  @gen-napi-`ts_return_type`: any
 */
 static Napi::Value tensorFromBoolInt8Buffer(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
@@ -838,7 +835,6 @@ static Napi::Value tensorFromBoolInt8Buffer(const Napi::CallbackInfo& info) {
 
 /*
   @gen-napi-`ts_args`: (buffer: ArrayBuffer)
-  @gen-napi-`ts_return_type`: any
 */
 static Napi::Value tensorFromInt16Buffer(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
@@ -862,7 +858,6 @@ static Napi::Value tensorFromInt16Buffer(const Napi::CallbackInfo& info) {
 
 /*
   @gen-napi-`ts_args`: (buffer: ArrayBuffer)
-  @gen-napi-`ts_return_type`: any
 */
 static Napi::Value tensorFromInt32Buffer(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
@@ -886,7 +881,6 @@ static Napi::Value tensorFromInt32Buffer(const Napi::CallbackInfo& info) {
 
 /*
   @gen-napi-`ts_args`: (buffer: ArrayBuffer)
-  @gen-napi-`ts_return_type`: any
 */
 static Napi::Value tensorFromInt64Buffer(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
@@ -910,7 +904,6 @@ static Napi::Value tensorFromInt64Buffer(const Napi::CallbackInfo& info) {
 
 /*
   @gen-napi-`ts_args`: (buffer: ArrayBuffer)
-  @gen-napi-`ts_return_type`: any
 */
 static Napi::Value tensorFromUint8Buffer(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
@@ -934,7 +927,6 @@ static Napi::Value tensorFromUint8Buffer(const Napi::CallbackInfo& info) {
 
 /*
   @gen-napi-`ts_args`: (buffer: ArrayBuffer)
-  @gen-napi-`ts_return_type`: any
 */
 static Napi::Value tensorFromUint16Buffer(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
@@ -958,7 +950,6 @@ static Napi::Value tensorFromUint16Buffer(const Napi::CallbackInfo& info) {
 
 /*
   @gen-napi-`ts_args`: (buffer: ArrayBuffer)
-  @gen-napi-`ts_return_type`: any
 */
 static Napi::Value tensorFromUint32Buffer(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
@@ -982,7 +973,6 @@ static Napi::Value tensorFromUint32Buffer(const Napi::CallbackInfo& info) {
 
 /*
   @gen-napi-`ts_args`: (buffer: ArrayBuffer)
-  @gen-napi-`ts_return_type`: any
 */
 static Napi::Value tensorFromUint64Buffer(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();

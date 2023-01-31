@@ -14,6 +14,7 @@ func (g *PackageGenerator) Generate() (string, string, error) {
 	g.ParsedData.Enums = g.parseEnums(g.RootNode, *g.Input, true)
 	g.writeFileCodegenHeader(bindings)
 	g.writeFileCodegenHeader(env_wrapper)
+	g.writeESLintIgnore(env_wrapper)
 
 	g.writeBindings(bindings)
 	g.WriteEnvWrapper(env_wrapper)
