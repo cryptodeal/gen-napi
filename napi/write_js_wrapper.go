@@ -25,20 +25,20 @@ func isTypedArray(typeName string) bool {
 	return false
 }
 
-func (g *PackageGenerator) WriteEnvWrapper(sb *strings.Builder, classes map[string]*CPPClass, methods map[string]*CPPMethod, processedMethods map[string]*CPPMethod) {
+func (g *PackageGenerator) WriteEnvWrapper(sb *strings.Builder) {
 	sb.WriteString(g.conf.JSWrapperOpts.FrontMatter)
-	sb.WriteString(g.WriteEnvImports(classes, methods, processedMethods))
-	sb.WriteString(g.WriteEnvWrappedFns(methods, processedMethods, classes))
+	sb.WriteString(g.WriteEnvImports())
+	sb.WriteString(g.WriteEnvWrappedFns())
 	if !g.conf.IsEnvTS() {
-		sb.WriteString(g.WriteEnvExports(classes, methods, processedMethods))
+		sb.WriteString(g.WriteEnvExports())
 	}
 }
 
-func (g *PackageGenerator) WriteEnvExports(classes map[string]*CPPClass, methods map[string]*CPPMethod, processedMethods map[string]*CPPMethod) string {
+func (g *PackageGenerator) WriteEnvExports() string {
 	sb := new(strings.Builder)
 	sb.WriteString("module.exports = {\n")
 	used := []string{}
-	for name, m := range methods {
+	for name, m := range g.ParsedData.Methods {
 		if !g.conf.IsMethodIgnored(*m.Ident) {
 			if isInvalidName(name) {
 				used = append(used, "_"+name)
@@ -56,7 +56,7 @@ func (g *PackageGenerator) WriteEnvExports(classes map[string]*CPPClass, methods
 		}
 	}
 	used = []string{}
-	for name, m := range processedMethods {
+	for name, m := range g.ParsedData.Lits {
 		if !g.conf.IsMethodIgnored(*m.Ident) {
 			if isInvalidName(name) {
 				used = append(used, "_"+name)
@@ -92,7 +92,7 @@ func (g *PackageGenerator) WriteEnvExports(classes map[string]*CPPClass, methods
 		}
 	}
 
-	for name, c := range classes {
+	for name, c := range g.ParsedData.Classes {
 		if c.Decl != nil {
 			if v, ok := g.conf.ClassOpts[name]; ok && len(v.ForcedMethods) > 0 {
 				used_len = len(v.ForcedMethods)
@@ -117,11 +117,11 @@ func (g *PackageGenerator) WriteEnvExports(classes map[string]*CPPClass, methods
 	return sb.String()
 }
 
-func (g *PackageGenerator) WriteEnvImports(classes map[string]*CPPClass, methods map[string]*CPPMethod, processedMethods map[string]*CPPMethod) string {
+func (g *PackageGenerator) WriteEnvImports() string {
 	hasClassImports := false
 	sb := new(strings.Builder)
 	sb.WriteString("const {\n")
-	for name, c := range classes {
+	for name, c := range g.ParsedData.Classes {
 		if c.Decl != nil {
 			if v, ok := g.conf.ClassOpts[name]; ok && len(v.ForcedMethods) > 0 {
 				for i, m := range v.ForcedMethods {
@@ -140,7 +140,7 @@ func (g *PackageGenerator) WriteEnvImports(classes map[string]*CPPClass, methods
 		}
 	}
 	used := []string{}
-	for name, m := range methods {
+	for name, m := range g.ParsedData.Methods {
 		if !g.conf.IsMethodIgnored(*m.Ident) {
 			used = append(used, name)
 		}
@@ -163,7 +163,7 @@ func (g *PackageGenerator) WriteEnvImports(classes map[string]*CPPClass, methods
 	}
 
 	used = []string{}
-	for name, m := range processedMethods {
+	for name, m := range g.ParsedData.Lits {
 		if !g.conf.IsMethodIgnored(*m.Ident) {
 			used = append(used, name)
 		}
@@ -202,9 +202,9 @@ func (g *PackageGenerator) WriteEnvImports(classes map[string]*CPPClass, methods
 	return sb.String()
 }
 
-func (g *PackageGenerator) WriteEnvWrappedFns(methods map[string]*CPPMethod, processedMethods map[string]*CPPMethod, classes map[string]*CPPClass) string {
+func (g *PackageGenerator) WriteEnvWrappedFns() string {
 	sb := new(strings.Builder)
-	for _, m := range methods {
+	for _, m := range g.ParsedData.Methods {
 		if !g.conf.IsMethodIgnored(*m.Ident) {
 			if g.conf.IsEnvTS() {
 				sb.WriteString("export ")
@@ -248,7 +248,7 @@ func (g *PackageGenerator) WriteEnvWrappedFns(methods map[string]*CPPMethod, pro
 			}
 			g.writeIndent(sb, 1)
 			sb.WriteString("return ")
-			if isClass(tsType, classes) {
+			if isClass(tsType, g.ParsedData.Classes) {
 				sb.WriteString(fmt.Sprintf("new %s(", tsType))
 			}
 			if isInvalidName(*m.Ident) {
@@ -264,11 +264,11 @@ func (g *PackageGenerator) WriteEnvWrappedFns(methods map[string]*CPPMethod, pro
 					sb.WriteString(", ")
 				}
 				sb.WriteString(*p.Ident)
-				if isClass(*p.Type, classes) {
+				if isClass(*p.Type, g.ParsedData.Classes) {
 					sb.WriteString("._native_self")
 				}
 			}
-			if isClass(tsType, classes) {
+			if isClass(tsType, g.ParsedData.Classes) {
 				sb.WriteByte(')')
 			}
 			sb.WriteString(");\n")
@@ -276,7 +276,7 @@ func (g *PackageGenerator) WriteEnvWrappedFns(methods map[string]*CPPMethod, pro
 		}
 	}
 
-	for name, c := range classes {
+	for name, c := range g.ParsedData.Classes {
 		if c.Decl != nil {
 			if v, ok := g.conf.ClassOpts[name]; ok && len(v.ForcedMethods) > 0 {
 				for _, m := range v.ForcedMethods {
@@ -308,7 +308,7 @@ func (g *PackageGenerator) WriteEnvWrappedFns(methods map[string]*CPPMethod, pro
 					}
 					g.writeIndent(sb, 1)
 					sb.WriteString("return ")
-					if isClass(m.TSReturnType, classes) {
+					if isClass(m.TSReturnType, g.ParsedData.Classes) {
 						sb.WriteString(fmt.Sprintf("new %s(", m.TSReturnType))
 					}
 					if isInvalidName(m.Name) {
@@ -321,13 +321,13 @@ func (g *PackageGenerator) WriteEnvWrappedFns(methods map[string]*CPPMethod, pro
 							sb.WriteString(", ")
 						}
 						sb.WriteString(p.Name)
-						if isClass(p.TSType, classes) {
+						if isClass(p.TSType, g.ParsedData.Classes) {
 							sb.WriteString("._native_self")
 						} else if isTypedArray(m.Args[i].TSType) {
 							sb.WriteString(".buffer")
 						}
 					}
-					if isClass(m.TSReturnType, classes) {
+					if isClass(m.TSReturnType, g.ParsedData.Classes) {
 						sb.WriteByte(')')
 					}
 					sb.WriteString(");\n")
@@ -337,7 +337,7 @@ func (g *PackageGenerator) WriteEnvWrappedFns(methods map[string]*CPPMethod, pro
 		}
 	}
 
-	for _, m := range processedMethods {
+	for _, m := range g.ParsedData.Lits {
 		if !g.conf.IsMethodIgnored(*m.Ident) {
 			if !g.conf.IsMethodIgnored(*m.Ident) {
 				if g.conf.IsEnvTS() {
@@ -374,7 +374,7 @@ func (g *PackageGenerator) WriteEnvWrappedFns(methods map[string]*CPPMethod, pro
 				}
 				g.writeIndent(sb, 1)
 				sb.WriteString("return ")
-				if isClass(tsType, classes) {
+				if isClass(tsType, g.ParsedData.Classes) {
 					sb.WriteString(fmt.Sprintf("new %s(", tsType))
 				}
 				if isInvalidName(*m.Ident) {
@@ -387,11 +387,11 @@ func (g *PackageGenerator) WriteEnvWrappedFns(methods map[string]*CPPMethod, pro
 						sb.WriteString(", ")
 					}
 					sb.WriteString(*p.Ident)
-					if isClass(*p.Type, classes) {
+					if isClass(*p.Type, g.ParsedData.Classes) {
 						sb.WriteString("._native_self")
 					}
 				}
-				if isClass(tsType, classes) {
+				if isClass(tsType, g.ParsedData.Classes) {
 					sb.WriteByte(')')
 				}
 				sb.WriteString(");\n")
@@ -429,7 +429,7 @@ func (g *PackageGenerator) WriteEnvWrappedFns(methods map[string]*CPPMethod, pro
 		}
 		g.writeIndent(sb, 1)
 		sb.WriteString("return ")
-		if isClass(m.TSReturnType, classes) {
+		if isClass(m.TSReturnType, g.ParsedData.Classes) {
 			sb.WriteString(fmt.Sprintf("new %s(", m.TSReturnType))
 		}
 		if isInvalidName(m.Name) {
@@ -446,7 +446,7 @@ func (g *PackageGenerator) WriteEnvWrappedFns(methods map[string]*CPPMethod, pro
 				sb.WriteString(".buffer")
 			}
 		}
-		if isClass(m.TSReturnType, classes) {
+		if isClass(m.TSReturnType, g.ParsedData.Classes) {
 			sb.WriteByte(')')
 		}
 		sb.WriteString(");\n")

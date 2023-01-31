@@ -52,7 +52,7 @@ func (g *PackageGenerator) writeArgTypeChecker(sb *strings.Builder, name string,
 	sb.WriteString("}\n")
 }
 
-func (g *PackageGenerator) writeArgChecks(sb *strings.Builder, name string, args *[]*CPPArg, expected_arg_count int, classes map[string]*CPPClass) {
+func (g *PackageGenerator) writeArgChecks(sb *strings.Builder, name string, args *[]*CPPArg, expected_arg_count int) {
 	if expected_arg_count == 0 {
 		return
 	}
@@ -151,7 +151,7 @@ func (g *PackageGenerator) writeArgChecks(sb *strings.Builder, name string, args
 					sb.WriteString(";\n")
 				}
 			}
-		} else if isClass(*arg.Type, classes) {
+		} else if isClass(*arg.Type, g.ParsedData.Classes) {
 			g.writeArgTypeChecker(sb, name, "IsExternal", i, fmt.Sprintf("native `%s` (typeof `Napi::External<%s::%s>`)", *arg.Type, *g.NameSpace, *arg.Type), 1, nil)
 			if !isArgTransform {
 				g.writeIndent(sb, 1)
@@ -197,7 +197,7 @@ func (g *PackageGenerator) writeArgChecks(sb *strings.Builder, name string, args
 	}
 }
 
-func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classes map[string]*CPPClass) {
+func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod) {
 	parsedName := "_" + *m.Ident
 	sb.WriteString(fmt.Sprintf("static Napi::Value %s(const Napi::CallbackInfo& info) {\n", parsedName))
 	g.writeIndent(sb, 1)
@@ -212,7 +212,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 		m.ExpectedArgs = arg_count
 	}
 	// single overload, parse args
-	g.writeArgChecks(sb, *m.Ident, m.Overloads[0], arg_count, classes)
+	g.writeArgChecks(sb, *m.Ident, m.Overloads[0], arg_count)
 
 	obj_name := ""
 	outType := *m.Returns
@@ -230,7 +230,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 			}
 			sb.WriteString(strings.ReplaceAll(*argTransformVal, "/arg/", fmt.Sprintf("info[%d]", i)))
 			// TODO: this might need better handling for class wrappers
-		} else if isClass(*arg.Type, classes) {
+		} else if isClass(*arg.Type, g.ParsedData.Classes) {
 			obj_name = *arg.Ident
 		} else if strings.Contains(*arg.Type, "std::vector") && !strings.EqualFold(tmpType[strings.Index(*arg.Type, "<")+1:strings.Index(*arg.Type, ">")], *m.Returns) {
 			g.writeIndent(sb, 2)
@@ -275,7 +275,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 				}
 				if _, ok := g.conf.TypeMappings[*arg.Type]; ok {
 					sb.WriteString(fmt.Sprintf("%s::%s(%s)", *g.NameSpace, *arg.Type, *arg.Ident))
-				} else if isClass(*arg.Type, classes) {
+				} else if isClass(*arg.Type, g.ParsedData.Classes) {
 					sb.WriteString(fmt.Sprintf("*(%s)", *arg.Ident))
 				} else {
 					sb.WriteString(*arg.Ident)
@@ -286,7 +286,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 		parsed_transform := strings.ReplaceAll(*transform, "/return/", "_res")
 		for i, arg := range *m.Overloads[0] {
 			fmtd_arg := ""
-			if isClass(*arg.Type, classes) {
+			if isClass(*arg.Type, g.ParsedData.Classes) {
 				fmtd_arg = fmt.Sprintf("*(%s)", *arg.Ident)
 			} else {
 				fmtd_arg = *arg.Ident
@@ -321,7 +321,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 			}
 			if _, ok := g.conf.TypeMappings[*arg.Type]; ok {
 				sb.WriteString(fmt.Sprintf("%s::%s(%s)", *g.NameSpace, *arg.Type, *arg.Ident))
-			} else if isClass(*arg.Type, classes) {
+			} else if isClass(*arg.Type, g.ParsedData.Classes) {
 				sb.WriteString(fmt.Sprintf("*(%s)", *arg.Ident))
 			} else {
 				sb.WriteString(*arg.Ident)
@@ -359,7 +359,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 				sb.WriteString(strings.ReplaceAll(t.Handler, "/val/", "_res"))
 				g.writeIndent(sb, 1)
 				sb.WriteString(fmt.Sprintf("return %s;\n", t.OutVar))
-			} else if isObject && isClass(returnType, classes) {
+			} else if isObject && isClass(returnType, g.ParsedData.Classes) {
 				if v, ok := g.conf.GlobalTypeOutTransforms[returnType]; ok {
 					g.writeIndent(sb, 1)
 					sb.WriteString(strings.ReplaceAll(v, "/return/", "_res"))
@@ -387,7 +387,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod, classe
 	sb.WriteString("}\n\n")
 }
 
-func (g *PackageGenerator) writeClassField(sb *strings.Builder, f *CPPFieldDecl, className string, classes map[string]*CPPClass) {
+func (g *PackageGenerator) writeClassField(sb *strings.Builder, f *CPPFieldDecl, className string) {
 	if f.Ident != nil && g.conf.IsFieldWrapped(className, *f.Ident) {
 		var returnType string
 		isVoid := false
@@ -437,7 +437,7 @@ func (g *PackageGenerator) writeClassField(sb *strings.Builder, f *CPPFieldDecl,
 				}
 				if _, ok := g.conf.TypeMappings[*arg.Type]; ok {
 					sb.WriteString(fmt.Sprintf("%s::%s(%s)", *g.NameSpace, *arg.Type, *arg.Ident))
-				} else if isClass(*arg.Type, classes) {
+				} else if isClass(*arg.Type, g.ParsedData.Classes) {
 					sb.WriteString(fmt.Sprintf("*(%s)", *arg.Ident))
 				} else {
 					sb.WriteString(*arg.Ident)
@@ -454,7 +454,7 @@ func (g *PackageGenerator) writeClassField(sb *strings.Builder, f *CPPFieldDecl,
 				sb.WriteString(strings.ReplaceAll(t.Handler, "/val/", "_res"))
 				g.writeIndent(sb, 1)
 				sb.WriteString(fmt.Sprintf("return %s;\n", t.OutVar))
-			} else if isObject && isClass(returnType, classes) {
+			} else if isObject && isClass(returnType, g.ParsedData.Classes) {
 				if v, ok := g.conf.GlobalTypeOutTransforms[returnType]; ok {
 					g.writeIndent(sb, 1)
 					sb.WriteString(strings.ReplaceAll(v, "/return/", "_res"))
@@ -484,7 +484,7 @@ func (g *PackageGenerator) writeAddonExport(sb *strings.Builder, name string) {
 }
 
 // makes calls to functions that write bindings
-func (g *PackageGenerator) writeBindings(sb *strings.Builder, classes map[string]*CPPClass, methods map[string]*CPPMethod, processedMethods map[string]*CPPMethod) {
+func (g *PackageGenerator) writeBindings(sb *strings.Builder) {
 	g.writeRequiredIncludes(sb)
 
 	// g.writeHeaderFrontmatter(sb)
@@ -492,17 +492,17 @@ func (g *PackageGenerator) writeBindings(sb *strings.Builder, classes map[string
 	g.writeFileSourceHeader(sb, *g.Path)
 	g.writeGlobalVars(sb)
 	// write any helpers functions (non-exported; specified in config)
-	g.writeHelpers(sb, classes)
+	g.writeHelpers(sb)
 
 	sb.WriteString("// exported functions\n\n")
 	// write methods (not requiring preprocessing)
-	for _, f := range methods {
-		g.writeMethod(sb, f, classes)
+	for _, f := range g.ParsedData.Methods {
+		g.writeMethod(sb, f)
 	}
 
 	// write methods that required preprocessing
-	for _, f := range processedMethods {
-		g.writeMethod(sb, f, classes)
+	for _, f := range g.ParsedData.Lits {
+		g.writeMethod(sb, f)
 	}
 
 	// write any forced methods (specified in config)
@@ -513,7 +513,7 @@ func (g *PackageGenerator) writeBindings(sb *strings.Builder, classes map[string
 	// writes NAPI `Init` function (init NAPI exports)
 	sb.WriteString("// NAPI exports\n\n")
 	sb.WriteString("Napi::Object Init(Napi::Env env, Napi::Object exports) {\n")
-	for name, c := range classes {
+	for name, c := range g.ParsedData.Classes {
 		// check if header contained class constructor declaration(s)
 		if c.Decl != nil {
 			// write exports for wrapped class fields (specified in config)
@@ -534,12 +534,12 @@ func (g *PackageGenerator) writeBindings(sb *strings.Builder, classes map[string
 	}
 
 	// write exports for methods defined in header
-	for _, f := range methods {
+	for _, f := range g.ParsedData.Methods {
 		g.writeAddonExport(sb, *f.Ident)
 	}
 
 	// write exports for methods requiring pre-processing
-	for _, f := range processedMethods {
+	for _, f := range g.ParsedData.Lits {
 		g.writeAddonExport(sb, *f.Ident)
 	}
 

@@ -49,6 +49,7 @@ type PackageGenerator struct {
 	LocalIncludes []*string
 	NameSpace     *string
 	Name          *string
+	ParsedData    ParsedData
 	Path          *string
 	RootNode      *sitter.Node
 	Input         *[]byte
@@ -57,6 +58,13 @@ type PackageGenerator struct {
 type EnumField struct {
 	Name string
 	Val  string
+}
+
+type ParsedData struct {
+	Methods map[string]*CPPMethod
+	Classes map[string]*CPPClass
+	Lits    map[string]*CPPMethod
+	Enums   []*ParsedEnum
 }
 
 func New(config *Config) *TSGo {
@@ -98,10 +106,12 @@ func (g *TSGo) Generate() error {
 			lower: cases.Lower(language.AmericanEnglish),
 			upper: cases.Upper(language.AmericanEnglish),
 		}
+		parsedData := ParsedData{}
 		napiGen := &PackageGenerator{
 			casers:        casers,
 			conf:          napiConfig,
 			NameSpace:     &namespace,
+			ParsedData:    parsedData,
 			Name:          &name,
 			LocalIncludes: localIncludes,
 			RootNode:      n,

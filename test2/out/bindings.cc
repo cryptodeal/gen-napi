@@ -218,12 +218,12 @@ static Napi::Value _foo(const Napi::CallbackInfo& info) {
 // NAPI exports
 
 Napi::Object Init(Napi::Env env, Napi::Object exports) {
+  exports.Set(Napi::String::New(env, "_foo"), Napi::Function::New(env, _foo));
+  exports.Set(Napi::String::New(env, "_bar"), Napi::Function::New(env, _bar));
   exports.Set(Napi::String::New(env, "_baz"), Napi::Function::New(env, _baz));
   exports.Set(Napi::String::New(env, "_qux"), Napi::Function::New(env, _qux));
   exports.Set(Napi::String::New(env, "_quux"), Napi::Function::New(env, _quux));
   exports.Set(Napi::String::New(env, "_test"), Napi::Function::New(env, _test));
-  exports.Set(Napi::String::New(env, "_foo"), Napi::Function::New(env, _foo));
-  exports.Set(Napi::String::New(env, "_bar"), Napi::Function::New(env, _bar));
   return exports;
 }
 

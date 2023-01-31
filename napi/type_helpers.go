@@ -1,5 +1,10 @@
 package napi
 
+import (
+	"fmt"
+	"strings"
+)
+
 func isClass(argType string, classes map[string]*CPPClass) bool {
 	_, ok := classes[argType]
 	return ok
@@ -114,4 +119,14 @@ func CPPTypeToTS(t string, isPointer bool) (string, bool) {
 	default:
 		return t, true
 	}
+}
+
+func (g *PackageGenerator) IsTypeEnum(t string) bool {
+	for _, e := range g.ParsedData.Enums {
+		fullName := fmt.Sprintf("%s::%s", *e.NameSpace, *e.Ident)
+		if strings.EqualFold(fullName, t) {
+			return true
+		}
+	}
+	return false
 }

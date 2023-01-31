@@ -41,12 +41,12 @@ func (g *PackageGenerator) writeJsArrayToVectorFn(sb *strings.Builder) {
 	sb.WriteString("}\n\n")
 }
 
-func (g *PackageGenerator) writeHelpers(w *strings.Builder, classes map[string]*CPPClass) {
+func (g *PackageGenerator) writeHelpers(w *strings.Builder) {
 	w.WriteString("// non-exported helpers\n")
 	g.writeJsArrayToVectorFn(w)
 	g.writeArrayBufferDeleter(w)
 	hasUnexternalizer := false
-	for name, c := range classes {
+	for name, c := range g.ParsedData.Classes {
 		if c.Decl != nil {
 			g.writeClassDeleter(w, c, name)
 			g.writeClassExternalizer(w, c, name)
@@ -57,7 +57,7 @@ func (g *PackageGenerator) writeHelpers(w *strings.Builder, classes map[string]*
 
 			if c.FieldDecl != nil {
 				for _, f := range *c.FieldDecl {
-					g.writeClassField(w, f, name, classes)
+					g.writeClassField(w, f, name)
 				}
 			}
 
