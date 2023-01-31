@@ -1,28 +1,11 @@
 {
-  "name": "@shumai/shumai",
-  "version": "0.0.11",
-  "module": "shumai/index.ts",
+  "name": "gen-napi",
+  "version": "0.0.0",
   "type": "module",
   "scripts": {
     "format": "eslint '**/*.{js,ts}' '*.{js,ts,cjs}' package.json --fix",
-    "install": "cmake-js compile --CD flashlight_DIR=$HOME/usr/share/flashlight/cmake/",
-    "typedoc": "typedoc --tsconfig tsconfig.typedoc.json"
+    "install": "cmake-js compile --CD flashlight_DIR=$HOME/usr/share/flashlight/cmake/"
   },
-  "files": [
-    "shumai/**/*.ts",
-    "dist/**/*.d.ts"
-  ],
-  "types": "dist/shumai/index.d.ts",
-  "keywords": [
-    "bun",
-    "flashlight",
-    "gpu",
-    "tensor",
-    "array",
-    "machine",
-    "learning",
-    "ai"
-  ],
   "devDependencies": {
     "@types/node": "^18.11.18",
     "@typescript-eslint/eslint-plugin": "^5.49.0",

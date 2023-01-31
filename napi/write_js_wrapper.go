@@ -345,6 +345,8 @@ func (g *PackageGenerator) WriteEnvWrappedFns() string {
 					}
 					if g.conf.IsEnvTS() {
 						if m.IsVoid {
+							sb.WriteString("): void => {\n")
+						} else if m.TSReturnType == "" {
 							sb.WriteString(") => {\n")
 						} else {
 							sb.WriteString(fmt.Sprintf("): %s => {\n", m.TSReturnType))
