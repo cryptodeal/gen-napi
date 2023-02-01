@@ -424,8 +424,11 @@ func parseCPPArg(content []byte, arg_list *sitter.Node) *[]*CPPArg {
 			}
 		case "optional_parameter_declaration":
 			{
-				tempDefault := scoped_arg.ChildByFieldName("default_value").Content(content)
-				parsed_arg.DefaultValue = &CPPArgDefault{Val: &tempDefault}
+				defaultNode := refNode.ChildByFieldName("default_value")
+				if defaultNode != nil {
+					tempDefault := defaultNode.Content(content)
+					parsed_arg.DefaultValue = &CPPArgDefault{Val: &tempDefault}
+				}
 			}
 		}
 		args = append(args, parsed_arg)
