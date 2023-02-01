@@ -23,18 +23,6 @@ export enum dtype {
   u64 = 10
 }
 
-export const qux = (a: BigInt64Array, b: number): BigInt64Array => {
-  return _qux(a, b);
-}
-
-export const quux = (a: boolean, b: boolean): Uint8Array => {
-  return _quux(a, b);
-}
-
-export const test = (a: string): string => {
-  return _test(a);
-}
-
 export const foo = (a: number): number => {
   return _foo(a);
 }
@@ -45,5 +33,17 @@ export const bar = (a: Float64Array, b: number): Float64Array => {
 
 export const baz = (a: Float32Array, b: number): Float32Array => {
   return _baz(a, b);
+}
+
+export const qux = (a: BigInt64Array, b: number): BigInt64Array => {
+  return _qux(a, b);
+}
+
+export const quux = (a: boolean, b: boolean): Uint8Array => {
+  return _quux(a, b);
+}
+
+export const test = (a: string): string => {
+  return _test(a);
 }
 
