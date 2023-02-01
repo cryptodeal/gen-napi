@@ -10,25 +10,26 @@ func (g *PackageGenerator) writeArgCountChecker(sb *strings.Builder, name string
 		return
 	}
 	g.writeIndent(sb, 1)
+	sb.WriteString("auto _arg_count = info.Length();\n")
 	if optional == 0 {
-		sb.WriteString(fmt.Sprintf("if (info.Length() != %d) {\n", expected_arg_count))
-	} else {
 		g.writeIndent(sb, 1)
-		sb.WriteString("auto _arg_count = info.Length();\n")
+		sb.WriteString(fmt.Sprintf("if (_arg_count != %d) {\n", expected_arg_count))
+	} else {
 		g.writeIndent(sb, 1)
 		sb.WriteString(fmt.Sprintf("if (_arg_count < %d || _arg_count > %d) {\n", expected_arg_count, expected_arg_count+optional))
 	}
 	g.writeIndent(sb, 2)
+	var errMsg string
 	if optional == 0 {
-		errMsg := fmt.Sprintf("`%s` expects exactly %d arg", name, expected_arg_count)
+		errMsg = fmt.Sprintf("`%s` expects exactly %d arg, but received ", name, expected_arg_count)
 		if expected_arg_count > 1 {
 			errMsg += "s"
 		}
-		sb.WriteString(fmt.Sprintf("Napi::TypeError::New(env, %q).ThrowAsJavaScriptException();\n", errMsg))
 	} else {
-		errMsg := fmt.Sprintf("`%s` expected %d to %d args, but received ", name, expected_arg_count, expected_arg_count+optional)
-		sb.WriteString(fmt.Sprintf("Napi::TypeError::New(env, %q + std::to_string(_arg_count)).ThrowAsJavaScriptException();\n", errMsg))
+		errMsg = fmt.Sprintf("`%s` expects %d to %d args, but received ", name, expected_arg_count, expected_arg_count+optional)
 	}
+	sb.WriteString(fmt.Sprintf("Napi::TypeError::New(env, %q + std::to_string(_arg_count)).ThrowAsJavaScriptException();\n", errMsg))
+
 	g.writeIndent(sb, 2)
 	sb.WriteString("return env.Undefined();\n")
 	g.writeIndent(sb, 1)
@@ -118,7 +119,7 @@ func (g *PackageGenerator) writeArgChecks(sb *strings.Builder, name string, args
 
 	// TODO: clean up logic/handle more cases
 	for i, arg := range *args {
-		if i >= expected_arg_count {
+		if i >= expected_arg_count && optionalArgs == 0 {
 			break
 		}
 		if arg.Ident == nil {
