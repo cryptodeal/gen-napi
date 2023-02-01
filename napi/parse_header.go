@@ -394,6 +394,13 @@ func parseCPPArg(content []byte, arg_list *sitter.Node) *[]*CPPArg {
 			TypeQualifier: typeQualifier,
 			IsPrimitive:   isPrimitive,
 		}
+		if node_type == "optional_parameter_declaration" {
+			defaultNode := scoped_arg.ChildByFieldName("default_value")
+			if defaultNode != nil {
+				tempDefault := defaultNode.Content(content)
+				parsed_arg.DefaultValue = &CPPArgDefault{Val: &tempDefault}
+			}
+		}
 		refNode := scoped_arg.ChildByFieldName("declarator")
 		// switch case to handle per node type
 		switch refNode.Type() {
@@ -421,14 +428,6 @@ func parseCPPArg(content []byte, arg_list *sitter.Node) *[]*CPPArg {
 			{
 				identStr := refNode.Content(content)
 				parsed_arg.Ident = &identStr
-			}
-		case "optional_parameter_declaration":
-			{
-				defaultNode := refNode.ChildByFieldName("default_value")
-				if defaultNode != nil {
-					tempDefault := defaultNode.Content(content)
-					parsed_arg.DefaultValue = &CPPArgDefault{Val: &tempDefault}
-				}
 			}
 		}
 		args = append(args, parsed_arg)
