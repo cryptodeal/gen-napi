@@ -13,7 +13,8 @@ import (
 )
 
 type CPPArgDefault struct {
-	Val *string
+	NameSpace *string
+	Val       *string
 }
 
 type TemplateArg struct {
@@ -397,8 +398,17 @@ func parseCPPArg(content []byte, arg_list *sitter.Node) *[]*CPPArg {
 		if node_type == "optional_parameter_declaration" {
 			defaultNode := scoped_arg.ChildByFieldName("default_value")
 			if defaultNode != nil {
-				tempDefault := defaultNode.Content(content)
-				parsed_arg.DefaultValue = &CPPArgDefault{Val: &tempDefault}
+				parsed_arg.DefaultValue = &CPPArgDefault{}
+				ns_node := defaultNode.ChildByFieldName("scope")
+				if ns_node != nil {
+					ns := ns_node.Content(content)
+					parsed_arg.DefaultValue.NameSpace = &ns
+				}
+				val_node := defaultNode.ChildByFieldName("name")
+				if val_node != nil {
+					val := val_node.Content(content)
+					parsed_arg.DefaultValue.Val = &val
+				}
 			}
 		}
 		refNode := scoped_arg.ChildByFieldName("declarator")

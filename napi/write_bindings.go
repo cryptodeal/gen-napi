@@ -77,10 +77,6 @@ func (g *PackageGenerator) writeArgChecks(sb *strings.Builder, name string, args
 
 	// TODO: clean up logic/handle more cases
 	for i, arg := range *args {
-		// log default values for arguments (playing w enum handling)
-		if arg.DefaultValue != nil {
-			fmt.Println(*arg.DefaultValue)
-		}
 		if i >= expected_arg_count {
 			break
 		}
