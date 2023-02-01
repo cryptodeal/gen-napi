@@ -5,16 +5,28 @@ import (
 	"strings"
 )
 
-func (g *PackageGenerator) writeArgCountChecker(sb *strings.Builder, name string, expected_arg_count int) {
-	if expected_arg_count == 0 {
+func (g *PackageGenerator) writeArgCountChecker(sb *strings.Builder, name string, expected_arg_count int, optional int) {
+	if expected_arg_count == 0 && optional == 0 {
 		return
 	}
 	g.writeIndent(sb, 1)
-	sb.WriteString(fmt.Sprintf("if (info.Length() != %d) {\n", expected_arg_count))
+	if optional == 0 {
+		sb.WriteString(fmt.Sprintf("if (info.Length() != %d) {\n", expected_arg_count))
+	} else {
+		g.writeIndent(sb, 1)
+		sb.WriteString("auto _arg_count = info.Length();\n")
+		g.writeIndent(sb, 1)
+		sb.WriteString(fmt.Sprintf("if (_arg_count < %d || _arg_count > %d) {\n", expected_arg_count, expected_arg_count+optional))
+	}
 	g.writeIndent(sb, 2)
-	errMsg := fmt.Sprintf("`%s` expects exactly %d arg", name, expected_arg_count)
-	if expected_arg_count > 1 {
-		errMsg += "s"
+	var errMsg string
+	if optional == 0 {
+		errMsg = fmt.Sprintf("`%s` expects exactly %d arg", name, expected_arg_count)
+		if expected_arg_count > 1 {
+			errMsg += "s"
+		}
+	} else {
+		errMsg = fmt.Sprintf("`%s` expects between %d to %d args", name, expected_arg_count, expected_arg_count+optional)
 	}
 	sb.WriteString(fmt.Sprintf("Napi::TypeError::New(env, %q).ThrowAsJavaScriptException();\n", errMsg))
 	g.writeIndent(sb, 2)
@@ -81,11 +93,11 @@ func (g *PackageGenerator) writeArgTypeChecker(sb *strings.Builder, name string,
 	}
 }
 
-func (g *PackageGenerator) writeArgChecks(sb *strings.Builder, name string, args *[]*CPPArg, expected_arg_count int) {
+func (g *PackageGenerator) writeArgChecks(sb *strings.Builder, name string, args *[]*CPPArg, expected_arg_count int, optionalArgs int) {
 	if expected_arg_count == 0 {
 		return
 	}
-	g.writeArgCountChecker(sb, name, expected_arg_count)
+	g.writeArgCountChecker(sb, name, expected_arg_count, optionalArgs)
 	// write arg checks, transforms, and declare arg variable as possible
 	if v, ok := g.conf.MethodTransforms[name]; ok && v.ArgCheckTransforms != "" {
 		sb.WriteString(v.ArgCheckTransforms)
@@ -235,16 +247,23 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod) {
 	g.writeIndent(sb, 1)
 	sb.WriteString("Napi::Env env = info.Env();\n")
 	// if len(m.Overloads) == 1 {
-	var arg_count int
+	arg_count := 0
+	optional_args := 0
 	if v, ok := g.conf.MethodTransforms[*m.Ident]; ok {
 		arg_count = v.ArgCount
 		m.ExpectedArgs = arg_count
 	} else {
-		arg_count = len(*m.Overloads[0])
+		for _, arg := range *m.Overloads[0] {
+			isEnum, _ := g.IsTypeEnum(*arg.Type)
+			if arg.DefaultValue != nil && isEnum {
+				optional_args++
+			}
+			arg_count++
+		}
 		m.ExpectedArgs = arg_count
 	}
 	// single overload, parse args
-	g.writeArgChecks(sb, *m.Ident, m.Overloads[0], arg_count)
+	g.writeArgChecks(sb, *m.Ident, m.Overloads[0], arg_count, optional_args)
 
 	obj_name := ""
 	outType := *m.Returns
@@ -444,7 +463,7 @@ func (g *PackageGenerator) writeClassField(sb *strings.Builder, f *CPPFieldDecl,
 		if f.Args != nil {
 			argCount += len(*f.Args)
 		}
-		g.writeArgCountChecker(sb, *f.Ident, argCount)
+		g.writeArgCountChecker(sb, *f.Ident, argCount, 0)
 		g.writeArgTypeChecker(sb, *f.Ident, "IsExternal", 0, fmt.Sprintf("native `%s` (typeof `Napi::External<%s::%s>`)", className, *g.NameSpace, className), 1, nil, nil)
 		g.writeIndent(sb, 1)
 		sb.WriteString(fmt.Sprintf("%s::%s* _tmp_external = UnExternalize<%s::%s>(info[%d]);\n", *g.NameSpace, className, *g.NameSpace, className, 0))

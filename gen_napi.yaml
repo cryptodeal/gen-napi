@@ -4,9 +4,9 @@ packages:
     js_wrapper_opts:
       addon_path: ../../build/Release/test.node
       wrapper_out_path: demo2/ts/index.ts
-  - path: demo1/TensorBase.h
-    # - path: ../flashlight/flashlight/fl/tensor/TensorBase.h
-    # lib_root_dir: ../flashlight
+  # - path: demo1/TensorBase.h
+  - path: ../flashlight/flashlight/fl/tensor/TensorBase.h
+    lib_root_dir: ../flashlight
     bindings_out_path: demo1/out
     indent: "\t"
     vector_opts:
@@ -185,14 +185,12 @@ packages:
           dim: |
             int64_t dim = /arg/.As<Napi::Number>().Int64Value();
       iota:
-        arg_count: 2
-        return_transforms: |
-          /return/ = fl::iota(fl::Shape(/arg_0/), fl::Shape(/arg_1/));
+        arg_count: 3
         arg_transforms:
           dims: |
-            auto dims = jsArrayToVector<long long>(/arg/.As<Napi::Array>(), g_row_major, false);
+            fl::Shape dims = fl::Shape(jsArrayToVector<long long>(/arg/.As<Napi::Array>(), g_row_major, false));
           tileDims: |
-            auto tileDims = jsArrayToVector<long long>(/arg/.As<Napi::Array>(), g_row_major, false);
+            fl::Shape tileDims = fl::Shape(jsArrayToVector<long long>(/arg/.As<Napi::Array>(), g_row_major, false));
       concatenate:
         arg_count: 2
         arg_transforms:
