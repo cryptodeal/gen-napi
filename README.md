@@ -1,4 +1,4 @@
-# Gen-NAPI (WIP)
+# Gen-NAPI (WIP) [latest: `external main`](https://github.com/cryptodeal/gen-napi/tree/external_main)
 
 **Not even remotely prod ready!**
 
