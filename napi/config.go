@@ -23,7 +23,7 @@ type TypeHandler struct {
 }
 
 type MethodTransforms struct {
-	ArgCount           int               `yaml:"arg_count"`
+	ArgCount           *int              `yaml:"arg_count"`
 	ArgCheckTransforms string            `yaml:"arg_check_transforms"`
 	ReturnTransforms   string            `yaml:"return_transforms"`
 	ArgTransforms      map[string]string `yaml:"arg_transforms"`

@@ -185,12 +185,14 @@ packages:
           dim: |
             int64_t dim = /arg/.As<Napi::Number>().Int64Value();
       iota:
-        arg_count: 3
+        arg_count: 2
+        return_transforms: |
+          /return/ = fl::iota(fl::Shape(dims), fl::Shape(tileDims));
         arg_transforms:
           dims: |
-            fl::Shape dims = fl::Shape(jsArrayToVector<long long>(/arg/.As<Napi::Array>(), g_row_major, false));
+            auto dims = jsArrayToVector<long long>(/arg/.As<Napi::Array>(), g_row_major, false);
           tileDims: |
-            fl::Shape tileDims = fl::Shape(jsArrayToVector<long long>(/arg/.As<Napi::Array>(), g_row_major, false));
+            auto tileDims = jsArrayToVector<long long>(/arg/.As<Napi::Array>(), g_row_major, false);
       concatenate:
         arg_count: 2
         arg_transforms:

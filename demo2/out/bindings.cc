@@ -39,6 +39,40 @@ static inline void DeleteArrayBuffer(Napi::Env env,
 
 // exported functions
 
+static Napi::Value _quux(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  if (info.Length() != 2) {
+    Napi::TypeError::New(env, "`quux` expects exactly 2 args")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  if (!info[0].IsBoolean()) {
+    Napi::TypeError::New(env, "`quux` expects args[0] to be typeof `boolean`)")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  bool a = info[0].As<Napi::Boolean>().Value();
+  if (!info[1].IsBoolean()) {
+    Napi::TypeError::New(env, "`quux` expects args[1] to be typeof `boolean`)")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  bool b = info[1].As<Napi::Boolean>().Value();
+  uint8_t* _res;
+  _res = reinterpret_cast<uint8_t*>(demo2::quux(a, b));
+  size_t _res_byte_len = sizeof(_res);
+  size_t _res_elem_len = _res_byte_len / sizeof(*_res);
+  std::unique_ptr<std::vector<uint8_t>> _res_native_array =
+      std::make_unique<std::vector<uint8_t>>(_res, _res + _res_elem_len);
+  Napi::ArrayBuffer _res_arraybuffer = Napi::ArrayBuffer::New(
+      env, _res_native_array->data(), _res_byte_len, DeleteArrayBuffer<uint8_t>,
+      _res_native_array.get());
+  _res_native_array.release();
+  Napi::MemoryManagement::AdjustExternalMemory(env, _res_byte_len);
+  return Napi::TypedArrayOf<uint8_t>::New(env, _res_elem_len, _res_arraybuffer,
+                                          0, napi_uint8_array);
+}
+
 static Napi::Value _test(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   if (info.Length() != 1) {
@@ -181,49 +215,15 @@ static Napi::Value _qux(const Napi::CallbackInfo& info) {
                                           0, napi_bigint64_array);
 }
 
-static Napi::Value _quux(const Napi::CallbackInfo& info) {
-  Napi::Env env = info.Env();
-  if (info.Length() != 2) {
-    Napi::TypeError::New(env, "`quux` expects exactly 2 args")
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  if (!info[0].IsBoolean()) {
-    Napi::TypeError::New(env, "`quux` expects args[0] to be typeof `boolean`)")
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  bool a = info[0].As<Napi::Boolean>().Value();
-  if (!info[1].IsBoolean()) {
-    Napi::TypeError::New(env, "`quux` expects args[1] to be typeof `boolean`)")
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  bool b = info[1].As<Napi::Boolean>().Value();
-  uint8_t* _res;
-  _res = reinterpret_cast<uint8_t*>(demo2::quux(a, b));
-  size_t _res_byte_len = sizeof(_res);
-  size_t _res_elem_len = _res_byte_len / sizeof(*_res);
-  std::unique_ptr<std::vector<uint8_t>> _res_native_array =
-      std::make_unique<std::vector<uint8_t>>(_res, _res + _res_elem_len);
-  Napi::ArrayBuffer _res_arraybuffer = Napi::ArrayBuffer::New(
-      env, _res_native_array->data(), _res_byte_len, DeleteArrayBuffer<uint8_t>,
-      _res_native_array.get());
-  _res_native_array.release();
-  Napi::MemoryManagement::AdjustExternalMemory(env, _res_byte_len);
-  return Napi::TypedArrayOf<uint8_t>::New(env, _res_elem_len, _res_arraybuffer,
-                                          0, napi_uint8_array);
-}
-
 // NAPI exports
 
 Napi::Object Init(Napi::Env env, Napi::Object exports) {
-  exports.Set(Napi::String::New(env, "_quux"), Napi::Function::New(env, _quux));
-  exports.Set(Napi::String::New(env, "_test"), Napi::Function::New(env, _test));
   exports.Set(Napi::String::New(env, "_foo"), Napi::Function::New(env, _foo));
   exports.Set(Napi::String::New(env, "_bar"), Napi::Function::New(env, _bar));
   exports.Set(Napi::String::New(env, "_baz"), Napi::Function::New(env, _baz));
   exports.Set(Napi::String::New(env, "_qux"), Napi::Function::New(env, _qux));
+  exports.Set(Napi::String::New(env, "_quux"), Napi::Function::New(env, _quux));
+  exports.Set(Napi::String::New(env, "_test"), Napi::Function::New(env, _test));
   return exports;
 }
 

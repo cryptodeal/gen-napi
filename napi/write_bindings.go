@@ -249,8 +249,8 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod) {
 	// if len(m.Overloads) == 1 {
 	arg_count := 0
 	optional_args := 0
-	if v, ok := g.conf.MethodTransforms[*m.Ident]; ok {
-		arg_count = v.ArgCount
+	if v, ok := g.conf.MethodTransforms[*m.Ident]; ok && v.ArgCount != nil {
+		arg_count = *v.ArgCount
 		m.ExpectedArgs = arg_count
 	} else {
 		for _, arg := range *m.Overloads[0] {
