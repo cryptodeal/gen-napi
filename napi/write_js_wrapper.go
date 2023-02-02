@@ -278,6 +278,12 @@ func (g *PackageGenerator) WriteEnvWrappedFns() string {
 							vectorType := tsType[strings.Index(tsType, "<")+1 : strings.Index(tsType, ">")]
 							tsType, _ = g.CPPTypeToTS(vectorType, p.IsPointer)
 							tsType = tsType + "[]"
+							if p.DefaultValue.Val != nil {
+								val := *p.DefaultValue.Val
+								val = strings.ReplaceAll(val, "{", "[")
+								val = strings.ReplaceAll(val, "]", "}")
+								tsType += fmt.Sprintf(" = %s", val)
+							}
 						}
 						isEnum, _ := g.IsTypeEnum(*p.Type)
 						if isEnum && p.DefaultValue.Val != nil {
