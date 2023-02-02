@@ -63,7 +63,7 @@ static Napi::Value _bar(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   auto _arg_count = info.Length();
   if (_arg_count != 2) {
-    Napi::TypeError::New(env, "`bar` expects exactly 2 arg, but received s" +
+    Napi::TypeError::New(env, "`bar` expects exactly 2 args, but received " +
                                   std::to_string(_arg_count))
         .ThrowAsJavaScriptException();
     return env.Undefined();
@@ -100,7 +100,7 @@ static Napi::Value _baz(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   auto _arg_count = info.Length();
   if (_arg_count != 2) {
-    Napi::TypeError::New(env, "`baz` expects exactly 2 arg, but received s" +
+    Napi::TypeError::New(env, "`baz` expects exactly 2 args, but received " +
                                   std::to_string(_arg_count))
         .ThrowAsJavaScriptException();
     return env.Undefined();
@@ -137,7 +137,7 @@ static Napi::Value _qux(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   auto _arg_count = info.Length();
   if (_arg_count != 2) {
-    Napi::TypeError::New(env, "`qux` expects exactly 2 arg, but received s" +
+    Napi::TypeError::New(env, "`qux` expects exactly 2 args, but received " +
                                   std::to_string(_arg_count))
         .ThrowAsJavaScriptException();
     return env.Undefined();
@@ -175,7 +175,7 @@ static Napi::Value _quux(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   auto _arg_count = info.Length();
   if (_arg_count != 2) {
-    Napi::TypeError::New(env, "`quux` expects exactly 2 arg, but received s" +
+    Napi::TypeError::New(env, "`quux` expects exactly 2 args, but received " +
                                   std::to_string(_arg_count))
         .ThrowAsJavaScriptException();
     return env.Undefined();

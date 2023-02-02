@@ -248,6 +248,7 @@ func (g *PackageGenerator) WriteEnums() string {
 	}
 	return sb.String()
 }
+
 func (g *PackageGenerator) WriteEnvWrappedFns() string {
 	sb := new(strings.Builder)
 	for _, m := range g.ParsedData.Methods {
@@ -261,7 +262,7 @@ func (g *PackageGenerator) WriteEnvWrappedFns() string {
 				sb.WriteString(fmt.Sprintf("const %s = (", *m.Ident))
 			}
 			for i, p := range *m.Overloads[0] {
-				if i >= m.ExpectedArgs {
+				if i >= m.ExpectedArgs && m.OptionalArgs == 0 {
 					break
 				}
 				if i > 0 && i < len(*m.Overloads[0]) {
@@ -277,6 +278,10 @@ func (g *PackageGenerator) WriteEnvWrappedFns() string {
 							vectorType := tsType[strings.Index(tsType, "<")+1 : strings.Index(tsType, ">")]
 							tsType, _ = g.CPPTypeToTS(vectorType, p.IsPointer)
 							tsType = tsType + "[]"
+						}
+						isEnum, _ := g.IsTypeEnum(*p.Type)
+						if isEnum && p.DefaultValue.Val != nil {
+							tsType += fmt.Sprintf(" = %s.%s", *p.Type, *p.DefaultValue.Val)
 						}
 						sb.WriteString(fmt.Sprintf(": %s", tsType))
 					}
@@ -303,7 +308,7 @@ func (g *PackageGenerator) WriteEnvWrappedFns() string {
 				sb.WriteString(fmt.Sprintf("_%s(", *m.Ident))
 			}
 			for i, p := range *m.Overloads[0] {
-				if i >= m.ExpectedArgs {
+				if i >= m.ExpectedArgs && m.OptionalArgs == 0 {
 					break
 				}
 				if i > 0 && i < len(*m.Overloads[0]) {

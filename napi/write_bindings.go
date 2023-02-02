@@ -264,6 +264,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod) {
 			}
 		}
 		m.ExpectedArgs = arg_count
+		m.OptionalArgs = optional_args
 	}
 	// single overload, parse args
 	g.writeArgChecks(sb, *m.Ident, m.Overloads[0], arg_count, optional_args)

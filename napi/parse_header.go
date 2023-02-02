@@ -89,6 +89,7 @@ type CPPMethod struct {
 	ReturnsPrimitive bool
 	ReturnsPointer   bool
 	ExpectedArgs     int
+	OptionalArgs     int
 }
 
 type TemplateMethod struct {
