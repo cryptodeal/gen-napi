@@ -100,7 +100,11 @@ func PrimitivePtrToTS(t string) (string, string, *string, string) {
 	return jsTypeEquivalent, arrayType, needsCast, napi_short_type
 }
 
-func CPPTypeToTS(t string, isPointer bool) (string, bool) {
+func (g *PackageGenerator) CPPTypeToTS(t string, isPointer bool) (string, bool) {
+	isEnum, _ := g.IsTypeEnum(t)
+	if isEnum {
+		return t, false
+	}
 	if isPointer {
 		jsArrayType, _, _, _ := PrimitivePtrToTS(t)
 		if jsArrayType != "" {

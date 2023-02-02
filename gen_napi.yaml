@@ -129,7 +129,6 @@ packages:
           step: |
             float step = /arg/.As<Napi::Number>().FloatValue();
       var:
-        arg_count: 4
         return_transforms: |
           /return/ = fl::var(/arg_0/, /arg_1/, /arg_2/, /arg_3/);
           auto axes_set = std::unordered_set<int>(/arg_1/.begin(), /arg_1/.end());
@@ -147,7 +146,6 @@ packages:
           const auto& shape = fl::Shape(new_shape);
           /return/ = fl::reshape(/return/, shape);
       norm:
-        arg_count: 4
         return_transforms: |
           /return/ = fl::norm(/arg_0/, /arg_1/, /arg_2/, /arg_3/);
           if (p == std::numeric_limits<double>::infinity()) {
@@ -178,9 +176,6 @@ packages:
           val: |
             float val = /arg/.As<Napi::Number>().FloatValue();
       identity:
-        arg_count: 1
-        return_transforms: |
-          /return/ = fl::identity(/arg_0/);
         arg_transforms:
           dim: |
             int64_t dim = /arg/.As<Napi::Number>().Int64Value();
@@ -191,14 +186,12 @@ packages:
           tileDims: |
             auto tileDims = jsArrayToVector<long long>(/arg/.As<Napi::Array>(), g_row_major, false);
       concatenate:
-        arg_count: 2
         arg_transforms:
           axis: |
             auto axis = axisArg(/arg/.As<Napi::Number>().Int32Value(), g_row_major, (&/arg_0/[0])->ndim());
           tensors: |
             auto tensors = jsTensorArrayArg<fl::Tensor>(/arg/.As<Napi::Array>());
       tril:
-        arg_count: 1
         return_transforms: |
           if (g_row_major) {
             /return/ = fl::triu(/arg_0/);
@@ -206,7 +199,6 @@ packages:
             /return/ = fl::tril(/arg_0/);
           }
       triu:
-        arg_count: 1
         return_transforms: |
           if (g_row_major) {
             /return/ = fl::tril(/arg_0/);
@@ -214,32 +206,25 @@ packages:
             /return/ = fl::triu(/arg_0/);
           }
       sort:
-        arg_count: 2
-        return_transforms: |
-          /return/ = fl::sort(/arg_0/, /arg_1/);
         arg_transforms:
           axis: |
             auto axis = /arg/.As<Napi::Number>().Uint32Value();
       matmul:
-        arg_count: 2
         return_transforms: |
           if (g_row_major) {
-            /return/ = fl::matmul(/arg_1/, /arg_0/);
+            /return/ = fl::matmul(/arg_1/, /arg_0/, /arg_3/, /arg_2/);
           } else {
-            /return/ = fl::matmul(/arg_0/, /arg_1/);
+            /return/ = fl::matmul(/arg_0/, /arg_1/, /arg_2/, /arg_3/);
           }
       tile:
-        arg_count: 2
         arg_transforms:
           shape: |
             auto shape = jsArrayToVector<long long>(/arg/.As<Napi::Array>(), g_row_major, false);
       transpose:
-        arg_count: 2
         arg_transforms:
           axes: |
             auto axes = jsArrayToVector<long long>(/arg/.As<Napi::Array>(), g_row_major, /arg_0/->ndim());
       reshape:
-        arg_count: 2
         arg_transforms:
           shape: |
             auto shape = jsArrayToVector<long long>(/arg/.As<Napi::Array>(), g_row_major, false);
