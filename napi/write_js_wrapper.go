@@ -271,7 +271,7 @@ func (g *PackageGenerator) WriteEnvWrappedFns() string {
 				sb.WriteString(*p.Ident)
 				if g.conf.IsEnvTS() {
 					tsType, _ := g.CPPTypeToTS(*p.Type, p.IsPointer)
-					if v, ok := g.conf.TypeMappings[tsType]; ok {
+					if v, ok := g.conf.TypeMappings[tsType]; ok && v.TSType != "" {
 						sb.WriteString(fmt.Sprintf(": %s", v.TSType))
 					} else {
 						if strings.Contains(tsType, "std::vector") {
