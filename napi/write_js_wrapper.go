@@ -273,6 +273,13 @@ func (g *PackageGenerator) WriteEnvWrappedFns() string {
 					tsType, isClass := g.CPPTypeToTS(*p.Type, p.IsPointer)
 					if v, ok := g.conf.TypeMappings[tsType]; ok && v.TSType != "" {
 						sb.WriteString(fmt.Sprintf(": %s", v.TSType))
+						if p.DefaultValue != nil && p.DefaultValue.Val != nil {
+							val := *p.DefaultValue.Val
+							val = strings.ReplaceAll(val, "{", "[")
+							val = strings.ReplaceAll(val, "}", "]")
+							tsType += fmt.Sprintf(" = %s", val)
+							sb.WriteString(fmt.Sprintf(" = %s", val))
+						}
 					} else {
 						if strings.Contains(tsType, "std::vector") {
 							vectorType := tsType[strings.Index(tsType, "<")+1 : strings.Index(tsType, ">")]
@@ -289,8 +296,10 @@ func (g *PackageGenerator) WriteEnvWrappedFns() string {
 						if isEnum && p.DefaultValue != nil && p.DefaultValue.Val != nil {
 							tsType += fmt.Sprintf(" = %s.%s", *p.Type, *p.DefaultValue.Val)
 						} else if !isClass && p.DefaultValue != nil && p.DefaultValue.Val != nil {
-							tsType += fmt.Sprintf(" = %s", *p.DefaultValue.Val)
-
+							val := *p.DefaultValue.Val
+							val = strings.ReplaceAll(val, "{", "[")
+							val = strings.ReplaceAll(val, "}", "]")
+							tsType += fmt.Sprintf(" = %s", val)
 						}
 						sb.WriteString(fmt.Sprintf(": %s", tsType))
 					}
