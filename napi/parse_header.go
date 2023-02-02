@@ -405,8 +405,10 @@ func parseCPPArg(content []byte, arg_list *sitter.Node) *[]*CPPArg {
 					ns := ns_node.Content(content)
 					parsed_arg.DefaultValue.NameSpace = &ns
 				}
-				val_node := defaultNode.ChildByFieldName("name")
-				if val_node != nil {
+				if val_node := defaultNode.ChildByFieldName("name"); val_node != nil {
+					val := val_node.Content(content)
+					parsed_arg.DefaultValue.Val = &val
+				} else if val_node := defaultNode.ChildByFieldName("value"); val_node != nil {
 					val := val_node.Content(content)
 					parsed_arg.DefaultValue.Val = &val
 				}

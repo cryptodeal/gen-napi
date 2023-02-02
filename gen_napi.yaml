@@ -18,6 +18,9 @@ packages:
       Dim:
         ts: number
       dtype:
+        ts: number
+        napi: Number
+        casts_to: fl::dtype
         cast_napi: Int32Value
       T:
         ts: number
