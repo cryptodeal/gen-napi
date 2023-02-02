@@ -278,7 +278,7 @@ func (g *PackageGenerator) WriteEnvWrappedFns() string {
 							vectorType := tsType[strings.Index(tsType, "<")+1 : strings.Index(tsType, ">")]
 							tsType, _ = g.CPPTypeToTS(vectorType, p.IsPointer)
 							tsType = tsType + "[]"
-							if p.DefaultValue.Val != nil {
+							if p.DefaultValue != nil && p.DefaultValue.Val != nil {
 								val := *p.DefaultValue.Val
 								val = strings.ReplaceAll(val, "{", "[")
 								val = strings.ReplaceAll(val, "]", "}")

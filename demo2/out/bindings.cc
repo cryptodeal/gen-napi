@@ -39,6 +39,26 @@ static inline void DeleteArrayBuffer(Napi::Env env,
 
 // exported functions
 
+static Napi::Value _test(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  auto _arg_count = info.Length();
+  if (_arg_count != 1) {
+    Napi::TypeError::New(env, "`test` expects exactly 1 arg, but received " +
+                                  std::to_string(_arg_count))
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  if (!info[0].IsString()) {
+    Napi::TypeError::New(env, "`test` expects args[0] to be typeof `string`)")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  std::string a = info[0].As<Napi::String>().Utf8Value();
+  std::string _res;
+  _res = demo2::test(a);
+  return Napi::String::New(env, _res);
+}
+
 static Napi::Value _foo(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   auto _arg_count = info.Length();
@@ -205,26 +225,6 @@ static Napi::Value _quux(const Napi::CallbackInfo& info) {
   Napi::MemoryManagement::AdjustExternalMemory(env, _res_byte_len);
   return Napi::TypedArrayOf<uint8_t>::New(env, _res_elem_len, _res_arraybuffer,
                                           0, napi_uint8_array);
-}
-
-static Napi::Value _test(const Napi::CallbackInfo& info) {
-  Napi::Env env = info.Env();
-  auto _arg_count = info.Length();
-  if (_arg_count != 1) {
-    Napi::TypeError::New(env, "`test` expects exactly 1 arg, but received " +
-                                  std::to_string(_arg_count))
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  if (!info[0].IsString()) {
-    Napi::TypeError::New(env, "`test` expects args[0] to be typeof `string`)")
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  std::string a = info[0].As<Napi::String>().Utf8Value();
-  std::string _res;
-  _res = demo2::test(a);
-  return Napi::String::New(env, _res);
 }
 
 // NAPI exports
