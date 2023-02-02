@@ -35,77 +35,77 @@ const {
 	_tensorFromUint32Buffer,
 	_tensorFromUint64Buffer,
 	_save,
-	_mean,
-	_reshape,
-	_sin,
-	_negative,
-	_exp,
-	_absolute,
-	_where,
-	_sort,
-	_argmin,
-	_erf,
-	_var: __var,
-	_sqrt,
-	_roll,
-	_norm,
-	_cos,
-	_sigmoid,
-	_isInvalidArray,
-	_flip,
-	_tril,
 	_rint,
-	_isnan,
-	_isinf,
-	_logicalNot,
-	_minimum,
-	_amin,
-	_median,
-	_tile,
 	_triu,
-	_matmul,
-	_ceil,
-	_argmax,
-	_sum,
-	_countNonzero,
-	_arange,
-	_floor,
-	_clip,
-	_sign,
-	_maximum,
-	_any,
-	_transpose,
-	_concatenate,
-	_power,
-	_all,
-	_std,
+	_var: __var,
+	_isInvalidArray,
 	_iota,
 	_nonzero,
-	_tanh,
-	_full,
+	_exp,
+	_flip,
+	_isinf,
+	_sin,
+	_ceil,
 	_identity,
-	_log,
+	_argmax,
+	_concatenate,
+	_floor,
+	_roll,
+	_where,
+	_erf,
+	_amin,
+	_any,
+	_negative,
 	_log1p,
-	_amax,
+	_maximum,
+	_all,
+	_arange,
+	_tile,
+	_log,
+	_sqrt,
+	_absolute,
+	_norm,
+	_cos,
+	_sum,
+	_std,
+	_isnan,
+	_median,
+	_reshape,
+	_transpose,
+	_clip,
+	_tanh,
+	_countNonzero,
+	_sort,
+	_minimum,
+	_matmul,
+	_argmin,
 	_cumsum,
-	_eq,
-	_lShift,
-	_sub,
-	_div,
-	_bitwiseXor,
-	_neq,
-	_lessThan,
-	_greaterThan,
-	_lessThanEqual,
-	_rShift,
-	_logicalOr,
+	_mean,
+	_tril,
+	_amax,
+	_sigmoid,
+	_logicalNot,
+	_sign,
+	_power,
+	_full,
 	_greaterThanEqual,
-	_add,
-	_mul,
-	_logicalAnd,
+	_mod,
 	_bitwiseAnd,
 	_bitwiseOr,
-	_mod,
+	_sub,
+	_lessThan,
+	_lessThanEqual,
+	_div,
+	_neq,
+	_mul,
+	_bitwiseXor,
+	_greaterThan,
+	_lShift,
+	_eq,
+	_rShift,
+	_logicalAnd,
+	_logicalOr,
+	_add,
 	_init,
 	_bytesUsed,
 	_setRowMajor,
@@ -176,179 +176,183 @@ export enum dtype {
 	u64 = 10
 }
 
-export const reshape = (tensor: Tensor, shape: number[]): Tensor => {
-	return new Tensor(_reshape(tensor._native_self, shape));
-}
-
-export const sin = (tensor: Tensor): Tensor => {
-	return new Tensor(_sin(tensor._native_self));
-}
-
-export const mean = (input: Tensor, axes: number[] = [], keepDims: boolean = false): Tensor => {
-	return new Tensor(_mean(input._native_self, axes, keepDims));
-}
-
-export const negative = (tensor: Tensor): Tensor => {
-	return new Tensor(_negative(tensor._native_self));
-}
-
-export const exp = (tensor: Tensor): Tensor => {
-	return new Tensor(_exp(tensor._native_self));
-}
-
-export const absolute = (tensor: Tensor): Tensor => {
-	return new Tensor(_absolute(tensor._native_self));
-}
-
-export const where = (condition: Tensor, x: Tensor, y: Tensor): Tensor => {
-	return new Tensor(_where(condition._native_self, x._native_self, y._native_self));
-}
-
-export const sort = (input: Tensor, axis: number, sortMode: SortMode = SortMode.Ascending): Tensor => {
-	return new Tensor(_sort(input._native_self, axis, sortMode));
-}
-
-export const argmin = (input: Tensor, axis: number, keepDims: boolean = false): Tensor => {
-	return new Tensor(_argmin(input._native_self, axis, keepDims));
-}
-
-export const erf = (tensor: Tensor): Tensor => {
-	return new Tensor(_erf(tensor._native_self));
-}
-
-export const _var = (input: Tensor, axes: number[] = [], bias: boolean = false, keepDims: boolean = false): Tensor => {
-	return new Tensor(__var(input._native_self, axes, bias, keepDims));
-}
-
-export const sqrt = (tensor: Tensor): Tensor => {
-	return new Tensor(_sqrt(tensor._native_self));
-}
-
-export const roll = (tensor: Tensor, shift: number, axis: number): Tensor => {
-	return new Tensor(_roll(tensor._native_self, shift, axis));
-}
-
-export const norm = (input: Tensor, axes: number[] = [], p: number = 2, keepDims: boolean = false): Tensor => {
-	return new Tensor(_norm(input._native_self, axes, p, keepDims));
-}
-
-export const cos = (tensor: Tensor): Tensor => {
-	return new Tensor(_cos(tensor._native_self));
-}
-
-export const sigmoid = (tensor: Tensor): Tensor => {
-	return new Tensor(_sigmoid(tensor._native_self));
-}
-
-export const isInvalidArray = (tensor: Tensor): boolean => {
-	return _isInvalidArray(tensor._native_self);
-}
-
-export const flip = (tensor: Tensor, dim: number): Tensor => {
-	return new Tensor(_flip(tensor._native_self, dim));
-}
-
-export const tril = (tensor: Tensor): Tensor => {
-	return new Tensor(_tril(tensor._native_self));
-}
-
-export const isnan = (tensor: Tensor): Tensor => {
-	return new Tensor(_isnan(tensor._native_self));
-}
-
-export const isinf = (tensor: Tensor): Tensor => {
-	return new Tensor(_isinf(tensor._native_self));
-}
-
-export const logicalNot = (tensor: Tensor): Tensor => {
-	return new Tensor(_logicalNot(tensor._native_self));
-}
-
-export const rint = (tensor: Tensor): Tensor => {
-	return new Tensor(_rint(tensor._native_self));
-}
-
-export const minimum = (lhs: Tensor, rhs: Tensor): Tensor => {
-	return new Tensor(_minimum(lhs._native_self, rhs._native_self));
-}
-
-export const amin = (input: Tensor, axes: number[] = [], keepDims: boolean = false): Tensor => {
-	return new Tensor(_amin(input._native_self, axes, keepDims));
-}
-
-export const median = (input: Tensor, axes: number[] = [], keepDims: boolean = false): Tensor => {
-	return new Tensor(_median(input._native_self, axes, keepDims));
-}
-
-export const tile = (tensor: Tensor, shape: number[]): Tensor => {
-	return new Tensor(_tile(tensor._native_self, shape));
-}
-
-export const triu = (tensor: Tensor): Tensor => {
-	return new Tensor(_triu(tensor._native_self));
-}
-
-export const matmul = (lhs: Tensor, rhs: Tensor, lhsProp: MatrixProperty = MatrixProperty.None, rhsProp: MatrixProperty = MatrixProperty.None): Tensor => {
-	return new Tensor(_matmul(lhs._native_self, rhs._native_self, lhsProp, rhsProp));
-}
-
-export const ceil = (tensor: Tensor): Tensor => {
-	return new Tensor(_ceil(tensor._native_self));
-}
-
-export const sum = (input: Tensor, axes: number[] = [], keepDims: boolean = false): Tensor => {
-	return new Tensor(_sum(input._native_self, axes, keepDims));
-}
-
-export const countNonzero = (input: Tensor, axes: number[] = [], keepDims: boolean = false): Tensor => {
-	return new Tensor(_countNonzero(input._native_self, axes, keepDims));
-}
-
-export const arange = (start: number, end: number, step: number): Tensor => {
-	return new Tensor(_arange(start, end, step));
-}
-
-export const floor = (tensor: Tensor): Tensor => {
-	return new Tensor(_floor(tensor._native_self));
-}
-
-export const clip = (tensor: Tensor, low: Tensor, high: Tensor): Tensor => {
-	return new Tensor(_clip(tensor._native_self, low._native_self, high._native_self));
-}
-
-export const sign = (tensor: Tensor): Tensor => {
-	return new Tensor(_sign(tensor._native_self));
-}
-
-export const maximum = (lhs: Tensor, rhs: Tensor): Tensor => {
-	return new Tensor(_maximum(lhs._native_self, rhs._native_self));
-}
-
 export const argmax = (input: Tensor, axis: number, keepDims: boolean = false): Tensor => {
 	return new Tensor(_argmax(input._native_self, axis, keepDims));
-}
-
-export const any = (input: Tensor, axes: number[] = [], keepDims: boolean = false): Tensor => {
-	return new Tensor(_any(input._native_self, axes, keepDims));
-}
-
-export const transpose = (tensor: Tensor, axes: number[]): Tensor => {
-	return new Tensor(_transpose(tensor._native_self, axes));
 }
 
 export const concatenate = (tensors: Tensor[], axis: number = 0): Tensor => {
 	return new Tensor(_concatenate(tensors, axis));
 }
 
-export const power = (lhs: Tensor, rhs: Tensor): Tensor => {
-	return new Tensor(_power(lhs._native_self, rhs._native_self));
+export const floor = (tensor: Tensor): Tensor => {
+	return new Tensor(_floor(tensor._native_self));
+}
+
+export const roll = (tensor: Tensor, shift: number, axis: number): Tensor => {
+	return new Tensor(_roll(tensor._native_self, shift, axis));
+}
+
+export const where = (condition: Tensor, x: Tensor, y: Tensor): Tensor => {
+	return new Tensor(_where(condition._native_self, x._native_self, y._native_self));
+}
+
+export const amin = (input: Tensor, axes: number[] = [], keepDims: boolean = false): Tensor => {
+	return new Tensor(_amin(input._native_self, axes, keepDims));
+}
+
+export const any = (input: Tensor, axes: number[] = [], keepDims: boolean = false): Tensor => {
+	return new Tensor(_any(input._native_self, axes, keepDims));
+}
+
+export const negative = (tensor: Tensor): Tensor => {
+	return new Tensor(_negative(tensor._native_self));
+}
+
+export const log1p = (tensor: Tensor): Tensor => {
+	return new Tensor(_log1p(tensor._native_self));
+}
+
+export const erf = (tensor: Tensor): Tensor => {
+	return new Tensor(_erf(tensor._native_self));
+}
+
+export const maximum = (lhs: Tensor, rhs: Tensor): Tensor => {
+	return new Tensor(_maximum(lhs._native_self, rhs._native_self));
 }
 
 export const all = (input: Tensor, axes: number[] = [], keepDims: boolean = false): Tensor => {
 	return new Tensor(_all(input._native_self, axes, keepDims));
 }
 
-export const iota = (dims: number[], tileDims: number[], type: dtype = dtype.f32): Tensor => {
+export const arange = (start: number, end: number, step: number = 1): Tensor => {
+	return new Tensor(_arange(start, end, step));
+}
+
+export const tile = (tensor: Tensor, shape: number[]): Tensor => {
+	return new Tensor(_tile(tensor._native_self, shape));
+}
+
+export const log = (tensor: Tensor): Tensor => {
+	return new Tensor(_log(tensor._native_self));
+}
+
+export const sqrt = (tensor: Tensor): Tensor => {
+	return new Tensor(_sqrt(tensor._native_self));
+}
+
+export const absolute = (tensor: Tensor): Tensor => {
+	return new Tensor(_absolute(tensor._native_self));
+}
+
+export const cos = (tensor: Tensor): Tensor => {
+	return new Tensor(_cos(tensor._native_self));
+}
+
+export const sum = (input: Tensor, axes: number[] = [], keepDims: boolean = false): Tensor => {
+	return new Tensor(_sum(input._native_self, axes, keepDims));
+}
+
+export const std = (input: Tensor, axes: number[] = [], keepDims: boolean = false): Tensor => {
+	return new Tensor(_std(input._native_self, axes, keepDims));
+}
+
+export const norm = (input: Tensor, axes: number[] = [], p: number = 2, keepDims: boolean = false): Tensor => {
+	return new Tensor(_norm(input._native_self, axes, p, keepDims));
+}
+
+export const isnan = (tensor: Tensor): Tensor => {
+	return new Tensor(_isnan(tensor._native_self));
+}
+
+export const median = (input: Tensor, axes: number[] = [], keepDims: boolean = false): Tensor => {
+	return new Tensor(_median(input._native_self, axes, keepDims));
+}
+
+export const reshape = (tensor: Tensor, shape: number[]): Tensor => {
+	return new Tensor(_reshape(tensor._native_self, shape));
+}
+
+export const transpose = (tensor: Tensor, axes: number[] = []): Tensor => {
+	return new Tensor(_transpose(tensor._native_self, axes));
+}
+
+export const tanh = (tensor: Tensor): Tensor => {
+	return new Tensor(_tanh(tensor._native_self));
+}
+
+export const clip = (tensor: Tensor, low: Tensor, high: Tensor): Tensor => {
+	return new Tensor(_clip(tensor._native_self, low._native_self, high._native_self));
+}
+
+export const sort = (input: Tensor, axis: number, sortMode: SortMode = SortMode.Ascending): Tensor => {
+	return new Tensor(_sort(input._native_self, axis, sortMode));
+}
+
+export const minimum = (lhs: Tensor, rhs: Tensor): Tensor => {
+	return new Tensor(_minimum(lhs._native_self, rhs._native_self));
+}
+
+export const matmul = (lhs: Tensor, rhs: Tensor, lhsProp: MatrixProperty = MatrixProperty.None, rhsProp: MatrixProperty = MatrixProperty.None): Tensor => {
+	return new Tensor(_matmul(lhs._native_self, rhs._native_self, lhsProp, rhsProp));
+}
+
+export const countNonzero = (input: Tensor, axes: number[] = [], keepDims: boolean = false): Tensor => {
+	return new Tensor(_countNonzero(input._native_self, axes, keepDims));
+}
+
+export const cumsum = (input: Tensor, axis: number): Tensor => {
+	return new Tensor(_cumsum(input._native_self, axis));
+}
+
+export const mean = (input: Tensor, axes: number[] = [], keepDims: boolean = false): Tensor => {
+	return new Tensor(_mean(input._native_self, axes, keepDims));
+}
+
+export const tril = (tensor: Tensor): Tensor => {
+	return new Tensor(_tril(tensor._native_self));
+}
+
+export const argmin = (input: Tensor, axis: number, keepDims: boolean = false): Tensor => {
+	return new Tensor(_argmin(input._native_self, axis, keepDims));
+}
+
+export const amax = (input: Tensor, axes: number[] = [], keepDims: boolean = false): Tensor => {
+	return new Tensor(_amax(input._native_self, axes, keepDims));
+}
+
+export const sigmoid = (tensor: Tensor): Tensor => {
+	return new Tensor(_sigmoid(tensor._native_self));
+}
+
+export const sign = (tensor: Tensor): Tensor => {
+	return new Tensor(_sign(tensor._native_self));
+}
+
+export const power = (lhs: Tensor, rhs: Tensor): Tensor => {
+	return new Tensor(_power(lhs._native_self, rhs._native_self));
+}
+
+export const full = (dims: number[], val: number): Tensor => {
+	return new Tensor(_full(dims, val));
+}
+
+export const logicalNot = (tensor: Tensor): Tensor => {
+	return new Tensor(_logicalNot(tensor._native_self));
+}
+
+export const triu = (tensor: Tensor): Tensor => {
+	return new Tensor(_triu(tensor._native_self));
+}
+
+export const _var = (input: Tensor, axes: number[] = [], bias: boolean = false, keepDims: boolean = false): Tensor => {
+	return new Tensor(__var(input._native_self, axes, bias, keepDims));
+}
+
+export const isInvalidArray = (tensor: Tensor): boolean => {
+	return _isInvalidArray(tensor._native_self);
+}
+
+export const iota = (dims: number[], tileDims: number[] = [1], type: dtype = dtype.f32): Tensor => {
 	return new Tensor(_iota(dims, tileDims, type));
 }
 
@@ -356,36 +360,32 @@ export const nonzero = (tensor: Tensor): Tensor => {
 	return new Tensor(_nonzero(tensor._native_self));
 }
 
-export const tanh = (tensor: Tensor): Tensor => {
-	return new Tensor(_tanh(tensor._native_self));
+export const exp = (tensor: Tensor): Tensor => {
+	return new Tensor(_exp(tensor._native_self));
 }
 
-export const std = (input: Tensor, axes: number[] = [], keepDims: boolean = false): Tensor => {
-	return new Tensor(_std(input._native_self, axes, keepDims));
+export const rint = (tensor: Tensor): Tensor => {
+	return new Tensor(_rint(tensor._native_self));
 }
 
-export const full = (dims: number[], val: number): Tensor => {
-	return new Tensor(_full(dims, val));
+export const flip = (tensor: Tensor, dim: number): Tensor => {
+	return new Tensor(_flip(tensor._native_self, dim));
+}
+
+export const isinf = (tensor: Tensor): Tensor => {
+	return new Tensor(_isinf(tensor._native_self));
+}
+
+export const ceil = (tensor: Tensor): Tensor => {
+	return new Tensor(_ceil(tensor._native_self));
 }
 
 export const identity = (dim: number, type: dtype = dtype.f32): Tensor => {
 	return new Tensor(_identity(dim, type));
 }
 
-export const log = (tensor: Tensor): Tensor => {
-	return new Tensor(_log(tensor._native_self));
-}
-
-export const log1p = (tensor: Tensor): Tensor => {
-	return new Tensor(_log1p(tensor._native_self));
-}
-
-export const amax = (input: Tensor, axes: number[] = [], keepDims: boolean = false): Tensor => {
-	return new Tensor(_amax(input._native_self, axes, keepDims));
-}
-
-export const cumsum = (input: Tensor, axis: number): Tensor => {
-	return new Tensor(_cumsum(input._native_self, axis));
+export const sin = (tensor: Tensor): Tensor => {
+	return new Tensor(_sin(tensor._native_self));
 }
 
 export const toFloat32Array = (tensor: Tensor): Float32Array => {
@@ -520,16 +520,64 @@ export const save = (tensor: Tensor, path: string): void => {
 	return _save(tensor._native_self, path);
 }
 
-export const add = (lhs: Tensor, rhs: Tensor): Tensor => {
-	return new Tensor(_add(lhs._native_self, rhs._native_self));
-}
-
 export const mul = (lhs: Tensor, rhs: Tensor): Tensor => {
 	return new Tensor(_mul(lhs._native_self, rhs._native_self));
 }
 
+export const bitwiseXor = (lhs: Tensor, rhs: Tensor): Tensor => {
+	return new Tensor(_bitwiseXor(lhs._native_self, rhs._native_self));
+}
+
+export const greaterThan = (lhs: Tensor, rhs: Tensor): Tensor => {
+	return new Tensor(_greaterThan(lhs._native_self, rhs._native_self));
+}
+
+export const lShift = (lhs: Tensor, rhs: Tensor): Tensor => {
+	return new Tensor(_lShift(lhs._native_self, rhs._native_self));
+}
+
+export const eq = (lhs: Tensor, rhs: Tensor): Tensor => {
+	return new Tensor(_eq(lhs._native_self, rhs._native_self));
+}
+
+export const add = (lhs: Tensor, rhs: Tensor): Tensor => {
+	return new Tensor(_add(lhs._native_self, rhs._native_self));
+}
+
+export const rShift = (lhs: Tensor, rhs: Tensor): Tensor => {
+	return new Tensor(_rShift(lhs._native_self, rhs._native_self));
+}
+
 export const logicalAnd = (lhs: Tensor, rhs: Tensor): Tensor => {
 	return new Tensor(_logicalAnd(lhs._native_self, rhs._native_self));
+}
+
+export const logicalOr = (lhs: Tensor, rhs: Tensor): Tensor => {
+	return new Tensor(_logicalOr(lhs._native_self, rhs._native_self));
+}
+
+export const sub = (lhs: Tensor, rhs: Tensor): Tensor => {
+	return new Tensor(_sub(lhs._native_self, rhs._native_self));
+}
+
+export const lessThan = (lhs: Tensor, rhs: Tensor): Tensor => {
+	return new Tensor(_lessThan(lhs._native_self, rhs._native_self));
+}
+
+export const lessThanEqual = (lhs: Tensor, rhs: Tensor): Tensor => {
+	return new Tensor(_lessThanEqual(lhs._native_self, rhs._native_self));
+}
+
+export const div = (lhs: Tensor, rhs: Tensor): Tensor => {
+	return new Tensor(_div(lhs._native_self, rhs._native_self));
+}
+
+export const greaterThanEqual = (lhs: Tensor, rhs: Tensor): Tensor => {
+	return new Tensor(_greaterThanEqual(lhs._native_self, rhs._native_self));
+}
+
+export const mod = (lhs: Tensor, rhs: Tensor): Tensor => {
+	return new Tensor(_mod(lhs._native_self, rhs._native_self));
 }
 
 export const bitwiseAnd = (lhs: Tensor, rhs: Tensor): Tensor => {
@@ -540,56 +588,8 @@ export const bitwiseOr = (lhs: Tensor, rhs: Tensor): Tensor => {
 	return new Tensor(_bitwiseOr(lhs._native_self, rhs._native_self));
 }
 
-export const mod = (lhs: Tensor, rhs: Tensor): Tensor => {
-	return new Tensor(_mod(lhs._native_self, rhs._native_self));
-}
-
-export const eq = (lhs: Tensor, rhs: Tensor): Tensor => {
-	return new Tensor(_eq(lhs._native_self, rhs._native_self));
-}
-
-export const lShift = (lhs: Tensor, rhs: Tensor): Tensor => {
-	return new Tensor(_lShift(lhs._native_self, rhs._native_self));
-}
-
-export const sub = (lhs: Tensor, rhs: Tensor): Tensor => {
-	return new Tensor(_sub(lhs._native_self, rhs._native_self));
-}
-
-export const div = (lhs: Tensor, rhs: Tensor): Tensor => {
-	return new Tensor(_div(lhs._native_self, rhs._native_self));
-}
-
-export const bitwiseXor = (lhs: Tensor, rhs: Tensor): Tensor => {
-	return new Tensor(_bitwiseXor(lhs._native_self, rhs._native_self));
-}
-
 export const neq = (lhs: Tensor, rhs: Tensor): Tensor => {
 	return new Tensor(_neq(lhs._native_self, rhs._native_self));
-}
-
-export const lessThan = (lhs: Tensor, rhs: Tensor): Tensor => {
-	return new Tensor(_lessThan(lhs._native_self, rhs._native_self));
-}
-
-export const greaterThan = (lhs: Tensor, rhs: Tensor): Tensor => {
-	return new Tensor(_greaterThan(lhs._native_self, rhs._native_self));
-}
-
-export const lessThanEqual = (lhs: Tensor, rhs: Tensor): Tensor => {
-	return new Tensor(_lessThanEqual(lhs._native_self, rhs._native_self));
-}
-
-export const rShift = (lhs: Tensor, rhs: Tensor): Tensor => {
-	return new Tensor(_rShift(lhs._native_self, rhs._native_self));
-}
-
-export const logicalOr = (lhs: Tensor, rhs: Tensor): Tensor => {
-	return new Tensor(_logicalOr(lhs._native_self, rhs._native_self));
-}
-
-export const greaterThanEqual = (lhs: Tensor, rhs: Tensor): Tensor => {
-	return new Tensor(_greaterThanEqual(lhs._native_self, rhs._native_self));
 }
 
 export const init = (): void => {

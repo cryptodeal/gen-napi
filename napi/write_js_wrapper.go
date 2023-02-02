@@ -269,46 +269,49 @@ func (g *PackageGenerator) WriteEnvWrappedFns() string {
 					sb.WriteString(", ")
 				}
 				sb.WriteString(*p.Ident)
-				if g.conf.IsEnvTS() {
-					tsType, isClass := g.CPPTypeToTS(*p.Type, p.IsPointer)
-					if v, ok := g.conf.TypeMappings[tsType]; ok && v.TSType != "" {
+				tsType, isClass := g.CPPTypeToTS(*p.Type, p.IsPointer)
+				if v, ok := g.conf.TypeMappings[tsType]; ok && v.TSType != "" {
+					if g.conf.IsEnvTS() {
 						sb.WriteString(fmt.Sprintf(": %s", v.TSType))
+					}
+					if p.DefaultValue != nil && p.DefaultValue.Val != nil {
+						val := *p.DefaultValue.Val
+						val = strings.ReplaceAll(val, "{", "[")
+						val = strings.ReplaceAll(val, "}", "]")
+						sb.WriteString(fmt.Sprintf(" = %s", val))
+					}
+				} else {
+					if strings.Contains(tsType, "std::vector") {
+						vectorType := tsType[strings.Index(tsType, "<")+1 : strings.Index(tsType, ">")]
+						tsType, _ = g.CPPTypeToTS(vectorType, p.IsPointer)
+						tsType = tsType + "[]"
+						if g.conf.IsEnvTS() {
+							sb.WriteString(fmt.Sprintf(": %s", tsType))
+						}
 						if p.DefaultValue != nil && p.DefaultValue.Val != nil {
 							val := *p.DefaultValue.Val
 							val = strings.ReplaceAll(val, "{", "[")
 							val = strings.ReplaceAll(val, "}", "]")
 							tsType += fmt.Sprintf(" = %s", val)
-							sb.WriteString(fmt.Sprintf(" = %s", val))
 						}
 					} else {
-						if strings.Contains(tsType, "std::vector") {
-							vectorType := tsType[strings.Index(tsType, "<")+1 : strings.Index(tsType, ">")]
-							tsType, _ = g.CPPTypeToTS(vectorType, p.IsPointer)
-							tsType = tsType + "[]"
-							if p.DefaultValue != nil && p.DefaultValue.Val != nil {
-								val := *p.DefaultValue.Val
-								val = strings.ReplaceAll(val, "{", "[")
-								val = strings.ReplaceAll(val, "}", "]")
-								tsType += fmt.Sprintf(" = %s", val)
-							}
-						}
-						isEnum, _ := g.IsTypeEnum(*p.Type)
-						if isEnum && p.DefaultValue != nil && p.DefaultValue.Val != nil {
-							tsType += fmt.Sprintf(" = %s.%s", *p.Type, *p.DefaultValue.Val)
-						} else if !isClass && p.DefaultValue != nil && p.DefaultValue.Val != nil {
-							val := *p.DefaultValue.Val
-							val = strings.ReplaceAll(val, "{", "[")
-							val = strings.ReplaceAll(val, "}", "]")
-							tsType += fmt.Sprintf(" = %s", val)
-						}
 						sb.WriteString(fmt.Sprintf(": %s", tsType))
+					}
+					isEnum, _ := g.IsTypeEnum(*p.Type)
+					if isEnum && p.DefaultValue != nil && p.DefaultValue.Val != nil {
+						sb.WriteString(fmt.Sprintf(" = %s.%s", *p.Type, *p.DefaultValue.Val))
+					} else if !isClass && p.DefaultValue != nil && p.DefaultValue.Val != nil {
+						val := *p.DefaultValue.Val
+						val = strings.ReplaceAll(val, "{", "[")
+						val = strings.ReplaceAll(val, "}", "]")
+						sb.WriteString(fmt.Sprintf(" = %s", val))
 					}
 				}
 			}
 			tsType, _ := g.CPPTypeToTS(*m.Returns, m.ReturnsPointer)
 			if g.conf.IsEnvTS() {
 				if v, ok := g.conf.TypeMappings[tsType]; ok {
-					sb.WriteString(fmt.Sprintf("): %s {\n", v.TSType))
+					sb.WriteString(fmt.Sprintf("): %s => {\n", v.TSType))
 				} else {
 					sb.WriteString(fmt.Sprintf("): %s => {\n", tsType))
 				}
