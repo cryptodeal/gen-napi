@@ -411,6 +411,9 @@ func parseCPPArg(content []byte, arg_list *sitter.Node) *[]*CPPArg {
 				} else if val_node := defaultNode.ChildByFieldName("value"); val_node != nil {
 					val := val_node.Content(content)
 					parsed_arg.DefaultValue.Val = &val
+				} else {
+					val := defaultNode.Content(content)
+					parsed_arg.DefaultValue.Val = &val
 				}
 			}
 		}

@@ -286,8 +286,11 @@ func (g *PackageGenerator) WriteEnvWrappedFns() string {
 							}
 						}
 						isEnum, _ := g.IsTypeEnum(*p.Type)
-						if (isEnum || !isClass) && p.DefaultValue != nil && p.DefaultValue.Val != nil {
+						if isEnum && p.DefaultValue != nil && p.DefaultValue.Val != nil {
 							tsType += fmt.Sprintf(" = %s.%s", *p.Type, *p.DefaultValue.Val)
+						} else if !isClass && p.DefaultValue != nil && p.DefaultValue.Val != nil {
+							tsType += fmt.Sprintf(" = %s", *p.DefaultValue.Val)
+
 						}
 						sb.WriteString(fmt.Sprintf(": %s", tsType))
 					}
