@@ -87,6 +87,7 @@ type CPPMethod struct {
 	Overloads        []*[]*CPPArg
 	Returns          *string
 	ReturnsPrimitive bool
+	NameSpace        *string
 	ReturnsPointer   bool
 	ExpectedArgs     int
 	OptionalArgs     int
@@ -117,7 +118,9 @@ type ParsedMethod struct {
 	Args             *[]*CPPArg
 	Returns          *string
 	ReturnsPrimitive bool
-	ReturnsPointer   bool
+	NameSpace        *string
+
+	ReturnsPointer bool
 }
 
 type Enum struct {
@@ -129,6 +132,29 @@ type ParsedEnum struct {
 	Ident     *string
 	NameSpace *string
 	Values    []*Enum
+}
+
+func parseNameSpace(n *sitter.Node, input []byte) string {
+	ns := []string{}
+	p := n
+	for p != nil && !p.IsMissing() {
+		if p.Type() == "namespace_definition" {
+			nameNode := p.ChildByFieldName("name")
+			if nameNode != nil {
+				ns = append(ns, nameNode.Content(input))
+			}
+		}
+		p = p.Parent()
+	}
+
+	var nameSpace string
+	for i := len(ns) - 1; i >= 0; i-- {
+		nameSpace += ns[i]
+		if i > 0 {
+			nameSpace += "::"
+		}
+	}
+	return nameSpace
 }
 
 func getRootNode(path string) (*sitter.Node, []byte) {
@@ -188,22 +214,11 @@ func (g *PackageGenerator) parseEnums(n *sitter.Node, input []byte, parseInclude
 func parseEnum(n *sitter.Node, input []byte) *ParsedEnum {
 	enum_val := &ParsedEnum{}
 	// parse enum namespace
-	var namespace_node *sitter.Node
-	p := n
-	for namespace_node == nil {
-		if p.Type() == "namespace_definition" {
-			namespace_node = p
-			break
-		}
-		p = p.Parent()
+	ns := parseNameSpace(n, input)
+	if ns != "" {
+		enum_val.NameSpace = &ns
 	}
-	if namespace_node != nil {
-		nameNode := namespace_node.ChildByFieldName("name")
-		if nameNode != nil {
-			name := nameNode.Content(input)
-			enum_val.NameSpace = &name
-		}
-	}
+
 	// parse enum name
 	nameNode := n.ChildByFieldName("name")
 	if nameNode != nil {
@@ -301,6 +316,7 @@ func (g *PackageGenerator) parseMethods(n *sitter.Node, input []byte) map[string
 				Ident:            parsed.Ident,
 				Overloads:        []*[]*CPPArg{parsed.Args},
 				Returns:          parsed.Returns,
+				NameSpace:        parsed.NameSpace,
 				ReturnsPrimitive: parsed.ReturnsPrimitive,
 				ReturnsPointer:   parsed.ReturnsPointer,
 			}
@@ -340,6 +356,7 @@ func parseNamespace(n *sitter.Node, input []byte) string {
 func parseCPPMethod(r *sitter.Node, b *sitter.Node, content []byte) *ParsedMethod {
 	funcDeclNode := b
 	returnsPointer := false
+	namespace := parseNameSpace(b, content)
 	if b.Type() == "pointer_declarator" {
 		returnsPointer = true
 		funcDeclNode = b.ChildByFieldName("declarator")
@@ -349,6 +366,7 @@ func parseCPPMethod(r *sitter.Node, b *sitter.Node, content []byte) *ParsedMetho
 	parsed := &ParsedMethod{
 		Args:           args,
 		ReturnsPointer: returnsPointer,
+		NameSpace:      &namespace,
 		Ident:          &name,
 	}
 	if r != nil {
@@ -470,10 +488,10 @@ func parseClasses(n *sitter.Node, input []byte) map[string]*CPPClass {
 		}
 		// fmt.Println(len(m.Captures))
 		for _, c := range m.Captures {
-			namespace := getNameSpace(c.Node, input)
+			namespace := parseNameSpace(c.Node, input)
 			class_name := c.Node.ChildByFieldName("name").Content(input)
 			classes[class_name] = &CPPClass{
-				NameSpace: namespace,
+				NameSpace: &namespace,
 			}
 			class_body := c.Node.ChildByFieldName("body")
 			class_friends := &[]*CPPFriend{}
@@ -811,21 +829,6 @@ func parseClassFriend(n *sitter.Node, input []byte) *CPPFriend {
 }
 
 // helper functions
-
-func getNameSpace(n *sitter.Node, input []byte) *string {
-	var nameSpace *string
-	test_node := n
-	for test_node.Type() != "namespace_definition" {
-		test_node = test_node.Parent()
-	}
-	name_node := test_node.ChildByFieldName("name")
-	if name_node != nil {
-		name := name_node.Content(input)
-		nameSpace = &name
-	}
-	return nameSpace
-}
-
 func getTypeQualifier(n *sitter.Node, input []byte) *string {
 	qualNode := findChildNodeByType(n, "type_qualifier")
 	if qualNode != nil {
@@ -860,7 +863,7 @@ type PreprocessBlock struct {
 func (g *PackageGenerator) parseLiterals(n *sitter.Node, input []byte) map[string]*CPPMethod {
 	preprocess_funcs := map[string]*PreprocessBlock{}
 	linked_expr := map[string]*[]*string{}
-
+	var namespace *string
 	processed_expr := map[string]*CPPMethod{}
 	q, err := sitter.NewQuery([]byte("(preproc_function_def) @function_literal"), cpp.GetLanguage())
 	if err != nil {
@@ -880,6 +883,10 @@ func (g *PackageGenerator) parseLiterals(n *sitter.Node, input []byte) map[strin
 		// fmt.Println(len(m.Captures))
 		for _, c := range m.Captures {
 			node := c.Node
+			if namespace == nil {
+				temp_ns := parseNameSpace(node, input)
+				namespace = &temp_ns
+			}
 			name_node := node.ChildByFieldName("name")
 			name := name_node.Content(input)
 			preprocess_funcs[name] = &PreprocessBlock{Node: node, Expr: false}
@@ -989,6 +996,7 @@ func (g *PackageGenerator) parseLiterals(n *sitter.Node, input []byte) map[strin
 		n := tree.RootNode()
 		processed_methods := g.parseMethods(n, temp_input)
 		for fn, method := range processed_methods {
+			method.NameSpace = namespace
 			processed_expr[fn] = method
 		}
 	}

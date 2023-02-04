@@ -132,7 +132,7 @@ func (g *PackageGenerator) WriteEnvExports() string {
 func (g *PackageGenerator) WriteEnvImports() string {
 	hasClassImports := false
 	sb := new(strings.Builder)
-	sb.WriteString("const {\n")
+	sb.WriteString("\nconst {\n")
 	for name, c := range g.ParsedData.Classes {
 		if c.Decl != nil {
 			if v, ok := g.conf.ClassOpts[name]; ok && len(v.ForcedMethods) > 0 {
@@ -272,7 +272,7 @@ func (g *PackageGenerator) WriteEnvWrappedFns() string {
 				tsType, isClass := g.CPPTypeToTS(*p.Type, p.IsPointer)
 				if v, ok := g.conf.TypeMappings[tsType]; ok && v.TSType != "" {
 					if g.conf.IsEnvTS() {
-						sb.WriteString(fmt.Sprintf(": %s", v.TSType))
+						sb.WriteString(fmt.Sprintf(": %s", stripNameSpace(v.TSType)))
 					}
 					if p.DefaultValue != nil && p.DefaultValue.Val != nil {
 						val := *p.DefaultValue.Val
@@ -295,7 +295,7 @@ func (g *PackageGenerator) WriteEnvWrappedFns() string {
 							tsType += fmt.Sprintf(" = %s", val)
 						}
 					} else {
-						sb.WriteString(fmt.Sprintf(": %s", tsType))
+						sb.WriteString(fmt.Sprintf(": %s", stripNameSpace(tsType)))
 					}
 					isEnum, _ := g.IsTypeEnum(*p.Type)
 					if isEnum && p.DefaultValue != nil && p.DefaultValue.Val != nil {
@@ -320,8 +320,8 @@ func (g *PackageGenerator) WriteEnvWrappedFns() string {
 			}
 			g.writeIndent(sb, 1)
 			sb.WriteString("return ")
-			if isClass(tsType, g.ParsedData.Classes) {
-				sb.WriteString(fmt.Sprintf("new %s(", tsType))
+			if g.isClass(tsType) {
+				sb.WriteString(fmt.Sprintf("new %s(", stripNameSpace(tsType)))
 			}
 			if isInvalidName(*m.Ident) {
 				sb.WriteString(fmt.Sprintf("__%s(", *m.Ident))
@@ -336,11 +336,11 @@ func (g *PackageGenerator) WriteEnvWrappedFns() string {
 					sb.WriteString(", ")
 				}
 				sb.WriteString(*p.Ident)
-				if isClass(*p.Type, g.ParsedData.Classes) {
+				if g.isClass(*p.Type) {
 					sb.WriteString("._native_self")
 				}
 			}
-			if isClass(tsType, g.ParsedData.Classes) {
+			if g.isClass(tsType) {
 				sb.WriteByte(')')
 			}
 			sb.WriteString(");\n")
@@ -382,8 +382,8 @@ func (g *PackageGenerator) WriteEnvWrappedFns() string {
 					}
 					g.writeIndent(sb, 1)
 					sb.WriteString("return ")
-					if isClass(m.TSReturnType, g.ParsedData.Classes) {
-						sb.WriteString(fmt.Sprintf("new %s(", m.TSReturnType))
+					if g.isClass(m.TSReturnType) {
+						sb.WriteString(fmt.Sprintf("new %s(", stripNameSpace(m.TSReturnType)))
 					}
 					if isInvalidName(m.Name) {
 						sb.WriteString(fmt.Sprintf("__%s(", m.Name))
@@ -395,13 +395,13 @@ func (g *PackageGenerator) WriteEnvWrappedFns() string {
 							sb.WriteString(", ")
 						}
 						sb.WriteString(p.Name)
-						if isClass(p.TSType, g.ParsedData.Classes) {
+						if g.isClass(p.TSType) {
 							sb.WriteString("._native_self")
 						} else if isTypedArray(m.Args[i].TSType) {
 							sb.WriteString(".buffer")
 						}
 					}
-					if isClass(m.TSReturnType, g.ParsedData.Classes) {
+					if g.isClass(m.TSReturnType) {
 						sb.WriteByte(')')
 					}
 					sb.WriteString(");\n")
@@ -448,8 +448,8 @@ func (g *PackageGenerator) WriteEnvWrappedFns() string {
 				}
 				g.writeIndent(sb, 1)
 				sb.WriteString("return ")
-				if isClass(tsType, g.ParsedData.Classes) {
-					sb.WriteString(fmt.Sprintf("new %s(", tsType))
+				if g.isClass(tsType) {
+					sb.WriteString(fmt.Sprintf("new %s(", stripNameSpace(tsType)))
 				}
 				if isInvalidName(*m.Ident) {
 					sb.WriteString(fmt.Sprintf("__%s(", *m.Ident))
@@ -461,11 +461,11 @@ func (g *PackageGenerator) WriteEnvWrappedFns() string {
 						sb.WriteString(", ")
 					}
 					sb.WriteString(*p.Ident)
-					if isClass(*p.Type, g.ParsedData.Classes) {
+					if g.isClass(*p.Type) {
 						sb.WriteString("._native_self")
 					}
 				}
-				if isClass(tsType, g.ParsedData.Classes) {
+				if g.isClass(tsType) {
 					sb.WriteByte(')')
 				}
 				sb.WriteString(");\n")
@@ -503,8 +503,8 @@ func (g *PackageGenerator) WriteEnvWrappedFns() string {
 		}
 		g.writeIndent(sb, 1)
 		sb.WriteString("return ")
-		if isClass(m.TSReturnType, g.ParsedData.Classes) {
-			sb.WriteString(fmt.Sprintf("new %s(", m.TSReturnType))
+		if g.isClass(m.TSReturnType) {
+			sb.WriteString(fmt.Sprintf("new %s(", stripNameSpace(m.TSReturnType)))
 		}
 		if isInvalidName(m.Name) {
 			sb.WriteString(fmt.Sprintf("__%s(", m.Name))
@@ -520,7 +520,7 @@ func (g *PackageGenerator) WriteEnvWrappedFns() string {
 				sb.WriteString(".buffer")
 			}
 		}
-		if isClass(m.TSReturnType, g.ParsedData.Classes) {
+		if g.isClass(m.TSReturnType) {
 			sb.WriteByte(')')
 		}
 		sb.WriteString(");\n")

@@ -197,11 +197,12 @@ func (g *PackageGenerator) writeArgChecks(sb *strings.Builder, name string, args
 					sb.WriteString(";\n")
 				}
 			}
-		} else if isClass(*arg.Type, g.ParsedData.Classes) {
+		} else if g.isClass(*arg.Type) {
 			g.writeArgTypeChecker(sb, name, "IsExternal", i, fmt.Sprintf("native `%s` (typeof `Napi::External<%s::%s>`)", *arg.Type, *g.NameSpace, *arg.Type), 1, nil, arg)
 			if !isArgTransform {
+				classData := g.getClass(*arg.Type)
 				g.writeIndent(sb, 1)
-				sb.WriteString(fmt.Sprintf("%s::%s* %s = UnExternalize<%s::%s>(info[%d]);\n", *g.NameSpace, *arg.Type, *arg.Ident, *g.NameSpace, *arg.Type, i))
+				sb.WriteString(fmt.Sprintf("%s::%s* %s = UnExternalize<%s::%s>(info[%d]);\n", *classData.NameSpace, stripNameSpace(*arg.Type), *arg.Ident, *classData.NameSpace, stripNameSpace(*arg.Type), i))
 			}
 		} else if strings.Contains(*arg.Type, "std::vector") {
 			argType := *arg.Type
@@ -285,7 +286,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod) {
 			}
 			sb.WriteString(strings.ReplaceAll(*argTransformVal, "/arg/", fmt.Sprintf("info[%d]", i)))
 			// TODO: this might need better handling for class wrappers
-		} else if isClass(*arg.Type, g.ParsedData.Classes) {
+		} else if g.isClass(*arg.Type) {
 			obj_name = *arg.Ident
 		} else if strings.Contains(*arg.Type, "std::vector") && !strings.EqualFold(tmpType[strings.Index(*arg.Type, "<")+1:strings.Index(*arg.Type, ">")], *m.Returns) {
 			g.writeIndent(sb, 2)
@@ -323,7 +324,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod) {
 	if isReturnTransform {
 		if isGrouped {
 			g.writeIndent(sb, 2)
-			sb.WriteString(fmt.Sprintf("_res = %s::%s(", *g.NameSpace, *m.Ident))
+			sb.WriteString(fmt.Sprintf("_res = %s::%s(", *m.NameSpace, *m.Ident))
 			for i, arg := range *m.Overloads[0] {
 				if i > 0 {
 					sb.WriteString(", ")
@@ -333,7 +334,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod) {
 					sb.WriteString(*arg.Ident)
 				} else if _, ok := g.conf.TypeMappings[*arg.Type]; ok {
 					sb.WriteString(fmt.Sprintf("%s::%s(%s)", *g.NameSpace, *arg.Type, *arg.Ident))
-				} else if isClass(*arg.Type, g.ParsedData.Classes) {
+				} else if g.isClass(*arg.Type) {
 					sb.WriteString(fmt.Sprintf("*(%s)", *arg.Ident))
 				} else {
 					sb.WriteString(*arg.Ident)
@@ -344,7 +345,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod) {
 		parsed_transform := strings.ReplaceAll(*transform, "/return/", "_res")
 		for i, arg := range *m.Overloads[0] {
 			fmtd_arg := ""
-			if isClass(*arg.Type, g.ParsedData.Classes) {
+			if g.isClass(*arg.Type) {
 				fmtd_arg = fmt.Sprintf("*(%s)", *arg.Ident)
 			} else {
 				fmtd_arg = *arg.Ident
@@ -369,7 +370,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod) {
 		if m.ReturnsPointer && needsCast != nil && arrayType != "" {
 			sb.WriteString(fmt.Sprintf("reinterpret_cast<%s *>(", arrayType))
 		}
-		sb.WriteString(fmt.Sprintf("%s::%s(", *g.NameSpace, *m.Ident))
+		sb.WriteString(fmt.Sprintf("%s::%s(", *m.NameSpace, *m.Ident))
 		for i, arg := range *m.Overloads[0] {
 			if i > arg_count {
 				break
@@ -379,7 +380,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod) {
 			}
 			if _, ok := g.conf.TypeMappings[*arg.Type]; ok {
 				sb.WriteString(fmt.Sprintf("%s::%s(%s)", *g.NameSpace, *arg.Type, *arg.Ident))
-			} else if isClass(*arg.Type, g.ParsedData.Classes) {
+			} else if g.isClass(*arg.Type) {
 				sb.WriteString(fmt.Sprintf("*(%s)", *arg.Ident))
 			} else {
 				sb.WriteString(*arg.Ident)
@@ -417,7 +418,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod) {
 				sb.WriteString(strings.ReplaceAll(t.Handler, "/val/", "_res"))
 				g.writeIndent(sb, 1)
 				sb.WriteString(fmt.Sprintf("return %s;\n", t.OutVar))
-			} else if isObject && isClass(returnType, g.ParsedData.Classes) {
+			} else if isObject && g.isClass(returnType) {
 				if v, ok := g.conf.GlobalTypeOutTransforms[returnType]; ok {
 					g.writeIndent(sb, 1)
 					sb.WriteString(strings.ReplaceAll(v, "/return/", "_res"))
@@ -446,6 +447,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod) {
 }
 
 func (g *PackageGenerator) writeClassField(sb *strings.Builder, f *CPPFieldDecl, className string) {
+	classData := g.getClass(className)
 	if f.Ident != nil && g.conf.IsFieldWrapped(className, *f.Ident) {
 		var returnType string
 		isVoid := false
@@ -468,9 +470,9 @@ func (g *PackageGenerator) writeClassField(sb *strings.Builder, f *CPPFieldDecl,
 			argCount += len(*f.Args)
 		}
 		g.writeArgCountChecker(sb, *f.Ident, argCount, 0)
-		g.writeArgTypeChecker(sb, *f.Ident, "IsExternal", 0, fmt.Sprintf("native `%s` (typeof `Napi::External<%s::%s>`)", className, *g.NameSpace, className), 1, nil, nil)
+		g.writeArgTypeChecker(sb, *f.Ident, "IsExternal", 0, fmt.Sprintf("native `%s` (typeof `Napi::External<%s::%s>`)", stripNameSpace(className), *classData.NameSpace, stripNameSpace(className)), 1, nil, nil)
 		g.writeIndent(sb, 1)
-		sb.WriteString(fmt.Sprintf("%s::%s* _tmp_external = UnExternalize<%s::%s>(info[%d]);\n", *g.NameSpace, className, *g.NameSpace, className, 0))
+		sb.WriteString(fmt.Sprintf("%s::%s* _tmp_external = UnExternalize<%s::%s>(info[%d]);\n", *classData.NameSpace, stripNameSpace(className), *classData.NameSpace, stripNameSpace(className), 0))
 		if f.Args != nil {
 			for i, arg := range *f.Args {
 				typeHandler, _ := g.CPPTypeToTS(*arg.Type, false)
@@ -495,7 +497,8 @@ func (g *PackageGenerator) writeClassField(sb *strings.Builder, f *CPPFieldDecl,
 				}
 				if _, ok := g.conf.TypeMappings[*arg.Type]; ok {
 					sb.WriteString(fmt.Sprintf("%s::%s(%s)", *g.NameSpace, *arg.Type, *arg.Ident))
-				} else if isClass(*arg.Type, g.ParsedData.Classes) {
+				} else if g.isClass(*arg.Type) {
+					// TODO: check whether expects ptr to Class
 					sb.WriteString(fmt.Sprintf("*(%s)", *arg.Ident))
 				} else {
 					sb.WriteString(*arg.Ident)
@@ -512,7 +515,7 @@ func (g *PackageGenerator) writeClassField(sb *strings.Builder, f *CPPFieldDecl,
 				sb.WriteString(strings.ReplaceAll(t.Handler, "/val/", "_res"))
 				g.writeIndent(sb, 1)
 				sb.WriteString(fmt.Sprintf("return %s;\n", t.OutVar))
-			} else if isObject && isClass(returnType, g.ParsedData.Classes) {
+			} else if isObject && g.isClass(returnType) {
 				if v, ok := g.conf.GlobalTypeOutTransforms[returnType]; ok {
 					g.writeIndent(sb, 1)
 					sb.WriteString(strings.ReplaceAll(v, "/return/", "_res"))

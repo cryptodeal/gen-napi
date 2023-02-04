@@ -29,3 +29,5 @@ examples/tygo
 examples/http
 
 dist/
+
+gen-napi

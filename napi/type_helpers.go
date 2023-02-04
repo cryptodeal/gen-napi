@@ -5,9 +5,26 @@ import (
 	"strings"
 )
 
-func isClass(argType string, classes map[string]*CPPClass) bool {
-	_, ok := classes[argType]
+func stripNameSpace(v string) string {
+	if strings.Contains(v, "::") {
+		lastIdx := strings.LastIndex(v, "::")
+		v = v[lastIdx+2:]
+	}
+	return v
+}
+
+func (g *PackageGenerator) isClass(argType string) bool {
+	argType = stripNameSpace(argType)
+	_, ok := g.ParsedData.Classes[argType]
 	return ok
+}
+
+func (g *PackageGenerator) getClass(argType string) *CPPClass {
+	argType = stripNameSpace(argType)
+	if v, ok := g.ParsedData.Classes[argType]; ok {
+		return v
+	}
+	return nil
 }
 
 func PrimitivePtrToTS(t string) (string, string, *string, string) {

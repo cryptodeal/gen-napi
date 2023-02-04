@@ -25,8 +25,7 @@ packages:
         ts: number
         napi: Number
     js_wrapper_opts:
-      front_matter: |
-        import { Tensor } from './tensor'
+      front_matter: import { Tensor } from './tensor'
       addon_path: ../../build/Release/shumai_bindings.node
       wrapper_out_path: demo1/ts/index.ts
     # TODO: need to debug (should not be necessary??)
@@ -34,10 +33,8 @@ packages:
       - scalar
       - device
       - pad
-      - argsort
       - host
       - fromScalar
-      - areTensorTypesEqual
       - releaseAdapter
       - tensorBackendTypeToString
       - releaseAdapterUnsafe
@@ -46,7 +43,6 @@ packages:
       - min
       - max
       - topk
-      - allClose
       - print
     path_to_forced_logic: demo1/ForcedLogic.cc
     global_type_out_transforms:
@@ -56,6 +52,11 @@ packages:
         Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
     # simplifies cases where multiple methods require transforming the generated logic (starting from after function call; useful when need to transform value before returning to JS)
     grouped_method_transforms:
+      - arg_transforms:
+          axis: auto axis = /arg/.As<Napi::Number>().Uint32Value();
+        applies_to:
+          - sort
+          - argsort
       - return_transforms: |
           auto axes_set = std::unordered_set<int>{static_cast<int>(/arg_1/)};
           auto base_shape = (/arg_0/).shape().get();
@@ -72,8 +73,7 @@ packages:
           const auto& shape = fl::Shape(new_shape);
           /return/ = fl::reshape(/return/, shape);
         arg_transforms:
-          axis: |
-            auto axis = axisArg(/arg/.As<Napi::Number>().Uint32Value(), g_row_major, /arg_0/->ndim());
+          axis: auto axis = axisArg(/arg/.As<Napi::Number>().Uint32Value(), g_row_major, /arg_0/->ndim());
         applies_to:
           - argmin
           - argmax
@@ -118,15 +118,11 @@ packages:
              Napi::TypeError::New(env, "`arange` expects args[2] to be typeof `number`").ThrowAsJavaScriptException();
              return env.Null();
            }
-        return_transforms: |
-          /return/ = fl::arange(/arg_0/, /arg_1/, /arg_2/);
+        return_transforms: /return/ = fl::arange(/arg_0/, /arg_1/, /arg_2/);
         arg_transforms:
-          start: |
-            float start = /arg/.As<Napi::Number>().FloatValue();
-          end: |
-            float end = /arg/.As<Napi::Number>().FloatValue();
-          step: |
-            float step = /arg/.As<Napi::Number>().FloatValue();
+          start: float start = /arg/.As<Napi::Number>().FloatValue();
+          end: float end = /arg/.As<Napi::Number>().FloatValue();
+          step: float step = /arg/.As<Napi::Number>().FloatValue();
       var:
         return_transforms: |
           /return/ = fl::var(/arg_0/, /arg_1/, /arg_2/, /arg_3/);
@@ -167,29 +163,21 @@ packages:
           /return/ = fl::reshape(/return/, shape);
       full:
         arg_count: 2
-        return_transforms: |
-          /return/ = fl::full(fl::Shape(/arg_0/), /arg_1/);
+        return_transforms: /return/ = fl::full(fl::Shape(/arg_0/), /arg_1/);
         arg_transforms:
-          dims: |
-            std::vector<long long> dims = jsArrayToVector<long long>(/arg/.As<Napi::Array>(), g_row_major, false);
-          val: |
-            float val = /arg/.As<Napi::Number>().FloatValue();
+          dims: std::vector<long long> dims = jsArrayToVector<long long>(/arg/.As<Napi::Array>(), g_row_major, false);
+          val: float val = /arg/.As<Napi::Number>().FloatValue();
       identity:
         arg_transforms:
-          dim: |
-            int64_t dim = /arg/.As<Napi::Number>().Int64Value();
+          dim: int64_t dim = /arg/.As<Napi::Number>().Int64Value();
       iota:
         arg_transforms:
-          dims: |
-            auto dims = jsArrayToVector<long long>(/arg/.As<Napi::Array>(), g_row_major, false);
-          tileDims: |
-            auto tileDims = jsArrayToVector<long long>(/arg/.As<Napi::Array>(), g_row_major, false);
+          dims: auto dims = jsArrayToVector<long long>(/arg/.As<Napi::Array>(), g_row_major, false);
+          tileDims: auto tileDims = jsArrayToVector<long long>(/arg/.As<Napi::Array>(), g_row_major, false);
       concatenate:
         arg_transforms:
-          axis: |
-            auto axis = axisArg(/arg/.As<Napi::Number>().Int32Value(), g_row_major, (&/arg_0/[0])->ndim());
-          tensors: |
-            auto tensors = jsTensorArrayArg<fl::Tensor>(/arg/.As<Napi::Array>());
+          axis: auto axis = axisArg(/arg/.As<Napi::Number>().Int32Value(), g_row_major, (&/arg_0/[0])->ndim());
+          tensors: auto tensors = jsTensorArrayArg<fl::Tensor>(/arg/.As<Napi::Array>());
       tril:
         return_transforms: |
           if (g_row_major) {
@@ -204,10 +192,6 @@ packages:
           } else {
             /return/ = fl::triu(/arg_0/);
           }
-      sort:
-        arg_transforms:
-          axis: |
-            auto axis = /arg/.As<Napi::Number>().Uint32Value();
       matmul:
         return_transforms: |
           if (g_row_major) {
@@ -217,22 +201,18 @@ packages:
           }
       tile:
         arg_transforms:
-          shape: |
-            auto shape = jsArrayToVector<long long>(/arg/.As<Napi::Array>(), g_row_major, false);
+          shape: auto shape = jsArrayToVector<long long>(/arg/.As<Napi::Array>(), g_row_major, false);
       transpose:
         arg_transforms:
-          axes: |
-            auto axes = jsArrayToVector<long long>(/arg/.As<Napi::Array>(), g_row_major, /arg_0/->ndim());
+          axes: auto axes = jsArrayToVector<long long>(/arg/.As<Napi::Array>(), g_row_major, /arg_0/->ndim());
       reshape:
         arg_transforms:
-          shape: |
-            auto shape = jsArrayToVector<long long>(/arg/.As<Napi::Array>(), g_row_major, false);
+          shape: auto shape = jsArrayToVector<long long>(/arg/.As<Napi::Array>(), g_row_major, false);
     type_handlers:
       dtype:
         out_type: Napi::Number
         out_var: _out
-        handler: |
-          Napi::Number _out = Napi::Number::New(env, static_cast<double>(/val/));
+        handler: Napi::Number _out = Napi::Number::New(env, static_cast<double>(/val/));
       Shape:
         out_type: Napi::TypedArrayOf<int64_t>
         out_var: _out
