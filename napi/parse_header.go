@@ -75,6 +75,7 @@ type CPPClass struct {
 type CPPArg struct {
 	TypeQualifier *string
 	IsPrimitive   bool
+	Template      *TemplateType
 	Type          *string
 	RefDecl       *string
 	IsPointer     bool
@@ -119,8 +120,7 @@ type ParsedMethod struct {
 	Returns          *string
 	ReturnsPrimitive bool
 	NameSpace        *string
-
-	ReturnsPointer bool
+	ReturnsPointer   bool
 }
 
 type Enum struct {
@@ -132,6 +132,20 @@ type ParsedEnum struct {
 	Ident     *string
 	NameSpace *string
 	Values    []*Enum
+}
+
+// TODO: simplify types (and make more lang agnostic for C/C++)
+type ObjectProperty struct {
+	Name string
+	// Type
+}
+
+type ParsedClass struct {
+	NameSpace  *string
+	Name       string
+	Methods    []*CPPMethod
+	Extends    *ParsedClass
+	Properties []*ObjectProperty
 }
 
 func parseNameSpace(n *sitter.Node, input []byte) string {
@@ -369,6 +383,7 @@ func parseCPPMethod(r *sitter.Node, b *sitter.Node, content []byte) *ParsedMetho
 		NameSpace:      &namespace,
 		Ident:          &name,
 	}
+
 	if r != nil {
 		nodeType := r.Type()
 		if nodeType == "primitive_type" || nodeType == "sized_type_specifier" {
@@ -396,6 +411,7 @@ func parseCPPArg(content []byte, arg_list *sitter.Node) *[]*CPPArg {
 		if node_type != "parameter_declaration" && node_type != "optional_parameter_declaration" {
 			continue
 		}
+		template_type := ParseTemplateArg(scoped_arg, content)
 		type_node := scoped_arg.ChildByFieldName("type")
 		argType := type_node.Content(content)
 		typeQualifier := getTypeQualifier(scoped_arg, content)
@@ -410,6 +426,7 @@ func parseCPPArg(content []byte, arg_list *sitter.Node) *[]*CPPArg {
 			}
 		}
 		parsed_arg := &CPPArg{
+			Template:      template_type,
 			Type:          &argType,
 			TypeQualifier: typeQualifier,
 			IsPrimitive:   isPrimitive,

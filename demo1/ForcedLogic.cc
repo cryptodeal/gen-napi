@@ -142,7 +142,7 @@ static Napi::Value rand(const Napi::CallbackInfo& info) {
     Napi::TypeError::New(env,
                          "`rand` expects exactly 1 arg; (typeof `number[]`)")
         .ThrowAsJavaScriptException();
-    return env.Null();
+    return env.Undefined();
   }
   std::vector<long long> shape =
       jsArrayToVector<long long>(info[0].As<Napi::Array>(), g_row_major, false);
@@ -166,7 +166,7 @@ static Napi::Value randn(const Napi::CallbackInfo& info) {
     Napi::TypeError::New(env,
                          "`randn` expects exactly 1 arg; (typeof `number[]`)")
         .ThrowAsJavaScriptException();
-    return env.Null();
+    return env.Undefined();
   }
   std::vector<long long> shape =
       jsArrayToVector<long long>(info[0].As<Napi::Array>(), g_row_major, false);
@@ -599,7 +599,7 @@ static Napi::Value toInt16Scalar(const Napi::CallbackInfo& info) {
                          "`toInt16Scalar` expects args[0] to be native "
                          "`Tensor` (typeof `Napi::External<fl::Tensor>`)")
         .ThrowAsJavaScriptException();
-    return env.Null();
+    return env.Undefined();
   }
   fl::Tensor* t = UnExternalize<fl::Tensor>(info[0]);
   return Napi::Number::New(env, t->asScalar<int16_t>());

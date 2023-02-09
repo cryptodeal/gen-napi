@@ -27,6 +27,10 @@ func (g *PackageGenerator) getClass(argType string) *CPPClass {
 	return nil
 }
 
+func isVoid(t *string) bool {
+	return !(t != nil && *t != "void" && *t != "")
+}
+
 func PrimitivePtrToTS(t string) (string, string, *string, string) {
 	jsTypeEquivalent := ""
 	var needsCast *string
@@ -45,7 +49,7 @@ func PrimitivePtrToTS(t string) (string, string, *string, string) {
 		arrayType = "uint8_t"
 		napi_short_type = "uint8"
 		jsTypeEquivalent = "Uint8Array"
-	case "unsigned char", "bool":
+	case "bool":
 		arrayType = "uint8_t"
 		napi_short_type = "uint8"
 		jsTypeEquivalent = "Uint8Array"
@@ -54,11 +58,6 @@ func PrimitivePtrToTS(t string) (string, string, *string, string) {
 		arrayType = "int8_t"
 		napi_short_type = "int8"
 		jsTypeEquivalent = "Int8Array"
-	case "char", "signed char":
-		arrayType = "int8_t"
-		napi_short_type = "int8"
-		jsTypeEquivalent = "Int8Array"
-		needsCast = &t
 	case "uint16_t":
 		arrayType = "uint16_t"
 		napi_short_type = "uint16"
@@ -117,6 +116,33 @@ func PrimitivePtrToTS(t string) (string, string, *string, string) {
 	return jsTypeEquivalent, arrayType, needsCast, napi_short_type
 }
 
+func IsTypeNumber(t string) bool {
+	switch strings.TrimSpace(t) {
+	case "short", "int", "int8_t", "uint8_t", "int16_t", "uint16_t", "int32_t", "uint32_t", "long", "float", "float_t", "double", "double_t", "long double":
+		return true
+	default:
+		return false
+	}
+}
+
+func IsTypeBigInt(t string) bool {
+	switch strings.TrimSpace(t) {
+	case "long long", "size_t", "int64_t", "uint64_t":
+		return true
+	default:
+		return false
+	}
+}
+
+func IsTypeString(t string) bool {
+	switch strings.TrimSpace(t) {
+	case "string", "std::string", "char", "wchar_t", "char16_t", "char32_t":
+		return true
+	default:
+		return false
+	}
+}
+
 func (g *PackageGenerator) CPPTypeToTS(t string, isPointer bool) (string, bool) {
 	isEnum, _ := g.IsTypeEnum(t)
 	if isEnum {
@@ -129,11 +155,11 @@ func (g *PackageGenerator) CPPTypeToTS(t string, isPointer bool) (string, bool) 
 		}
 	}
 	switch t {
-	case "int", "int8_t", "char", "uint8_t", "signed", "unsigned", "short", "long", "long int", "signed long", "signed long int", "unsigned long", "unsigned long int", "long double", "signed char", "unsigned char", "short int", "signed short", "unsigned_short", "signed int", "unsigned int", "unsigned short int", "signed short int", "uint16_t", "uint32_t", "int16_t", "int32_t", "float", "double":
+	case "int", "int8_t", "uint8_t", "signed", "unsigned", "short", "long", "long int", "signed long", "signed long int", "unsigned long", "unsigned long int", "long double", "short int", "signed short", "unsigned_short", "signed int", "unsigned int", "unsigned short int", "signed short int", "uint16_t", "uint32_t", "int16_t", "int32_t", "float", "double":
 		return "number", false
 	case "int64_t", "uint64_t", "long long", "long long int", "signed long long", "signed long long int", "unsigned long long", "unsigned long long int", "size_t":
 		return "bigint", false
-	case "string", "std::string":
+	case "string", "std::string", "char", "wchar_t", "char16_t", "char32_t":
 		return "string", false
 	case "bool":
 		return "boolean", false

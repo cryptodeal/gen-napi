@@ -2,16 +2,25 @@
 /* eslint-disable */
 
 const {
+  _bar,
   _baz,
   _qux,
   _quux,
   _test,
-  _foo,
-  _bar
+  _test2,
+  _foo
 } = import.meta.require("../../../../build/Release/test.node")
+
+export const quux = (a: boolean, b: boolean): Uint8Array => {
+  return _quux(a, b);
+}
 
 export const test = (a: string): string => {
   return _test(a);
+}
+
+export const test2 = (a: number[]): Float64Array => {
+  return _test2(a);
 }
 
 export const foo = (a: number): number => {
@@ -28,9 +37,5 @@ export const baz = (a: Float32Array, b: number): Float32Array => {
 
 export const qux = (a: BigInt64Array, b: number): BigInt64Array => {
   return _qux(a, b);
-}
-
-export const quux = (a: boolean, b: boolean): Uint8Array => {
-  return _quux(a, b);
 }
 

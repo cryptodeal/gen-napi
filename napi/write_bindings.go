@@ -5,12 +5,12 @@ import (
 	"strings"
 )
 
-func (g *PackageGenerator) writeArgCountChecker(sb *strings.Builder, name string, expected_arg_count int, optional int) {
+func (g *PackageGenerator) writeArgCountChecker(sb *strings.Builder, name string, expected_arg_count int, optional int, is_void bool) {
 	if expected_arg_count == 0 && optional == 0 {
 		return
 	}
 	g.writeIndent(sb, 1)
-	sb.WriteString("auto _arg_count = info.Length();\n")
+	sb.WriteString("const auto _arg_count = info.Length();\n")
 	if optional == 0 {
 		g.writeIndent(sb, 1)
 		sb.WriteString(fmt.Sprintf("if (_arg_count != %d) {\n", expected_arg_count))
@@ -30,14 +30,17 @@ func (g *PackageGenerator) writeArgCountChecker(sb *strings.Builder, name string
 		errMsg = fmt.Sprintf("`%s` expects %d to %d args, but received ", name, expected_arg_count, expected_arg_count+optional)
 	}
 	sb.WriteString(fmt.Sprintf("Napi::TypeError::New(env, %q + std::to_string(_arg_count)).ThrowAsJavaScriptException();\n", errMsg))
-
 	g.writeIndent(sb, 2)
-	sb.WriteString("return env.Undefined();\n")
+	if !is_void {
+		sb.WriteString("return env.Undefined();\n")
+	} else {
+		sb.WriteString("return;\n")
+	}
 	g.writeIndent(sb, 1)
 	sb.WriteString("}\n")
 }
 
-func (g *PackageGenerator) writeArgTypeChecker(sb *strings.Builder, name string, checker string, idx int, msg string, indents int, arrName *string, arg *CPPArg) {
+func (g *PackageGenerator) writeArgTypeChecker(sb *strings.Builder, name string, checker string, idx int, msg string, indents int, arrName *string, arg *CPPArg, is_void bool) {
 	isArrayItem := arrName != nil
 	hasDefault := arg != nil && arg.DefaultValue != nil
 	if hasDefault {
@@ -73,7 +76,11 @@ func (g *PackageGenerator) writeArgTypeChecker(sb *strings.Builder, name string,
 	}
 	sb.WriteString(").ThrowAsJavaScriptException();\n")
 	g.writeIndent(sb, indents+1)
-	sb.WriteString("return env.Undefined();\n")
+	if !is_void {
+		sb.WriteString("return env.Undefined();\n")
+	} else {
+		sb.WriteString("return;\n")
+	}
 	g.writeIndent(sb, indents)
 	sb.WriteString("}\n")
 	if hasDefault {
@@ -95,11 +102,11 @@ func (g *PackageGenerator) writeArgTypeChecker(sb *strings.Builder, name string,
 	}
 }
 
-func (g *PackageGenerator) writeArgChecks(sb *strings.Builder, name string, args *[]*CPPArg, expected_arg_count int, optionalArgs int) {
+func (g *PackageGenerator) writeArgChecks(sb *strings.Builder, name string, args *[]*CPPArg, expected_arg_count int, optionalArgs int, is_void bool) {
 	if expected_arg_count == 0 {
 		return
 	}
-	g.writeArgCountChecker(sb, name, expected_arg_count, optionalArgs)
+	g.writeArgCountChecker(sb, name, expected_arg_count, optionalArgs, is_void)
 	// write arg checks, transforms, and declare arg variable as possible
 	if v, ok := g.conf.MethodTransforms[name]; ok && v.ArgCheckTransforms != "" {
 		sb.WriteString(v.ArgCheckTransforms)
@@ -129,7 +136,7 @@ func (g *PackageGenerator) writeArgChecks(sb *strings.Builder, name string, args
 		isArgTransform, argTransformVal := g.conf.IsArgTransform(name, *arg.Ident)
 		isEnum, _ := g.IsTypeEnum(*arg.Type)
 		if isEnum {
-			g.writeArgTypeChecker(sb, name, "IsNumber", i, "typeof `number`", 1, nil, arg)
+			g.writeArgTypeChecker(sb, name, "IsNumber", i, "typeof `number`", 1, nil, arg, is_void)
 		} else if arg.IsPrimitive {
 			if !arg.IsPointer {
 				napiTypeHandler := "IsNumber"
@@ -165,7 +172,7 @@ func (g *PackageGenerator) writeArgChecks(sb *strings.Builder, name string, args
 					napiTypeHandler = "IsBoolean"
 					jsTypeEquivalent = "boolean"
 				}
-				g.writeArgTypeChecker(sb, name, napiTypeHandler, i, fmt.Sprintf("typeof `%s`)", jsTypeEquivalent), 1, nil, arg)
+				g.writeArgTypeChecker(sb, name, napiTypeHandler, i, fmt.Sprintf("typeof `%s`)", jsTypeEquivalent), 1, nil, arg, is_void)
 				// get val from arg if no transform is specified
 				if !isArgTransform {
 					g.writeIndent(sb, 1)
@@ -182,7 +189,7 @@ func (g *PackageGenerator) writeArgChecks(sb *strings.Builder, name string, args
 				}
 			} else {
 				jsTypeEquivalent, arrayType, needsCast, _ := PrimitivePtrToTS(*arg.Type)
-				g.writeArgTypeChecker(sb, name, "IsTypedArray", i, fmt.Sprintf("typeof `%s`)", jsTypeEquivalent), 1, nil, arg)
+				g.writeArgTypeChecker(sb, name, "IsTypedArray", i, fmt.Sprintf("typeof `%s`)", jsTypeEquivalent), 1, nil, arg, is_void)
 				// get val from arg if no transform is specified
 				if !isArgTransform {
 					g.writeIndent(sb, 1)
@@ -198,17 +205,15 @@ func (g *PackageGenerator) writeArgChecks(sb *strings.Builder, name string, args
 				}
 			}
 		} else if g.isClass(*arg.Type) {
-			g.writeArgTypeChecker(sb, name, "IsExternal", i, fmt.Sprintf("native `%s` (typeof `Napi::External<%s::%s>`)", *arg.Type, *g.NameSpace, *arg.Type), 1, nil, arg)
+			g.writeArgTypeChecker(sb, name, "IsExternal", i, fmt.Sprintf("native `%s` (typeof `Napi::External<%s::%s>`)", *arg.Type, *g.NameSpace, *arg.Type), 1, nil, arg, is_void)
 			if !isArgTransform {
 				classData := g.getClass(*arg.Type)
 				g.writeIndent(sb, 1)
 				sb.WriteString(fmt.Sprintf("%s::%s* %s = UnExternalize<%s::%s>(info[%d]);\n", *classData.NameSpace, stripNameSpace(*arg.Type), *arg.Ident, *classData.NameSpace, stripNameSpace(*arg.Type), i))
 			}
-		} else if strings.Contains(*arg.Type, "std::vector") {
-			argType := *arg.Type
-			type_test := argType[strings.Index(argType, "<")+1 : strings.Index(argType, ">")]
-			tsType, isObject := g.CPPTypeToTS(type_test, false)
-			g.writeArgTypeChecker(sb, name, "IsArray", i, fmt.Sprintf("typeof `%s[]`)", tsType), 1, nil, arg)
+		} else if arg.Template != nil && *arg.Template.Name == "vector" {
+			tsType, isObject := g.CPPTypeToTS(*arg.Template.Args[0].Name, false)
+			g.writeArgTypeChecker(sb, name, "IsArray", i, fmt.Sprintf("typeof `Array<%s>`)", tsType), 1, nil, arg, is_void)
 			g.writeIndent(sb, 1)
 			arrName := fmt.Sprintf("_tmp_parsed_%s", *arg.Ident)
 			sb.WriteString(fmt.Sprintf("Napi::Array %s = info[%d].As<Napi::Array>();\n", arrName, i))
@@ -218,9 +223,9 @@ func (g *PackageGenerator) writeArgChecks(sb *strings.Builder, name string, args
 			sb.WriteString(fmt.Sprintf("for (size_t i = 0; i < len_%s; ++i) {\n", *arg.Ident))
 			g.writeIndent(sb, 2)
 			if isObject {
-				g.writeArgTypeChecker(sb, name, "IsExternal", i, fmt.Sprintf("native `%s` (typeof `Napi::External<%s::%s>`)", tsType, *g.NameSpace, tsType), 2, &arrName, nil)
+				g.writeArgTypeChecker(sb, name, "IsExternal", i, fmt.Sprintf("native `%s` (typeof `Napi::External<%s::%s>`)", tsType, *g.NameSpace, tsType), 2, &arrName, nil, is_void)
 			} else {
-				g.writeArgTypeChecker(sb, name, fmt.Sprintf("Is%s", g.casers.upper.String(tsType[0:1])+tsType[1:]), i, fmt.Sprintf("typeof `%s`", tsType), 2, &arrName, nil)
+				g.writeArgTypeChecker(sb, name, fmt.Sprintf("Is%s", g.casers.upper.String(tsType[0:1])+tsType[1:]), i, fmt.Sprintf("typeof `%s`", tsType), 2, &arrName, nil, is_void)
 			}
 			g.writeIndent(sb, 1)
 			sb.WriteString("}\n")
@@ -228,13 +233,13 @@ func (g *PackageGenerator) writeArgChecks(sb *strings.Builder, name string, args
 			g.writeIndent(sb, 1)
 			errMsg := fmt.Sprintf("typeof `%s`)", v.TSType)
 			if strings.Contains(v.TSType, "Array") || strings.Contains(v.TSType, "[]") {
-				g.writeArgTypeChecker(sb, name, "IsArray", i, errMsg, 1, nil, arg)
+				g.writeArgTypeChecker(sb, name, "IsArray", i, errMsg, 1, nil, arg, is_void)
 			} else if strings.Contains(v.TSType, "any") || strings.Contains(v.TSType, "object") || strings.Contains(v.TSType, "Record<") || strings.Contains(v.TSType, "Map<") {
-				g.writeArgTypeChecker(sb, name, "IsObject", i, errMsg, 1, nil, arg)
+				g.writeArgTypeChecker(sb, name, "IsObject", i, errMsg, 1, nil, arg, is_void)
 			} else if strings.Contains(v.TSType, "string") {
-				g.writeArgTypeChecker(sb, name, "IsString", i, errMsg, 1, nil, arg)
+				g.writeArgTypeChecker(sb, name, "IsString", i, errMsg, 1, nil, arg, is_void)
 			} else if strings.Contains(v.TSType, "number") {
-				g.writeArgTypeChecker(sb, name, "IsNumber", i, errMsg, 1, nil, arg)
+				g.writeArgTypeChecker(sb, name, "IsNumber", i, errMsg, 1, nil, arg, is_void)
 			}
 		}
 		if isArgTransform && !strings.Contains(*argTransformVal, "/arg_") {
@@ -246,7 +251,12 @@ func (g *PackageGenerator) writeArgChecks(sb *strings.Builder, name string, args
 
 func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod) {
 	parsedName := "_" + *m.Ident
-	sb.WriteString(fmt.Sprintf("static Napi::Value %s(const Napi::CallbackInfo& info) {\n", parsedName))
+	return_type := "Napi::Value"
+	is_void := isVoid(m.Returns)
+	if is_void {
+		return_type = "void"
+	}
+	sb.WriteString(fmt.Sprintf("static %s %s(const Napi::CallbackInfo& info) {\n", return_type, parsedName))
 	g.writeIndent(sb, 1)
 	sb.WriteString("Napi::Env env = info.Env();\n")
 	// if len(m.Overloads) == 1 {
@@ -268,7 +278,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod) {
 		m.OptionalArgs = optional_args
 	}
 	// single overload, parse args
-	g.writeArgChecks(sb, *m.Ident, m.Overloads[0], arg_count, optional_args)
+	g.writeArgChecks(sb, *m.Ident, m.Overloads[0], arg_count, optional_args, is_void)
 
 	obj_name := ""
 	outType := *m.Returns
@@ -277,8 +287,8 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod) {
 			break
 		}
 		isArgTransform, argTransformVal := g.conf.IsArgTransform(*m.Ident, *arg.Ident)
+		isEnum, _ := g.IsTypeEnum(*arg.Type)
 
-		tmpType := *arg.Type
 		if isArgTransform && strings.Contains(*argTransformVal, "/arg_") {
 			g.writeIndent(sb, 2)
 			for j, val := range *m.Overloads[0] {
@@ -288,14 +298,15 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod) {
 			// TODO: this might need better handling for class wrappers
 		} else if g.isClass(*arg.Type) {
 			obj_name = *arg.Ident
-		} else if strings.Contains(*arg.Type, "std::vector") && !strings.EqualFold(tmpType[strings.Index(*arg.Type, "<")+1:strings.Index(*arg.Type, ">")], *m.Returns) {
+			// rework below conditional
+		} else if arg.Template != nil && !strings.EqualFold(*arg.Template.Args[0].Name, *m.Returns) {
 			g.writeIndent(sb, 2)
 			invertVal := "false"
 			if g.conf.VectorOpts.DimAccessor != "" {
 				invertVal = fmt.Sprintf("%s->%s", obj_name, g.conf.VectorOpts.DimAccessor)
 			}
-			sb.WriteString(fmt.Sprintf("auto %s = jsArrayToVector<%s>(info[%d].As<Napi::Array>(), g_row_major, %s);\n", *arg.Ident, tmpType[strings.Index(*arg.Type, "<")+1:strings.Index(*arg.Type, ">")], i, invertVal))
-		} else if !arg.IsPrimitive {
+			sb.WriteString(fmt.Sprintf("auto %s = jsArrayToVector<%s>(info[%d].As<Napi::Array>(), g_row_major, %s);\n", *arg.Ident, *arg.Template.Args[0].Name, i, invertVal))
+		} else if !arg.IsPrimitive && !isEnum {
 			// TODO: all arg coercions should probably be written in a single place to prevent duplication
 			var ptrType string
 			if arg.IsPointer {
@@ -469,15 +480,15 @@ func (g *PackageGenerator) writeClassField(sb *strings.Builder, f *CPPFieldDecl,
 		if f.Args != nil {
 			argCount += len(*f.Args)
 		}
-		g.writeArgCountChecker(sb, *f.Ident, argCount, 0)
-		g.writeArgTypeChecker(sb, *f.Ident, "IsExternal", 0, fmt.Sprintf("native `%s` (typeof `Napi::External<%s::%s>`)", stripNameSpace(className), *classData.NameSpace, stripNameSpace(className)), 1, nil, nil)
+		g.writeArgCountChecker(sb, *f.Ident, argCount, 0, isVoid)
+		g.writeArgTypeChecker(sb, *f.Ident, "IsExternal", 0, fmt.Sprintf("native `%s` (typeof `Napi::External<%s::%s>`)", stripNameSpace(className), *classData.NameSpace, stripNameSpace(className)), 1, nil, nil, isVoid)
 		g.writeIndent(sb, 1)
 		sb.WriteString(fmt.Sprintf("%s::%s* _tmp_external = UnExternalize<%s::%s>(info[%d]);\n", *classData.NameSpace, stripNameSpace(className), *classData.NameSpace, stripNameSpace(className), 0))
 		if f.Args != nil {
 			for i, arg := range *f.Args {
 				typeHandler, _ := g.CPPTypeToTS(*arg.Type, false)
 				if v, ok := g.conf.TypeMappings[*arg.Type]; ok {
-					g.writeArgTypeChecker(sb, *f.Ident, fmt.Sprintf("Is%s", v.NapiType), i+1, fmt.Sprintf("typeof `%s`)", typeHandler), 1, nil, nil)
+					g.writeArgTypeChecker(sb, *f.Ident, fmt.Sprintf("Is%s", v.NapiType), i+1, fmt.Sprintf("typeof `%s`)", typeHandler), 1, nil, nil, isVoid)
 					g.writeIndent(sb, 1)
 					sb.WriteString(fmt.Sprintf("auto %s = static_cast<%s>(info[%d].As<Napi::%s>().%s());\n", *arg.Ident, v.CastsTo, i, v.NapiType, v.CastNapi))
 				}

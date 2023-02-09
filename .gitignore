@@ -6,6 +6,10 @@ _.dll
 _.so
 \*.dylib
 
+
+# .DS_Store
+.DS_Store
+
 build/
 
 # Test binary, built with `go test -c`

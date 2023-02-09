@@ -14,4 +14,6 @@ long long* qux(long long* a, int b);
 bool* quux(bool a, bool b);
 
 std::string test(std::string a);
+
+double* test2(std::vector<double> a);
 }  // namespace demo2

@@ -11,7 +11,7 @@ func (g *PackageGenerator) writeJsArrayToVectorFn(sb *strings.Builder) {
 	g.writeIndent(sb, 1)
 	sb.WriteString("std::vector<T> out;\n")
 	g.writeIndent(sb, 1)
-	sb.WriteString("size_t len = arr.Length();\n")
+	sb.WriteString("const size_t len = arr.Length();\n")
 	g.writeIndent(sb, 1)
 	sb.WriteString("out.reserve(len);\n")
 	g.writeIndent(sb, 1)

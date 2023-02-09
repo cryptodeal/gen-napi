@@ -281,18 +281,17 @@ func (g *PackageGenerator) WriteEnvWrappedFns() string {
 						sb.WriteString(fmt.Sprintf(" = %s", val))
 					}
 				} else {
-					if strings.Contains(tsType, "std::vector") {
-						vectorType := tsType[strings.Index(tsType, "<")+1 : strings.Index(tsType, ">")]
-						tsType, _ = g.CPPTypeToTS(vectorType, p.IsPointer)
+					if p.Template != nil && *p.Template.Name == "vector" {
+						tsType, _ = g.CPPTypeToTS(*p.Template.Args[0].Name, p.IsPointer)
 						tsType = tsType + "[]"
-						if g.conf.IsEnvTS() {
-							sb.WriteString(fmt.Sprintf(": %s", tsType))
-						}
 						if p.DefaultValue != nil && p.DefaultValue.Val != nil {
 							val := *p.DefaultValue.Val
 							val = strings.ReplaceAll(val, "{", "[")
 							val = strings.ReplaceAll(val, "}", "]")
 							tsType += fmt.Sprintf(" = %s", val)
+						}
+						if g.conf.IsEnvTS() {
+							sb.WriteString(fmt.Sprintf(": %s", tsType))
 						}
 					} else {
 						sb.WriteString(fmt.Sprintf(": %s", stripNameSpace(tsType)))
