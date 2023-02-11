@@ -40,7 +40,7 @@ func (g *PackageGenerator) WriteEnvExports() string {
 	sb.WriteString("module.exports = {\n")
 	used := []string{}
 	for name, m := range g.ParsedData.Methods {
-		if !g.conf.IsMethodIgnored(*m.Ident) {
+		if !g.conf.IsMethodIgnored(*m.Name) {
 			if isInvalidName(name) {
 				used = append(used, "_"+name)
 			} else {
@@ -58,7 +58,7 @@ func (g *PackageGenerator) WriteEnvExports() string {
 	}
 	used = []string{}
 	for name, m := range g.ParsedData.Lits {
-		if !g.conf.IsMethodIgnored(*m.Ident) {
+		if !g.conf.IsMethodIgnored(*m.Name) {
 			if isInvalidName(name) {
 				used = append(used, "_"+name)
 			} else {
@@ -120,7 +120,7 @@ func (g *PackageGenerator) WriteEnvExports() string {
 			sb.WriteString(",\n")
 		}
 		g.writeIndent(sb, 1)
-		sb.WriteString(*e.Ident)
+		sb.WriteString(*e.Name)
 		if i < used_len-1 {
 			sb.WriteString(",\n")
 		}
@@ -153,7 +153,7 @@ func (g *PackageGenerator) WriteEnvImports() string {
 	}
 	used := []string{}
 	for name, m := range g.ParsedData.Methods {
-		if !g.conf.IsMethodIgnored(*m.Ident) {
+		if !g.conf.IsMethodIgnored(*m.Name) {
 			used = append(used, name)
 		}
 	}
@@ -176,7 +176,7 @@ func (g *PackageGenerator) WriteEnvImports() string {
 
 	used = []string{}
 	for name, m := range g.ParsedData.Lits {
-		if !g.conf.IsMethodIgnored(*m.Ident) {
+		if !g.conf.IsMethodIgnored(*m.Name) {
 			used = append(used, name)
 		}
 	}
@@ -224,11 +224,11 @@ func (g *PackageGenerator) WriteEnums() string {
 	sb := new(strings.Builder)
 	for _, e := range g.ParsedData.Enums {
 		if g.conf.IsEnvTS() {
-			sb.WriteString(fmt.Sprintf("export enum %s {\n", *e.Ident))
+			sb.WriteString(fmt.Sprintf("export enum %s {\n", *e.Name))
 			count := len(e.Values)
 			for i, v := range e.Values {
 				g.writeIndent(sb, 1)
-				sb.WriteString(fmt.Sprintf("%s = %d", *v.Ident, v.Value))
+				sb.WriteString(fmt.Sprintf("%s = %d", *v.Name, v.Value))
 				if i < count-1 {
 					sb.WriteByte(',')
 				}
@@ -237,13 +237,13 @@ func (g *PackageGenerator) WriteEnums() string {
 			sb.WriteString("}\n\n")
 		} else {
 			// write as if it's a compiled typescript enum if JS out type
-			sb.WriteString(fmt.Sprintf("var %s;\n", *e.Ident))
-			sb.WriteString(fmt.Sprintf("(function (%s) {\n", *e.Ident))
+			sb.WriteString(fmt.Sprintf("var %s;\n", *e.Name))
+			sb.WriteString(fmt.Sprintf("(function (%s) {\n", *e.Name))
 			for _, v := range e.Values {
 				g.writeIndent(sb, 1)
-				sb.WriteString(fmt.Sprintf("%s[%s[%q] = %d] = %q;\n", *e.Ident, *e.Ident, *v.Ident, v.Value, *v.Ident))
+				sb.WriteString(fmt.Sprintf("%s[%s[%q] = %d] = %q;\n", *e.Name, *e.Name, *v.Name, v.Value, *v.Name))
 			}
-			sb.WriteString(fmt.Sprintf("})(%s || (%s = {}));\n\n", *e.Ident, *e.Ident))
+			sb.WriteString(fmt.Sprintf("})(%s || (%s = {}));\n\n", *e.Name, *e.Name))
 		}
 	}
 	return sb.String()
@@ -252,14 +252,14 @@ func (g *PackageGenerator) WriteEnums() string {
 func (g *PackageGenerator) WriteEnvWrappedFns() string {
 	sb := new(strings.Builder)
 	for _, m := range g.ParsedData.Methods {
-		if !g.conf.IsMethodIgnored(*m.Ident) {
+		if !g.conf.IsMethodIgnored(*m.Name) {
 			if g.conf.IsEnvTS() {
 				sb.WriteString("export ")
 			}
-			if isInvalidName(*m.Ident) {
-				sb.WriteString(fmt.Sprintf("const %s = (", "_"+*m.Ident))
+			if isInvalidName(*m.Name) {
+				sb.WriteString(fmt.Sprintf("const %s = (", "_"+*m.Name))
 			} else {
-				sb.WriteString(fmt.Sprintf("const %s = (", *m.Ident))
+				sb.WriteString(fmt.Sprintf("const %s = (", *m.Name))
 			}
 			for i, p := range *m.Overloads[0] {
 				if i >= m.ExpectedArgs && m.OptionalArgs == 0 {
@@ -268,7 +268,7 @@ func (g *PackageGenerator) WriteEnvWrappedFns() string {
 				if i > 0 && i < len(*m.Overloads[0]) {
 					sb.WriteString(", ")
 				}
-				sb.WriteString(*p.Ident)
+				sb.WriteString(*p.Name)
 				tsType, isClass := g.CPPTypeToTS(*p.Type, p.IsPointer)
 				if v, ok := g.conf.TypeMappings[tsType]; ok && v.TSType != "" {
 					if g.conf.IsEnvTS() {
@@ -281,7 +281,7 @@ func (g *PackageGenerator) WriteEnvWrappedFns() string {
 						sb.WriteString(fmt.Sprintf(" = %s", val))
 					}
 				} else {
-					if p.Template != nil && *p.Template.Name == "vector" {
+					if IsArgTemplate(p) && *p.Template.Name == "vector" {
 						tsType, _ = g.CPPTypeToTS(*p.Template.Args[0].Name, p.IsPointer)
 						tsType = tsType + "[]"
 						if p.DefaultValue != nil && p.DefaultValue.Val != nil {
@@ -322,10 +322,10 @@ func (g *PackageGenerator) WriteEnvWrappedFns() string {
 			if g.isClass(tsType) {
 				sb.WriteString(fmt.Sprintf("new %s(", stripNameSpace(tsType)))
 			}
-			if isInvalidName(*m.Ident) {
-				sb.WriteString(fmt.Sprintf("__%s(", *m.Ident))
+			if isInvalidName(*m.Name) {
+				sb.WriteString(fmt.Sprintf("__%s(", *m.Name))
 			} else {
-				sb.WriteString(fmt.Sprintf("_%s(", *m.Ident))
+				sb.WriteString(fmt.Sprintf("_%s(", *m.Name))
 			}
 			for i, p := range *m.Overloads[0] {
 				if i >= m.ExpectedArgs && m.OptionalArgs == 0 {
@@ -334,7 +334,7 @@ func (g *PackageGenerator) WriteEnvWrappedFns() string {
 				if i > 0 && i < len(*m.Overloads[0]) {
 					sb.WriteString(", ")
 				}
-				sb.WriteString(*p.Ident)
+				sb.WriteString(*p.Name)
 				if g.isClass(*p.Type) {
 					sb.WriteString("._native_self")
 				}
@@ -411,21 +411,21 @@ func (g *PackageGenerator) WriteEnvWrappedFns() string {
 	}
 
 	for _, m := range g.ParsedData.Lits {
-		if !g.conf.IsMethodIgnored(*m.Ident) {
-			if !g.conf.IsMethodIgnored(*m.Ident) {
+		if !g.conf.IsMethodIgnored(*m.Name) {
+			if !g.conf.IsMethodIgnored(*m.Name) {
 				if g.conf.IsEnvTS() {
 					sb.WriteString("export ")
 				}
-				if isInvalidName(*m.Ident) {
-					sb.WriteString(fmt.Sprintf("const %s = (", "_"+*m.Ident))
+				if isInvalidName(*m.Name) {
+					sb.WriteString(fmt.Sprintf("const %s = (", "_"+*m.Name))
 				} else {
-					sb.WriteString(fmt.Sprintf("const %s = (", *m.Ident))
+					sb.WriteString(fmt.Sprintf("const %s = (", *m.Name))
 				}
 				for i, p := range *m.Overloads[0] {
 					if i > 0 && i < len(*m.Overloads[0]) {
 						sb.WriteString(", ")
 					}
-					sb.WriteString(*p.Ident)
+					sb.WriteString(*p.Name)
 					if g.conf.IsEnvTS() {
 						tsType, _ := g.CPPTypeToTS(*p.Type, p.IsPointer)
 						if v, ok := g.conf.TypeMappings[tsType]; ok {
@@ -450,16 +450,16 @@ func (g *PackageGenerator) WriteEnvWrappedFns() string {
 				if g.isClass(tsType) {
 					sb.WriteString(fmt.Sprintf("new %s(", stripNameSpace(tsType)))
 				}
-				if isInvalidName(*m.Ident) {
-					sb.WriteString(fmt.Sprintf("__%s(", *m.Ident))
+				if isInvalidName(*m.Name) {
+					sb.WriteString(fmt.Sprintf("__%s(", *m.Name))
 				} else {
-					sb.WriteString(fmt.Sprintf("_%s(", *m.Ident))
+					sb.WriteString(fmt.Sprintf("_%s(", *m.Name))
 				}
 				for i, p := range *m.Overloads[0] {
 					if i > 0 && i < len(*m.Overloads[0]) {
 						sb.WriteString(", ")
 					}
-					sb.WriteString(*p.Ident)
+					sb.WriteString(*p.Name)
 					if g.isClass(*p.Type) {
 						sb.WriteString("._native_self")
 					}

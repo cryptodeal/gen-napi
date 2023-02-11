@@ -23,8 +23,8 @@ const test = () => {
   }
   const t1 = performance.now() / 1e3;
   const time = t1 - t0;
-  console.log(time, 'seconds to calculate', m);
-  console.log('bytes: ', Number(sm.bytesUsed())); // if `Bun.gc(true)` -> `bytes:  0`
+  // console.log(time, 'seconds to calculate', m);
+  // console.log('bytes: ', Number(sm.bytesUsed())); // if `Bun.gc(true)` -> `bytes:  0`
   return time;
 };
 

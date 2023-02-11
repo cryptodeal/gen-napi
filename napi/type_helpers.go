@@ -27,10 +27,6 @@ func (g *PackageGenerator) getClass(argType string) *CPPClass {
 	return nil
 }
 
-func isVoid(t *string) bool {
-	return !(t != nil && *t != "void" && *t != "")
-}
-
 func PrimitivePtrToTS(t string) (string, string, *string, string) {
 	jsTypeEquivalent := ""
 	var needsCast *string
@@ -125,6 +121,10 @@ func IsTypeNumber(t string) bool {
 	}
 }
 
+func IsArgTemplate(t *CPPArg) bool {
+	return t.Template != nil
+}
+
 func IsTypeBigInt(t string) bool {
 	switch strings.TrimSpace(t) {
 	case "long long", "size_t", "int64_t", "uint64_t":
@@ -168,10 +168,23 @@ func (g *PackageGenerator) CPPTypeToTS(t string, isPointer bool) (string, bool) 
 	}
 }
 
+func (g *PackageGenerator) IsArgEnum(a *CPPArg) (bool, *string) {
+	if a == nil || a.Type == nil {
+		return false, nil
+	}
+	for _, e := range g.ParsedData.Enums {
+		fullName := fmt.Sprintf("%s::%s", *e.NameSpace, *e.Name)
+		if strings.EqualFold(fullName, *a.Type) || strings.EqualFold(*e.Name, *a.Type) {
+			return true, &fullName
+		}
+	}
+	return false, nil
+}
+
 func (g *PackageGenerator) IsTypeEnum(t string) (bool, *string) {
 	for _, e := range g.ParsedData.Enums {
-		fullName := fmt.Sprintf("%s::%s", *e.NameSpace, *e.Ident)
-		if strings.EqualFold(fullName, t) || strings.EqualFold(*e.Ident, t) {
+		fullName := fmt.Sprintf("%s::%s", *e.NameSpace, *e.Name)
+		if strings.EqualFold(fullName, t) || strings.EqualFold(*e.Name, t) {
 			return true, &fullName
 		}
 	}

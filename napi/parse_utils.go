@@ -20,13 +20,13 @@ func ParseTemplateType(n *sitter.Node, input []byte) *TemplateType {
 				name := scope_node.Content(input)
 				template_type.NameSpace = &name
 			}
-			used_node := n.ChildByFieldName("name")
-			name_node := used_node.ChildByFieldName("name")
+			template_node := n.ChildByFieldName("name")
+			name_node := template_node.ChildByFieldName("name")
 			if name_node != nil {
 				name := name_node.Content(input)
 				template_type.Name = &name
 			}
-			template_arg_node := used_node.ChildByFieldName("arguments")
+			template_arg_node := template_node.ChildByFieldName("arguments")
 			if template_arg_node != nil {
 				arg_count := int(template_arg_node.ChildCount())
 				for i := 0; i < arg_count; i++ {
@@ -49,7 +49,6 @@ func ParseTemplateType(n *sitter.Node, input []byte) *TemplateType {
 }
 
 func ParseTemplateArg(n *sitter.Node, input []byte) *TemplateType {
-	var template_type *TemplateType = nil
 	switch n.Type() {
 	case "parameter_declaration", "optional_parameter_declaration":
 		{
@@ -57,7 +56,7 @@ func ParseTemplateArg(n *sitter.Node, input []byte) *TemplateType {
 			if type_node != nil && type_node.Type() == "qualified_identifier" {
 				template_node := type_node.ChildByFieldName("name")
 				if template_node != nil && template_node.Type() == "template_type" {
-					template_type = ParseTemplateType(type_node, input)
+					return ParseTemplateType(type_node, input)
 				}
 			}
 		}
@@ -65,9 +64,9 @@ func ParseTemplateArg(n *sitter.Node, input []byte) *TemplateType {
 		{
 			type_node := n.ChildByFieldName("type")
 			if type_node != nil {
-				template_type = ParseTemplateType(type_node, input)
+				return ParseTemplateType(type_node, input)
 			}
 		}
 	}
-	return template_type
+	return nil
 }

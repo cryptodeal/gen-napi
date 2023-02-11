@@ -12,7 +12,7 @@ function genRand() {
   return out;
 }
 
-const test = async () => {
+const test = () => {
   const t0 = performance.now() / 1e3;
   let m = 0;
   for (let i = 0; i < 100000; ++i) {
@@ -24,19 +24,16 @@ const test = async () => {
   }
   const t1 = performance.now() / 1e3;
   const time = t1 - t0;
-  console.log(time, 'seconds to calculate', m);
-  m = null;
-  gc();
-  await new Promise((r) => setTimeout(r, 2000));
-  console.log('bytes: ', Number(sm.bytesUsed())); // if `Bun.gc(true)` -> `bytes:  0`
+  // console.log(time, 'seconds to calculate', m);
+  // console.log('bytes: ', Number(sm.bytesUsed())); // if `Bun.gc(true)` -> `bytes:  0`
   return time;
 };
 
-const runTest = async () => {
+const runTest = () => {
   const times = [];
   const runs = 25;
   for (let i = 0; i < runs; ++i) {
-    times.push(await test());
+    times.push(test());
   }
   console.log(`avg time (${runs} runs): ${times.reduce((a, b) => a + b, 0) / runs}`);
 };

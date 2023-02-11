@@ -40,8 +40,6 @@ packages:
       - releaseAdapterUnsafe
       - detail::releaseAdapter
       - detail::releaseAdapterUnsafe
-      - min
-      - max
       - topk
       - print
     path_to_forced_logic: demo1/ForcedLogic.cc

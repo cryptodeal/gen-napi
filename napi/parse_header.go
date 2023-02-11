@@ -42,14 +42,14 @@ type CPPFriendFunc struct {
 }
 
 type CPPFieldDecl struct {
-	Ident         *string
+	Name          *string
 	Args          *[]*CPPArg
 	Returns       *CPPType
 	TypeQualifier *string
 }
 
 type CPPFriend struct {
-	Ident          *string
+	Name           *string
 	QualifiedIdent *QualifiedIdentifier
 	IsClass        bool
 	Type           *CPPType
@@ -79,12 +79,12 @@ type CPPArg struct {
 	Type          *string
 	RefDecl       *string
 	IsPointer     bool
-	Ident         *string
+	Name          *string
 	DefaultValue  *CPPArgDefault
 }
 
 type CPPMethod struct {
-	Ident            *string
+	Name             *string
 	Overloads        []*[]*CPPArg
 	Returns          *string
 	ReturnsPrimitive bool
@@ -94,19 +94,23 @@ type CPPMethod struct {
 	OptionalArgs     int
 }
 
+func (c *CPPMethod) IsVoid() bool {
+	return !(c.Returns != nil && *c.Returns != "void" && *c.Returns != "")
+}
+
 type TemplateMethod struct {
 	TemplateDecl          *TemplateDecl
 	Returns               *string
 	PointerMethod         bool
 	StorageClassSpecifier *string
 	RefDecl               *string
-	Ident                 *string
+	Name                  *string
 	Args                  *[]*CPPArg
 	TypeQualifier         *string
 }
 
 type ParsedClassDecl struct {
-	Ident        *string
+	Name         *string
 	Args         *[]*CPPArg
 	Returns      *string
 	Explicit     bool
@@ -115,7 +119,7 @@ type ParsedClassDecl struct {
 }
 
 type ParsedMethod struct {
-	Ident            *string
+	Name             *string
 	Args             *[]*CPPArg
 	Returns          *string
 	ReturnsPrimitive bool
@@ -124,12 +128,12 @@ type ParsedMethod struct {
 }
 
 type Enum struct {
-	Ident *string
+	Name  *string
 	Value int
 }
 
 type ParsedEnum struct {
-	Ident     *string
+	Name      *string
 	NameSpace *string
 	Values    []*Enum
 }
@@ -237,7 +241,7 @@ func parseEnum(n *sitter.Node, input []byte) *ParsedEnum {
 	nameNode := n.ChildByFieldName("name")
 	if nameNode != nil {
 		name := nameNode.Content(input)
-		enum_val.Ident = &name
+		enum_val.Name = &name
 	}
 
 	// parse enum values
@@ -257,7 +261,7 @@ func parseEnum(n *sitter.Node, input []byte) *ParsedEnum {
 			val_name_node := child.ChildByFieldName("name")
 			if val_name_node != nil {
 				name := val_name_node.Content(input)
-				parsedEnum.Ident = &name
+				parsedEnum.Name = &name
 			}
 			val_node := child.ChildByFieldName("value")
 			if val_node != nil {
@@ -321,21 +325,21 @@ func (g *PackageGenerator) parseMethods(n *sitter.Node, input []byte) map[string
 		}
 		res, body := splitMatches(m.Captures)
 		parsed := parseCPPMethod(res.Node, body.Node, input)
-		if v, ok := methods[*parsed.Ident]; ok {
+		if v, ok := methods[*parsed.Name]; ok {
 			// encountered method previously (fn overloading)
 			v.Overloads = append(v.Overloads, parsed.Args)
 		} else {
 			// first time having encountered this method, so create a new entry
 			new_method := &CPPMethod{
-				Ident:            parsed.Ident,
+				Name:             parsed.Name,
 				Overloads:        []*[]*CPPArg{parsed.Args},
 				Returns:          parsed.Returns,
 				NameSpace:        parsed.NameSpace,
 				ReturnsPrimitive: parsed.ReturnsPrimitive,
 				ReturnsPointer:   parsed.ReturnsPointer,
 			}
-			if !g.conf.IsMethodIgnored(*parsed.Ident) {
-				methods[*parsed.Ident] = new_method
+			if !g.conf.IsMethodIgnored(*parsed.Name) {
+				methods[*parsed.Name] = new_method
 			}
 		}
 	}
@@ -381,7 +385,7 @@ func parseCPPMethod(r *sitter.Node, b *sitter.Node, content []byte) *ParsedMetho
 		Args:           args,
 		ReturnsPointer: returnsPointer,
 		NameSpace:      &namespace,
-		Ident:          &name,
+		Name:           &name,
 	}
 
 	if r != nil {
@@ -461,7 +465,7 @@ func parseCPPArg(content []byte, arg_list *sitter.Node) *[]*CPPArg {
 				identNode := refNode.ChildByFieldName("declarator")
 				if identNode != nil {
 					identStr := identNode.Content(content)
-					parsed_arg.Ident = &identStr
+					parsed_arg.Name = &identStr
 					parsed_arg.IsPointer = true
 				}
 			}
@@ -470,7 +474,7 @@ func parseCPPArg(content []byte, arg_list *sitter.Node) *[]*CPPArg {
 				identNode := findChildNodeByType(refNode, "identifier")
 				if identNode != nil {
 					identStr := identNode.Content(content)
-					parsed_arg.Ident = &identStr
+					parsed_arg.Name = &identStr
 					refDeclStr := strings.ReplaceAll(refNode.Content(content), identStr, "")
 					parsed_arg.RefDecl = &refDeclStr
 				}
@@ -478,7 +482,7 @@ func parseCPPArg(content []byte, arg_list *sitter.Node) *[]*CPPArg {
 		case "identifier":
 			{
 				identStr := refNode.Content(content)
-				parsed_arg.Ident = &identStr
+				parsed_arg.Name = &identStr
 			}
 		}
 		args = append(args, parsed_arg)
@@ -534,7 +538,7 @@ func parseClasses(n *sitter.Node, input []byte) map[string]*CPPClass {
 							classes[class_name].TemplateDecl = &[]*TemplateMethod{}
 						}
 						temp_decl := parseClassTemplateMethod(temp_child, input)
-						if temp_decl.Ident == nil {
+						if temp_decl.Name == nil {
 							// TODO: handle
 							// fmt.Println(temp_child.Content(input))
 						}
@@ -556,7 +560,7 @@ func parseClasses(n *sitter.Node, input []byte) map[string]*CPPClass {
 						}
 						matched++
 						parsed := parseFieldDecl(temp_child, input)
-						if parsed.Ident == nil {
+						if parsed.Name == nil {
 							// TODO: handle
 							fmt.Println("TODO: handle:", temp_child.Content(input))
 						}
@@ -586,10 +590,10 @@ func parseClassDecl(n *sitter.Node, input []byte) *ParsedClassDecl {
 				parsed.IsDestructor = true
 				identNode := findChildNodeByType(nameNode, "identifier")
 				identStr := identNode.Content(input)
-				parsed.Ident = &identStr
+				parsed.Name = &identStr
 			} else {
 				nameStr := nameNode.Content(input)
-				parsed.Ident = &nameStr
+				parsed.Name = &nameStr
 			}
 		}
 	}
@@ -617,14 +621,14 @@ func parseFieldDecl(n *sitter.Node, input []byte) *CPPFieldDecl {
 		child_decl := declarator.ChildByFieldName("declarator")
 		if child_decl != nil {
 			identStr := child_decl.Content(input)
-			field_decl.Ident = &identStr
+			field_decl.Name = &identStr
 		} else {
 			func_decl := findChildNodeByType(declarator, "function_declarator")
 			if func_decl != nil {
 				child_decl := func_decl.ChildByFieldName("declarator")
 				if child_decl != nil {
 					identStr := child_decl.Content(input)
-					field_decl.Ident = &identStr
+					field_decl.Name = &identStr
 				}
 
 			}
@@ -678,7 +682,7 @@ func parseClassTemplateMethod(n *sitter.Node, input []byte) *TemplateMethod {
 								nameNode := decl.ChildByFieldName("name")
 								if nameNode != nil {
 									name := nameNode.Content(input)
-									template_method.Ident = &name
+									template_method.Name = &name
 								} else {
 									decl := decl.ChildByFieldName("declarator")
 									if decl != nil {
@@ -714,10 +718,10 @@ func parseTemplateFuncIdent(n *sitter.Node, input []byte, method *TemplateMethod
 	nameNode := n.ChildByFieldName("name")
 	if nameNode != nil {
 		name := nameNode.Content(input)
-		method.Ident = &name
+		method.Name = &name
 	} else {
 		name := n.Content(input)
-		method.Ident = &name
+		method.Name = &name
 	}
 }
 
@@ -752,7 +756,7 @@ func parseTemplateFuncDefNode(n *sitter.Node, input []byte, method *TemplateMeth
 				nameNode := declarator.ChildByFieldName("declarator")
 				if nameNode != nil {
 					ident := nameNode.Content(input)
-					method.Ident = &ident
+					method.Name = &ident
 				}
 				method.Args = parseCPPArg(input, declarator.ChildByFieldName("parameters"))
 			}
@@ -764,7 +768,7 @@ func parseTemplateFuncDefNode(n *sitter.Node, input []byte, method *TemplateMeth
 				name := decl.Content(input)
 				refDecl := strings.ReplaceAll(funcDecl.Content(input), name, "")
 				method.RefDecl = &refDecl
-				method.Ident = &name
+				method.Name = &name
 			}
 		}
 	}
@@ -780,7 +784,7 @@ func parseClassFriend(n *sitter.Node, input []byte) *CPPFriend {
 		switch tempType {
 		case "type_identifier":
 			tempName := grandchild.Content(input)
-			new_friend.Ident = &tempName
+			new_friend.Name = &tempName
 			new_friend.IsClass = true
 		case "declaration":
 			great_grandchild_count := int(grandchild.ChildCount())

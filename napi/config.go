@@ -179,12 +179,12 @@ func (c Config) PackageConfig(packagePath string) *PackageConfig {
 func (c PackageConfig) IsReturnTransform(method *CPPMethod) (bool, bool, *string) {
 	for _, t := range c.GroupedMethodTransforms {
 		for _, a := range t.AppliesTo {
-			if strings.EqualFold(a, *method.Ident) {
+			if strings.EqualFold(a, *method.Name) {
 				return true, true, &t.ReturnTransforms
 			}
 		}
 	}
-	if v, ok := c.MethodTransforms[*method.Ident]; ok && v.ReturnTransforms != "" {
+	if v, ok := c.MethodTransforms[*method.Name]; ok && v.ReturnTransforms != "" {
 		return true, false, &v.ReturnTransforms
 	}
 	return false, false, nil
