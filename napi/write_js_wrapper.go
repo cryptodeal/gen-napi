@@ -120,7 +120,7 @@ func (g *PackageGenerator) WriteEnvExports() string {
 			sb.WriteString(",\n")
 		}
 		g.writeIndent(sb, 1)
-		sb.WriteString(*e.Name)
+		sb.WriteString(e.Name)
 		if i < used_len-1 {
 			sb.WriteString(",\n")
 		}
@@ -224,7 +224,7 @@ func (g *PackageGenerator) WriteEnums() string {
 	sb := new(strings.Builder)
 	for _, e := range g.ParsedData.Enums {
 		if g.conf.IsEnvTS() {
-			sb.WriteString(fmt.Sprintf("export enum %s {\n", *e.Name))
+			sb.WriteString(fmt.Sprintf("export enum %s {\n", e.Name))
 			count := len(e.Values)
 			for i, v := range e.Values {
 				g.writeIndent(sb, 1)
@@ -237,13 +237,13 @@ func (g *PackageGenerator) WriteEnums() string {
 			sb.WriteString("}\n\n")
 		} else {
 			// write as if it's a compiled typescript enum if JS out type
-			sb.WriteString(fmt.Sprintf("var %s;\n", *e.Name))
-			sb.WriteString(fmt.Sprintf("(function (%s) {\n", *e.Name))
+			sb.WriteString(fmt.Sprintf("var %s;\n", e.Name))
+			sb.WriteString(fmt.Sprintf("(function (%s) {\n", e.Name))
 			for _, v := range e.Values {
 				g.writeIndent(sb, 1)
-				sb.WriteString(fmt.Sprintf("%s[%s[%q] = %d] = %q;\n", *e.Name, *e.Name, *v.Name, v.Value, *v.Name))
+				sb.WriteString(fmt.Sprintf("%s[%s[%q] = %d] = %q;\n", e.Name, e.Name, *v.Name, v.Value, *v.Name))
 			}
-			sb.WriteString(fmt.Sprintf("})(%s || (%s = {}));\n\n", *e.Name, *e.Name))
+			sb.WriteString(fmt.Sprintf("})(%s || (%s = {}));\n\n", e.Name, e.Name))
 		}
 	}
 	return sb.String()
@@ -307,7 +307,7 @@ func (g *PackageGenerator) WriteEnvWrappedFns() string {
 					}
 				}
 			}
-			tsType, _ := g.CPPTypeToTS(*m.Returns, m.ReturnsPointer)
+			tsType, _ := g.CPPTypeToTS(m.Returns.Name, m.Returns.IsPointer)
 			if g.conf.IsEnvTS() {
 				if v, ok := g.conf.TypeMappings[tsType]; ok {
 					sb.WriteString(fmt.Sprintf("): %s => {\n", v.TSType))
@@ -435,7 +435,7 @@ func (g *PackageGenerator) WriteEnvWrappedFns() string {
 						}
 					}
 				}
-				tsType, _ := g.CPPTypeToTS(*m.Returns, m.ReturnsPointer)
+				tsType, _ := g.CPPTypeToTS(m.Returns.Name, m.Returns.IsPointer)
 				if g.conf.IsEnvTS() {
 					if v, ok := g.conf.TypeMappings[tsType]; ok {
 						sb.WriteString(fmt.Sprintf("): %s {\n", v.TSType))

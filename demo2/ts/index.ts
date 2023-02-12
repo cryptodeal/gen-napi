@@ -2,14 +2,19 @@
 /* eslint-disable */
 
 const {
-  _foo,
   _bar,
   _baz,
   _qux,
   _quux,
   _test,
-  _test2
+  _test2,
+  _test3,
+  _foo
 } = import.meta.require("../../../../build/Release/test.node")
+
+export const test3 = (a: void[]): void => {
+  return _test3(a);
+}
 
 export const foo = (a: number): number => {
   return _foo(a);

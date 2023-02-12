@@ -110,6 +110,9 @@ func (g *PackageGenerator) writeArgChecks(sb *strings.Builder, name string, args
 	if v, ok := g.conf.MethodTransforms[name]; ok && v.ArgCheckTransforms != "" {
 		sb.WriteString(v.ArgCheckTransforms)
 		for i, arg := range *args {
+			if arg == nil {
+				continue
+			}
 			if i > expected_arg_count {
 				break
 			}
@@ -128,6 +131,9 @@ func (g *PackageGenerator) writeArgChecks(sb *strings.Builder, name string, args
 	for i, arg := range *args {
 		if i >= expected_arg_count && optionalArgs == 0 {
 			break
+		}
+		if arg == nil {
+			continue
 		}
 		if arg.Name == nil {
 			fmt.Printf("WARNING: arg.Ident is nil for %q", name)
@@ -170,7 +176,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod) {
 	g.writeArgChecks(sb, *m.Name, m.Overloads[0], arg_count, optional_args, is_void)
 
 	obj_name := ""
-	outType := *m.Returns
+	outType := m.Returns.Name
 	for i, arg := range *m.Overloads[0] {
 		if i > arg_count {
 			break
@@ -188,7 +194,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod) {
 		} else if g.isClass(*arg.Type) {
 			obj_name = *arg.Name
 			// rework below conditional
-		} else if IsArgTemplate(arg) && !strings.EqualFold(*arg.Template.Args[0].Name, *m.Returns) {
+		} else if IsArgTemplate(arg) && !strings.EqualFold(*arg.Template.Args[0].Name, m.Returns.Name) {
 			g.writeIndent(sb, 2)
 			invertVal := "false"
 			if g.conf.VectorOpts.DimAccessor != "" {
@@ -206,17 +212,17 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod) {
 	}
 	if !is_void {
 		g.writeIndent(sb, 2)
-		_, arrayType, needsCast, _ := PrimitivePtrToTS(*m.Returns)
+		_, arrayType, needsCast, _ := PrimitivePtrToTS(m.Returns.Name)
 
-		if !m.ReturnsPrimitive {
+		if !m.Returns.IsPrimitive {
 			sb.WriteString(fmt.Sprintf("%s::%s ", *g.NameSpace, outType))
-		} else if m.ReturnsPointer && needsCast != nil && arrayType != "" {
+		} else if m.Returns.IsPointer && needsCast != nil && arrayType != "" {
 			sb.WriteString(fmt.Sprintf("%s ", arrayType))
 		} else {
-			sb.WriteString(fmt.Sprintf("%s ", *m.Returns))
+			sb.WriteString(fmt.Sprintf("%s ", m.Returns.Name))
 		}
 
-		if m.ReturnsPointer {
+		if m.Returns.IsPointer {
 			sb.WriteByte('*')
 		}
 		sb.WriteString("_res;\n")
@@ -273,8 +279,8 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod) {
 		if !is_void {
 			sb.WriteString("_res = ")
 		}
-		_, arrayType, needsCast, _ := PrimitivePtrToTS(*m.Returns)
-		if m.ReturnsPointer && needsCast != nil && arrayType != "" {
+		_, arrayType, needsCast, _ := PrimitivePtrToTS(m.Returns.Name)
+		if m.Returns.IsPointer && needsCast != nil && arrayType != "" {
 			sb.WriteString(fmt.Sprintf("reinterpret_cast<%s *>(", arrayType))
 		}
 		sb.WriteString(fmt.Sprintf("%s::%s(", *m.NameSpace, *m.Name))
@@ -294,15 +300,15 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod) {
 			}
 		}
 		sb.WriteByte(')')
-		if m.ReturnsPointer && needsCast != nil && arrayType != "" {
+		if m.Returns.IsPointer && needsCast != nil && arrayType != "" {
 			sb.WriteByte(')')
 		}
 		sb.WriteString(";\n")
 	}
-	if *m.Returns != "void" || isReturnTransform {
+	if m.Returns.Name != "void" || isReturnTransform {
 		g.writeIndent(sb, 2)
-		returnType := *m.Returns
-		if m.ReturnsPrimitive && m.ReturnsPointer {
+		returnType := m.Returns.Name
+		if m.Returns.IsPrimitive && m.Returns.IsPointer {
 			_, arrayType, _, napi_short_type := PrimitivePtrToTS(returnType)
 			sb.WriteString("size_t _res_byte_len = sizeof(_res);\n")
 			g.writeIndent(sb, 2)
@@ -358,8 +364,8 @@ func (g *PackageGenerator) writeClassField(sb *strings.Builder, f *CPPFieldDecl,
 	if f.Name != nil && g.conf.IsFieldWrapped(className, *f.Name) {
 		var returnType string
 		isVoid := false
-		if f.Returns != nil && *f.Returns.FullType != "void" {
-			returnType = *f.Returns.FullType
+		if f.Returns != nil && f.Returns.Name != "void" {
+			returnType = f.Returns.Name
 		} else {
 			isVoid = true
 		}
@@ -374,33 +380,29 @@ func (g *PackageGenerator) writeClassField(sb *strings.Builder, f *CPPFieldDecl,
 		sb.WriteString("Napi::Env env = info.Env();\n")
 		argCount := 1
 		if f.Args != nil {
-			argCount += len(*f.Args)
+			argCount += len(f.Args)
 		}
-		g.writeArgCountChecker(sb, *f.Name, argCount, 0, isVoid)
 		g.writeArgTypeChecker(sb, *f.Name, "IsExternal", 0, fmt.Sprintf("native `%s` (typeof `Napi::External<%s::%s>`)", stripNameSpace(className), *classData.NameSpace, stripNameSpace(className)), 1, nil, nil, isVoid)
 		g.writeIndent(sb, 1)
 		sb.WriteString(fmt.Sprintf("%s::%s* _tmp_external = UnExternalize<%s::%s>(info[%d]);\n", *classData.NameSpace, stripNameSpace(className), *classData.NameSpace, stripNameSpace(className), 0))
 
 		if f.Args != nil {
-			for i, arg := range *f.Args {
-				typeHandler, _ := g.CPPTypeToTS(*arg.Type, false)
-				if v, ok := g.conf.TypeMappings[*arg.Type]; ok {
-					g.writeArgTypeChecker(sb, *f.Name, fmt.Sprintf("Is%s", v.NapiType), i+1, fmt.Sprintf("typeof `%s`)", typeHandler), 1, nil, nil, isVoid)
-					g.writeIndent(sb, 1)
-					sb.WriteString(fmt.Sprintf("auto %s = static_cast<%s>(info[%d].As<Napi::%s>().%s());\n", *arg.Name, v.CastsTo, i, v.NapiType, v.CastNapi))
-				}
-				// TODO: handle unmapped types
-			}
+			f.Args = append([]*CPPArg{nil}, f.Args...)
+			g.writeArgChecks(sb, *f.Name, &f.Args, argCount, 0, isVoid)
 		}
+
 		g.writeIndent(sb, 1)
-		if f.Returns != nil && *f.Returns.FullType != "void" {
+		if f.Returns != nil && f.Returns.Name != "void" {
 			sb.WriteString("auto _res = ")
-			returnType = *f.Returns.FullType
+			returnType = f.Returns.Name
 		}
 		sb.WriteString(fmt.Sprintf("_tmp_external->%s(", *f.Name))
 		if f.Args != nil {
-			for i, arg := range *f.Args {
-				if i > 0 {
+			for i, arg := range f.Args {
+				if arg == nil {
+					continue
+				}
+				if i > 1 {
 					sb.WriteString(", ")
 				}
 				if _, ok := g.conf.TypeMappings[*arg.Type]; ok {
@@ -415,7 +417,7 @@ func (g *PackageGenerator) writeClassField(sb *strings.Builder, f *CPPFieldDecl,
 		}
 		sb.WriteString(");\n")
 
-		if f.Returns != nil && *f.Returns.FullType != "void" {
+		if f.Returns != nil && f.Returns.Name != "void" {
 			jsType, isObject := g.CPPTypeToTS(returnType, false)
 			if g.conf.TypeHasHandler(returnType) != nil {
 				t := g.conf.TypeHasHandler(returnType)

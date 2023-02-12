@@ -17,10 +17,6 @@ packages:
         ts: number[]
       Dim:
         ts: number
-      dtype:
-        napi: Number
-        casts_to: fl::dtype
-        cast_napi: Int32Value
       T:
         ts: number
         napi: Number

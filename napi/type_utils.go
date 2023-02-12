@@ -187,6 +187,7 @@ func (a *CPPArg) GetArgChecks(g *PackageGenerator) *ArgChecks {
 		}
 	}
 
+	// TODO: fix handling of `char` and other string types
 	// handles primitive types (and `std::string`/`string`)
 	if a.IsPrimitive {
 		checks.NapiType = napi_number_type
@@ -214,7 +215,7 @@ func (a *CPPArg) GetArgChecks(g *PackageGenerator) *ArgChecks {
 				checks.NapiGetter = &i32Getter
 				checks.CastTo = a.Type
 			}
-		case "unsigned long long", "unsigned char", "unsigned", "uint8_t", "uint16_t", "unsigned short", "unsigned int":
+		case "unsigned long long", "unsigned", "uint8_t", "uint16_t", "unsigned short", "unsigned int":
 			{
 				checks.NapiChecker = &numCheck
 				checks.NapiGetter = &u32Getter

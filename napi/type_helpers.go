@@ -173,8 +173,8 @@ func (g *PackageGenerator) IsArgEnum(a *CPPArg) (bool, *string) {
 		return false, nil
 	}
 	for _, e := range g.ParsedData.Enums {
-		fullName := fmt.Sprintf("%s::%s", *e.NameSpace, *e.Name)
-		if strings.EqualFold(fullName, *a.Type) || strings.EqualFold(*e.Name, *a.Type) {
+		fullName := fmt.Sprintf("%s::%s", *e.NameSpace, e.Name)
+		if strings.EqualFold(fullName, *a.Type) || strings.EqualFold(e.Name, *a.Type) {
 			return true, &fullName
 		}
 	}
@@ -183,8 +183,8 @@ func (g *PackageGenerator) IsArgEnum(a *CPPArg) (bool, *string) {
 
 func (g *PackageGenerator) IsTypeEnum(t string) (bool, *string) {
 	for _, e := range g.ParsedData.Enums {
-		fullName := fmt.Sprintf("%s::%s", *e.NameSpace, *e.Name)
-		if strings.EqualFold(fullName, t) || strings.EqualFold(*e.Name, t) {
+		fullName := fmt.Sprintf("%s::%s", *e.NameSpace, e.Name)
+		if strings.EqualFold(fullName, t) || strings.EqualFold(e.Name, t) {
 			return true, &fullName
 		}
 	}

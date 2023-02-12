@@ -16,4 +16,6 @@ bool* quux(bool a, bool b);
 std::string test(std::string a);
 
 double* test2(std::vector<double> a);
+
+void* test3(std::vector<void*> a);
 }  // namespace demo2
