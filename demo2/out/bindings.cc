@@ -39,40 +39,90 @@ static inline void DeleteArrayBuffer(Napi::Env env,
 
 // exported functions
 
-static Napi::Value _quux(const Napi::CallbackInfo& info) {
+static void _test4(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   const auto _arg_count = info.Length();
-  if (_arg_count != 2) {
-    Napi::TypeError::New(env, "`quux` expects exactly 2 args, but received " +
+  if (_arg_count != 1) {
+    Napi::TypeError::New(env, "`test4` expects exactly 1 arg, but received " +
+                                  std::to_string(_arg_count))
+        .ThrowAsJavaScriptException();
+    return;
+  }
+  if (!info[0].IsArray()) {
+    Napi::TypeError::New(env, "`test4` expects args[0] to be ``")
+        .ThrowAsJavaScriptException();
+    return;
+  }
+  Napi::Array _tmp_array_a = info[0].As<Napi::Array>();
+  auto _tmp_len_a = _tmp_array_a.Length();
+  std::vector<std::pair<string, string>> a;
+  a.reserve(_tmp_len_a);
+  for (size_t i = 0; i < _tmp_len_a; i++) {
+    Napi::Value _tmp_array_item = _tmp_array_a[i];
+    Napi::Array _tmp_pair = _tmp_array_item.As<Napi::Array>();
+    size_t idx1 = 0, idx2 = 1;
+    Napi::Value _tmp_pair_item1 = _tmp_pair[idx1];
+    Napi::Value _tmp_pair_item2 = _tmp_pair[idx2];
+    a.emplace_back(_tmp_pair_item1.As<Napi::String>().Utf8Value(),
+                   _tmp_pair_item2.As<Napi::String>().Utf8Value());
+  }
+  demo2::test4(a);
+}
+
+static Napi::Value _foo(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  const auto _arg_count = info.Length();
+  if (_arg_count != 1) {
+    Napi::TypeError::New(env, "`foo` expects exactly 1 arg, but received " +
                                   std::to_string(_arg_count))
         .ThrowAsJavaScriptException();
     return env.Undefined();
   }
-  if (!info[0].IsBoolean()) {
-    Napi::TypeError::New(env, "`quux` expects args[0] to be typeof `boolean`")
+  if (!info[0].IsNumber()) {
+    Napi::TypeError::New(env, "`foo` expects args[0] to be typeof `number`")
         .ThrowAsJavaScriptException();
     return env.Undefined();
   }
-  bool a = info[0].As<Napi::Boolean>().Value();
-  if (!info[1].IsBoolean()) {
-    Napi::TypeError::New(env, "`quux` expects args[1] to be typeof `boolean`")
+  int8_t a = static_cast<int8_t>(info[0].As<Napi::Number>().Int32Value());
+  int8_t _res;
+  _res = demo2::foo(a);
+  return Napi::Number::New(env, _res);
+}
+
+static void _baz(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  const auto _arg_count = info.Length();
+  if (_arg_count != 2) {
+    Napi::TypeError::New(env, "`baz` expects exactly 2 args, but received " +
+                                  std::to_string(_arg_count))
         .ThrowAsJavaScriptException();
-    return env.Undefined();
+    return;
   }
-  bool b = info[1].As<Napi::Boolean>().Value();
-  uint8_t* _res;
-  _res = reinterpret_cast<uint8_t*>(demo2::quux(a, b));
+  if (!info[0].IsTypedArray()) {
+    Napi::TypeError::New(
+        env, "`baz` expects args[0] to be instanceof `Float32Array`")
+        .ThrowAsJavaScriptException();
+    return;
+  }
+  float a = info[0].As<Napi::TypedArrayOf<float>>().Data();
+  if (!info[1].IsNumber()) {
+    Napi::TypeError::New(env, "`baz` expects args[1] to be typeof `number`")
+        .ThrowAsJavaScriptException();
+    return;
+  }
+  int b = static_cast<int>(info[1].As<Napi::Number>().Int32Value());
+  demo2::baz(a, b);
   size_t _res_byte_len = sizeof(_res);
   size_t _res_elem_len = _res_byte_len / sizeof(*_res);
-  std::unique_ptr<std::vector<uint8_t>> _res_native_array =
-      std::make_unique<std::vector<uint8_t>>(_res, _res + _res_elem_len);
-  Napi::ArrayBuffer _res_arraybuffer = Napi::ArrayBuffer::New(
-      env, _res_native_array->data(), _res_byte_len, DeleteArrayBuffer<uint8_t>,
-      _res_native_array.get());
+  std::unique_ptr<std::vector<float>> _res_native_array =
+      std::make_unique<std::vector<float>>(_res, _res + _res_elem_len);
+  Napi::ArrayBuffer _res_arraybuffer =
+      Napi::ArrayBuffer::New(env, _res_native_array->data(), _res_byte_len,
+                             DeleteArrayBuffer<float>, _res_native_array.get());
   _res_native_array.release();
   Napi::MemoryManagement::AdjustExternalMemory(env, _res_byte_len);
-  return Napi::TypedArrayOf<uint8_t>::New(env, _res_elem_len, _res_arraybuffer,
-                                          0, napi_uint8_array);
+  return Napi::TypedArrayOf<float>::New(env, _res_elem_len, _res_arraybuffer, 0,
+                                        napi_float32_array);
 }
 
 static Napi::Value _test(const Napi::CallbackInfo& info) {
@@ -95,22 +145,21 @@ static Napi::Value _test(const Napi::CallbackInfo& info) {
   return Napi::String::New(env, _res);
 }
 
-static Napi::Value _test2(const Napi::CallbackInfo& info) {
+static void _test2(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   const auto _arg_count = info.Length();
   if (_arg_count != 1) {
     Napi::TypeError::New(env, "`test2` expects exactly 1 arg, but received " +
                                   std::to_string(_arg_count))
         .ThrowAsJavaScriptException();
-    return env.Undefined();
+    return;
   }
   if (!info[0].IsArray()) {
     Napi::TypeError::New(env, "`test2` expects args[0] to be `Array<double>`")
         .ThrowAsJavaScriptException();
-    return env.Undefined();
+    return;
   }
-  double* _res;
-  _res = demo2::test2(a);
+  demo2::test2(a);
   size_t _res_byte_len = sizeof(_res);
   size_t _res_elem_len = _res_byte_len / sizeof(*_res);
   std::unique_ptr<std::vector<double>> _res_native_array =
@@ -141,50 +190,29 @@ static void _test3(const Napi::CallbackInfo& info) {
   demo2::test3(a);
 }
 
-static Napi::Value _foo(const Napi::CallbackInfo& info) {
-  Napi::Env env = info.Env();
-  const auto _arg_count = info.Length();
-  if (_arg_count != 1) {
-    Napi::TypeError::New(env, "`foo` expects exactly 1 arg, but received " +
-                                  std::to_string(_arg_count))
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  if (!info[0].IsNumber()) {
-    Napi::TypeError::New(env, "`foo` expects args[0] to be typeof `number`")
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  int8_t a = static_cast<int8_t>(info[0].As<Napi::Number>().Int32Value());
-  int8_t _res;
-  _res = demo2::foo(a);
-  return Napi::Number::New(env, _res);
-}
-
-static Napi::Value _bar(const Napi::CallbackInfo& info) {
+static void _bar(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   const auto _arg_count = info.Length();
   if (_arg_count != 2) {
     Napi::TypeError::New(env, "`bar` expects exactly 2 args, but received " +
                                   std::to_string(_arg_count))
         .ThrowAsJavaScriptException();
-    return env.Undefined();
+    return;
   }
   if (!info[0].IsTypedArray()) {
     Napi::TypeError::New(
         env, "`bar` expects args[0] to be instanceof `Float64Array`")
         .ThrowAsJavaScriptException();
-    return env.Undefined();
+    return;
   }
   double a = info[0].As<Napi::TypedArrayOf<double>>().Data();
   if (!info[1].IsNumber()) {
     Napi::TypeError::New(env, "`bar` expects args[1] to be typeof `number`")
         .ThrowAsJavaScriptException();
-    return env.Undefined();
+    return;
   }
   int32_t b = info[1].As<Napi::Number>().Int32Value();
-  double* _res;
-  _res = demo2::bar(a, b);
+  demo2::bar(a, b);
   size_t _res_byte_len = sizeof(_res);
   size_t _res_elem_len = _res_byte_len / sizeof(*_res);
   std::unique_ptr<std::vector<double>> _res_native_array =
@@ -198,68 +226,30 @@ static Napi::Value _bar(const Napi::CallbackInfo& info) {
                                          0, napi_float64_array);
 }
 
-static Napi::Value _baz(const Napi::CallbackInfo& info) {
-  Napi::Env env = info.Env();
-  const auto _arg_count = info.Length();
-  if (_arg_count != 2) {
-    Napi::TypeError::New(env, "`baz` expects exactly 2 args, but received " +
-                                  std::to_string(_arg_count))
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  if (!info[0].IsTypedArray()) {
-    Napi::TypeError::New(
-        env, "`baz` expects args[0] to be instanceof `Float32Array`")
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  float a = info[0].As<Napi::TypedArrayOf<float>>().Data();
-  if (!info[1].IsNumber()) {
-    Napi::TypeError::New(env, "`baz` expects args[1] to be typeof `number`")
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  int b = static_cast<int>(info[1].As<Napi::Number>().Int32Value());
-  float* _res;
-  _res = demo2::baz(a, b);
-  size_t _res_byte_len = sizeof(_res);
-  size_t _res_elem_len = _res_byte_len / sizeof(*_res);
-  std::unique_ptr<std::vector<float>> _res_native_array =
-      std::make_unique<std::vector<float>>(_res, _res + _res_elem_len);
-  Napi::ArrayBuffer _res_arraybuffer =
-      Napi::ArrayBuffer::New(env, _res_native_array->data(), _res_byte_len,
-                             DeleteArrayBuffer<float>, _res_native_array.get());
-  _res_native_array.release();
-  Napi::MemoryManagement::AdjustExternalMemory(env, _res_byte_len);
-  return Napi::TypedArrayOf<float>::New(env, _res_elem_len, _res_arraybuffer, 0,
-                                        napi_float32_array);
-}
-
-static Napi::Value _qux(const Napi::CallbackInfo& info) {
+static void _qux(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   const auto _arg_count = info.Length();
   if (_arg_count != 2) {
     Napi::TypeError::New(env, "`qux` expects exactly 2 args, but received " +
                                   std::to_string(_arg_count))
         .ThrowAsJavaScriptException();
-    return env.Undefined();
+    return;
   }
   if (!info[0].IsTypedArray()) {
     Napi::TypeError::New(
         env, "`qux` expects args[0] to be instanceof `BigInt64Array`")
         .ThrowAsJavaScriptException();
-    return env.Undefined();
+    return;
   }
   long long a =
       static_cast<long long>(info[0].As<Napi::TypedArrayOf<int64_t>>().Data());
   if (!info[1].IsNumber()) {
     Napi::TypeError::New(env, "`qux` expects args[1] to be typeof `number`")
         .ThrowAsJavaScriptException();
-    return env.Undefined();
+    return;
   }
   int b = static_cast<int>(info[1].As<Napi::Number>().Int32Value());
-  int64_t* _res;
-  _res = reinterpret_cast<int64_t*>(demo2::qux(a, b));
+  reinterpret_cast<int64_t*>(demo2::qux(a, b));
   size_t _res_byte_len = sizeof(_res);
   size_t _res_elem_len = _res_byte_len / sizeof(*_res);
   std::unique_ptr<std::vector<int64_t>> _res_native_array =
@@ -273,19 +263,56 @@ static Napi::Value _qux(const Napi::CallbackInfo& info) {
                                           0, napi_bigint64_array);
 }
 
+static void _quux(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  const auto _arg_count = info.Length();
+  if (_arg_count != 2) {
+    Napi::TypeError::New(env, "`quux` expects exactly 2 args, but received " +
+                                  std::to_string(_arg_count))
+        .ThrowAsJavaScriptException();
+    return;
+  }
+  if (!info[0].IsBoolean()) {
+    Napi::TypeError::New(env, "`quux` expects args[0] to be typeof `boolean`")
+        .ThrowAsJavaScriptException();
+    return;
+  }
+  bool a = info[0].As<Napi::Boolean>().Value();
+  if (!info[1].IsBoolean()) {
+    Napi::TypeError::New(env, "`quux` expects args[1] to be typeof `boolean`")
+        .ThrowAsJavaScriptException();
+    return;
+  }
+  bool b = info[1].As<Napi::Boolean>().Value();
+  reinterpret_cast<uint8_t*>(demo2::quux(a, b));
+  size_t _res_byte_len = sizeof(_res);
+  size_t _res_elem_len = _res_byte_len / sizeof(*_res);
+  std::unique_ptr<std::vector<uint8_t>> _res_native_array =
+      std::make_unique<std::vector<uint8_t>>(_res, _res + _res_elem_len);
+  Napi::ArrayBuffer _res_arraybuffer = Napi::ArrayBuffer::New(
+      env, _res_native_array->data(), _res_byte_len, DeleteArrayBuffer<uint8_t>,
+      _res_native_array.get());
+  _res_native_array.release();
+  Napi::MemoryManagement::AdjustExternalMemory(env, _res_byte_len);
+  return Napi::TypedArrayOf<uint8_t>::New(env, _res_elem_len, _res_arraybuffer,
+                                          0, napi_uint8_array);
+}
+
 // NAPI exports
 
 Napi::Object Init(Napi::Env env, Napi::Object exports) {
+  exports.Set(Napi::String::New(env, "_bar"), Napi::Function::New(env, _bar));
+  exports.Set(Napi::String::New(env, "_qux"), Napi::Function::New(env, _qux));
+  exports.Set(Napi::String::New(env, "_quux"), Napi::Function::New(env, _quux));
+  exports.Set(Napi::String::New(env, "_test4"),
+              Napi::Function::New(env, _test4));
+  exports.Set(Napi::String::New(env, "_foo"), Napi::Function::New(env, _foo));
+  exports.Set(Napi::String::New(env, "_baz"), Napi::Function::New(env, _baz));
   exports.Set(Napi::String::New(env, "_test"), Napi::Function::New(env, _test));
   exports.Set(Napi::String::New(env, "_test2"),
               Napi::Function::New(env, _test2));
   exports.Set(Napi::String::New(env, "_test3"),
               Napi::Function::New(env, _test3));
-  exports.Set(Napi::String::New(env, "_foo"), Napi::Function::New(env, _foo));
-  exports.Set(Napi::String::New(env, "_bar"), Napi::Function::New(env, _bar));
-  exports.Set(Napi::String::New(env, "_baz"), Napi::Function::New(env, _baz));
-  exports.Set(Napi::String::New(env, "_qux"), Napi::Function::New(env, _qux));
-  exports.Set(Napi::String::New(env, "_quux"), Napi::Function::New(env, _quux));
   return exports;
 }
 

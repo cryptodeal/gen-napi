@@ -14,6 +14,27 @@ func splitMatches(matched []sitter.QueryCapture) (sitter.QueryCapture, sitter.Qu
 	return matched[0], matched[1]
 }
 
+func getTypeQualifier(n *sitter.Node, input []byte) *string {
+	qualNode := findChildNodeByType(n, "type_qualifier")
+	if qualNode != nil {
+		type_qualifier := qualNode.Content(input)
+		return &type_qualifier
+	}
+	return nil
+}
+
+func findChildNodeByType(n *sitter.Node, node_type string) *sitter.Node {
+	child_count := int(n.ChildCount())
+	for i := 0; i < child_count; i++ {
+		tmp := n.Child(i)
+		if tmp.Type() == node_type {
+			return tmp
+		}
+	}
+	return nil
+}
+
+// parse full namespace for declaration node
 func parseNameSpace(n *sitter.Node, input []byte) *string {
 	ns := []string{}
 	p := n
@@ -84,6 +105,9 @@ func ParseTemplateType(n *sitter.Node, input []byte) *TemplateType {
 			name_node := template_node.ChildByFieldName("name")
 			if name_node != nil {
 				name := name_node.Content(input)
+				template_type.Name = &name
+			} else {
+				name := template_node.Content(input)
 				template_type.Name = &name
 			}
 			template_arg_node := template_node.ChildByFieldName("arguments")

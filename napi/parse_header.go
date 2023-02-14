@@ -47,15 +47,6 @@ type CPPFriend struct {
 	FuncDecl       *CPPFriendFunc
 }
 
-type CPPType struct {
-	Name        string
-	IsPrimitive bool
-	IsPointer   bool
-	IsConst     bool
-	Template    *TemplateType
-	NameSpace   *string
-}
-
 type CPPClass struct {
 	NameSpace    *string
 	FieldDecl    *[]*CPPFieldDecl
@@ -64,15 +55,21 @@ type CPPClass struct {
 	TemplateDecl *[]*TemplateMethod
 }
 
-type CPPArg struct {
-	TypeQualifier *string
+type CPPType struct {
+	Name          string
 	IsPrimitive   bool
-	Template      *TemplateType
-	Type          *string
-	RefDecl       *string
 	IsPointer     bool
-	Name          *string
-	DefaultValue  *CPPArgDefault
+	IsConst       bool
+	Template      *TemplateType
+	TypeQualifier *string
+	RefDecl       *string
+	NameSpace     *string
+}
+
+type CPPArg struct {
+	Type         *CPPType
+	Name         *string
+	DefaultValue *CPPArgDefault
 }
 
 type CPPMethod struct {
@@ -92,7 +89,7 @@ type CPPFieldDecl struct {
 }
 
 func (c *CPPMethod) IsVoid() bool {
-	return !(c.Returns != nil && (c.Returns.Name != "void" && c.Returns.Name != ""))
+	return !(c.Returns != nil && (c.Returns.Name != "void" && c.Returns.Name != "") && !c.Returns.IsPointer)
 }
 
 type TemplateMethod struct {
@@ -295,11 +292,15 @@ func parseCPPArg(content []byte, arg_list *sitter.Node) *[]*CPPArg {
 			isPrimitive = argType == "std::string" || argType == "string"
 		}
 
-		parsed_arg := &CPPArg{
-			Template:      template_type,
-			Type:          &argType,
-			TypeQualifier: typeQualifier,
+		type_data := &CPPType{
 			IsPrimitive:   isPrimitive,
+			Template:      template_type,
+			Name:          argType,
+			TypeQualifier: typeQualifier,
+		}
+
+		parsed_arg := &CPPArg{
+			Type: type_data,
 		}
 		if node_type == "optional_parameter_declaration" {
 			defaultNode := scoped_arg.ChildByFieldName("default_value")
@@ -332,7 +333,7 @@ func parseCPPArg(content []byte, arg_list *sitter.Node) *[]*CPPArg {
 				if identNode != nil {
 					identStr := identNode.Content(content)
 					parsed_arg.Name = &identStr
-					parsed_arg.IsPointer = true
+					parsed_arg.Type.IsPointer = true
 				}
 			}
 		case "reference_declarator":
@@ -342,7 +343,7 @@ func parseCPPArg(content []byte, arg_list *sitter.Node) *[]*CPPArg {
 					identStr := identNode.Content(content)
 					parsed_arg.Name = &identStr
 					refDeclStr := strings.ReplaceAll(refNode.Content(content), identStr, "")
-					parsed_arg.RefDecl = &refDeclStr
+					parsed_arg.Type.RefDecl = &refDeclStr
 				}
 			}
 		case "identifier":
@@ -425,6 +426,11 @@ func parseClasses(n *sitter.Node, input []byte) map[string]*CPPClass {
 							classes[class_name].FieldDecl = &[]*CPPFieldDecl{}
 						}
 						parsed := parseFieldDecl(temp_child, input)
+						selfName := "_tmp_external"
+						parsed.Args = append([]*CPPArg{{
+							Name: &selfName,
+							Type: &CPPType{Name: class_name},
+						}}, parsed.Args...)
 						// TODO: parse/handle these edge cases
 						/*
 							if parsed.Name == nil {
@@ -709,27 +715,6 @@ func parseClassFriend(n *sitter.Node, input []byte) *CPPFriend {
 	return new_friend
 }
 
-// helper functions
-func getTypeQualifier(n *sitter.Node, input []byte) *string {
-	qualNode := findChildNodeByType(n, "type_qualifier")
-	if qualNode != nil {
-		type_qualifier := qualNode.Content(input)
-		return &type_qualifier
-	}
-	return nil
-}
-
-func findChildNodeByType(n *sitter.Node, node_type string) *sitter.Node {
-	child_count := int(n.ChildCount())
-	for i := 0; i < child_count; i++ {
-		tmp := n.Child(i)
-		if tmp.Type() == node_type {
-			return tmp
-		}
-	}
-	return nil
-}
-
 type PreprocessBlock struct {
 	Node    *sitter.Node
 	RawArgs *string
@@ -757,30 +742,26 @@ func (g *PackageGenerator) parseLiterals(n *sitter.Node, input []byte) map[strin
 			break
 		}
 
-		// fmt.Println(len(m.Captures))
 		for _, c := range m.Captures {
 			node := c.Node
 			if namespace == nil {
 				namespace = parseNameSpace(node, input)
 			}
-			name_node := node.ChildByFieldName("name")
-			name := name_node.Content(input)
+			name := node.ChildByFieldName("name").Content(input)
 			preprocess_funcs[name] = &PreprocessBlock{Node: node, Expr: false}
 			value_node := node.ChildByFieldName("value")
-			if value_node != nil {
-				value := value_node.Content(input)
-				val_split := strings.Split(value, "\n")
-				for _, val := range val_split {
-					if strings.Contains(val, "FUNC") && !strings.Contains(val, "OP") && !strings.Contains(val, "operator") {
-						end_idx := strings.Index(val, ";")
-						used_portion := strings.TrimSpace(val[:end_idx])
-						used_split := strings.Split(used_portion, "FUNC")
-						res_type := strings.TrimSpace(used_split[0])
-						raw_args := strings.TrimSpace(used_split[1][1 : len(used_split[1])-1])
-						preprocess_funcs[name].RawRes = &res_type
-						preprocess_funcs[name].RawArgs = &raw_args
-						break
-					}
+			value := value_node.Content(input)
+			val_split := strings.Split(value, "\n")
+			for _, val := range val_split {
+				if strings.Contains(val, "FUNC") && !strings.Contains(val, "OP") && !strings.Contains(val, "operator") {
+					end_idx := strings.Index(val, ";")
+					used_portion := strings.TrimSpace(val[:end_idx])
+					used_split := strings.Split(used_portion, "FUNC")
+					res_type := strings.TrimSpace(used_split[0])
+					raw_args := strings.TrimSpace(used_split[1][1 : len(used_split[1])-1])
+					preprocess_funcs[name].RawRes = &res_type
+					preprocess_funcs[name].RawArgs = &raw_args
+					break
 				}
 			}
 		}

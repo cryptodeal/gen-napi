@@ -5,6 +5,54 @@ import (
 	"strings"
 )
 
+func (g *PackageGenerator) WritePairHandler(sb *strings.Builder, t *CPPType, name string, idx int) {
+	g.writeIndent(sb, 1)
+	sb.WriteString(fmt.Sprintf("Napi::Array _tmp_array_%s = info[%d].As<Napi::Array>();\n", name, idx))
+	g.writeIndent(sb, 1)
+	sb.WriteString(fmt.Sprintf("auto _tmp_len_%s = _tmp_array_%s.Length();\n", name, name))
+	g.writeIndent(sb, 1)
+	sb.WriteString(fmt.Sprintf("std::vector<std::pair<%s, %s>> %s;\n", *t.Template.Args[0].Args[0].Name, *t.Template.Args[0].Args[1].Name, name))
+	g.writeIndent(sb, 1)
+	sb.WriteString(fmt.Sprintf("%s.reserve(_tmp_len_%s);\n", name, name))
+	g.writeIndent(sb, 1)
+	sb.WriteString(fmt.Sprintf("for (size_t i = 0; i < _tmp_len_%s; i++) {\n", name))
+	g.writeIndent(sb, 2)
+	sb.WriteString(fmt.Sprintf("Napi::Value _tmp_array_item = _tmp_array_%s[i];\n", name))
+	g.writeIndent(sb, 2)
+	sb.WriteString("Napi::Array _tmp_pair = _tmp_array_item.As<Napi::Array>();\n")
+	g.writeIndent(sb, 2)
+	sb.WriteString("size_t idx1 = 0, idx2 = 1;\n")
+	g.writeIndent(sb, 2)
+	sb.WriteString("Napi::Value _tmp_pair_item1 = _tmp_pair[idx1];\n")
+	g.writeIndent(sb, 2)
+	sb.WriteString("Napi::Value _tmp_pair_item2 = _tmp_pair[idx2];\n")
+
+	// write handlers for each variable
+	helpers_1 := g.GetTypeHelpers(*t.Template.Args[0].Args[0].Name)
+	helpers_2 := g.GetTypeHelpers(*t.Template.Args[0].Args[1].Name)
+	h1_needsCast := helpers_1.CastTo != nil
+	h2_needsCast := helpers_2.CastTo != nil
+	var h1, h2 string
+	if h1_needsCast {
+		h1 += fmt.Sprintf("static_cast<%s>(", *helpers_1.CastTo)
+	}
+	h1 += fmt.Sprintf("_tmp_pair_item1.As<Napi::%s>().%s()", helpers_1.NapiType, *helpers_1.NapiGetter)
+	if h1_needsCast {
+		h1 += ")"
+	}
+	if h2_needsCast {
+		h2 += fmt.Sprintf("static_cast<%s>(", *helpers_2.CastTo)
+	}
+	h2 += fmt.Sprintf("_tmp_pair_item2.As<Napi::%s>().%s()", helpers_2.NapiType, *helpers_2.NapiGetter)
+	if h2_needsCast {
+		h2 += ")"
+	}
+	g.writeIndent(sb, 2)
+	sb.WriteString(fmt.Sprintf("%s.emplace_back(%s, %s);\n", name, h1, h2))
+	g.writeIndent(sb, 1)
+	sb.WriteString("}\n")
+}
+
 func (g *PackageGenerator) writeJsArrayToVectorFn(sb *strings.Builder) {
 	sb.WriteString("template <typename T>\n")
 	sb.WriteString("static inline std::vector<T> jsArrayToVector(Napi::Array arr, bool reverse, int invert) {\n")

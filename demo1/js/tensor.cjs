@@ -1,11 +1,13 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 const {
   _add,
+  _tensorFromUint8Buffer,
   _tensorFromFloat32Buffer,
   _tensorFromFloat64Buffer,
   _mean,
   _toFloat32Scalar,
   _toFloat64Array,
+  _toUint8Array,
   _toFloat32Array
 } = require('../../build/Release/shumai_bindings.node');
 
@@ -13,7 +15,9 @@ class Tensor {
   #native_self;
 
   constructor(t) {
-    if (t instanceof Float32Array || t.constructor === Float32Array) {
+    if (t instanceof Uint8Array || t.constructor === Uint8Array) {
+      this.#native_self = _tensorFromUint8Buffer(t.buffer);
+    } else if (t instanceof Float32Array || t.constructor === Float32Array) {
       this.#native_self = _tensorFromFloat32Buffer(t.buffer);
     } else if (t instanceof Float64Array || t.constructor === Float64Array) {
       this.#native_self = _tensorFromFloat64Buffer(t.buffer);
@@ -44,6 +48,10 @@ class Tensor {
 
   toFloat64Array() {
     return _toFloat64Array(this._native_self);
+  }
+
+  toUint8Array() {
+    return _toUint8Array(this._native_self);
   }
 }
 

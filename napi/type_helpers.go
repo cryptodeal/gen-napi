@@ -122,7 +122,7 @@ func IsTypeNumber(t string) bool {
 }
 
 func IsArgTemplate(t *CPPArg) bool {
-	return t.Template != nil
+	return t.Type != nil && t.Type.Template != nil
 }
 
 func IsTypeBigInt(t string) bool {
@@ -168,13 +168,13 @@ func (g *PackageGenerator) CPPTypeToTS(t string, isPointer bool) (string, bool) 
 	}
 }
 
-func (g *PackageGenerator) IsArgEnum(a *CPPArg) (bool, *string) {
-	if a == nil || a.Type == nil {
+func (g *PackageGenerator) IsArgEnum(t *CPPType) (bool, *string) {
+	if t == nil {
 		return false, nil
 	}
 	for _, e := range g.ParsedData.Enums {
 		fullName := fmt.Sprintf("%s::%s", *e.NameSpace, e.Name)
-		if strings.EqualFold(fullName, *a.Type) || strings.EqualFold(e.Name, *a.Type) {
+		if strings.EqualFold(fullName, t.Name) || strings.EqualFold(e.Name, t.Name) {
 			return true, &fullName
 		}
 	}

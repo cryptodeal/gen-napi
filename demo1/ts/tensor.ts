@@ -1,6 +1,5 @@
-const { _add, _tensorFromFloat32Buffer, _mean, _toFloat32Scalar } = import.meta.require(
-  '../../build/Release/shumai_bindings.node'
-);
+const { _add, _tensorFromFloat32Buffer, _mean, _toFloat32Scalar, _toUint8Array } =
+  import.meta.require('../../build/Release/shumai_bindings.node');
 
 export class Tensor {
   #native_self: any;
@@ -29,5 +28,9 @@ export class Tensor {
 
   toFloat32Scalar(): number {
     return _toFloat32Scalar(this._native_self);
+  }
+
+  toUint8Array(): Uint8Array {
+    return _toUint8Array(this._native_self);
   }
 }

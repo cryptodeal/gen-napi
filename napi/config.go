@@ -53,7 +53,7 @@ type FnOpts struct {
 }
 
 type ClassOpts struct {
-	Fields            []FnOpts `yaml:"fields"`
+	IgnoredFields     []FnOpts `yaml:"ignored_fields"`
 	ExternalFinalizer string   `yaml:"ext_finalizer_transform"`
 	ForcedMethods     []FnOpts `yaml:"forced_methods"`
 }
@@ -212,15 +212,15 @@ func (c PackageConfig) IsEnvTS() bool {
 	return c.JSWrapperOpts.EnvType == "ts" || strings.HasSuffix(c.JSWrapperOpts.WrapperOutPath, ".ts")
 }
 
-func (c PackageConfig) IsFieldWrapped(className string, fnName string) bool {
+func (c PackageConfig) IsFieldIgnored(className string, fnName string) bool {
 	if v, ok := c.ClassOpts[className]; ok {
-		for _, f := range v.Fields {
+		for _, f := range v.IgnoredFields {
 			if strings.EqualFold(f.Name, fnName) {
-				return true
+				return false
 			}
 		}
 	}
-	return false
+	return true
 }
 
 func (c PackageConfig) TypeHasHandler(name string) *TypeHandler {

@@ -18,4 +18,6 @@ std::string test(std::string a);
 double* test2(std::vector<double> a);
 
 void* test3(std::vector<void*> a);
+
+void* test4(std::vector<std::pair<std::string, std::string>> a);
 }  // namespace demo2

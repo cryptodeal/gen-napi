@@ -32,7 +32,7 @@ func (g *PackageGenerator) writeHeader(sb *strings.Builder, classes map[string]*
 			sb.WriteString("// methods defined in src, wrapped as class methods\n")
 			if cf.FieldDecl != nil {
 				for _, f := range *cf.FieldDecl {
-					if f.Name != nil && g.conf.IsFieldWrapped(class, *f.Name) {
+					if f.Name != nil && !g.conf.IsFieldIgnored(class, *f.Name) {
 						g.writeIndent(sb, 2)
 						sb.WriteString(fmt.Sprintf("Napi::Value %s(const Napi::CallbackInfo&);\n", *f.Name))
 					}

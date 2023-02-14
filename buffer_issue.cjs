@@ -13,8 +13,8 @@ const fillArray = (arr) => {
 const test = () => {
   const t0 = performance.now() / 1e3;
   for (let i = 0; i < 10000; i++) {
-    const backingArray = fillArray(new Float64Array(1000));
-    const a = new Tensor(backingArray).toFloat64Array();
+    const backingArray = fillArray(new Uint8Array(1000));
+    const a = new Tensor(backingArray).toUint8Array();
   }
   const t1 = performance.now() / 1e3;
   const time = t1 - t0;

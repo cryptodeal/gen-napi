@@ -2,30 +2,19 @@
 /* eslint-disable */
 
 const {
-  _bar,
   _baz,
-  _qux,
-  _quux,
   _test,
   _test2,
   _test3,
-  _foo
+  _test4,
+  _foo,
+  _qux,
+  _quux,
+  _bar
 } = import.meta.require("../../../../build/Release/test.node")
-
-export const test3 = (a: void[]): void => {
-  return _test3(a);
-}
-
-export const foo = (a: number): number => {
-  return _foo(a);
-}
 
 export const bar = (a: Float64Array, b: number): Float64Array => {
   return _bar(a, b);
-}
-
-export const baz = (a: Float32Array, b: number): Float32Array => {
-  return _baz(a, b);
 }
 
 export const qux = (a: BigInt64Array, b: number): BigInt64Array => {
@@ -36,11 +25,27 @@ export const quux = (a: boolean, b: boolean): Uint8Array => {
   return _quux(a, b);
 }
 
+export const test4 = (a: Array<[string, string]>): void => {
+  return _test4(a);
+}
+
+export const foo = (a: number): number => {
+  return _foo(a);
+}
+
+export const baz = (a: Float32Array, b: number): Float32Array => {
+  return _baz(a, b);
+}
+
 export const test = (a: string): string => {
   return _test(a);
 }
 
 export const test2 = (a: number[]): Float64Array => {
   return _test2(a);
+}
+
+export const test3 = (a: void[]): void => {
+  return _test3(a);
 }
 

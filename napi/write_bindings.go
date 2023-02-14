@@ -11,13 +11,14 @@ func (g *PackageGenerator) writeArgCountChecker(sb *strings.Builder, name string
 	}
 	g.writeIndent(sb, 1)
 	sb.WriteString("const auto _arg_count = info.Length();\n")
+	g.writeIndent(sb, 1)
+	sb.WriteString("if (")
 	if optional == 0 {
-		g.writeIndent(sb, 1)
-		sb.WriteString(fmt.Sprintf("if (_arg_count != %d) {\n", expected_arg_count))
+		sb.WriteString(fmt.Sprintf("_arg_count != %d", expected_arg_count))
 	} else {
-		g.writeIndent(sb, 1)
-		sb.WriteString(fmt.Sprintf("if (_arg_count < %d || _arg_count > %d) {\n", expected_arg_count, expected_arg_count+optional))
+		sb.WriteString(fmt.Sprintf("_arg_count < %d || _arg_count > %d", expected_arg_count, expected_arg_count+optional))
 	}
+	sb.WriteString(") {\n")
 	g.writeIndent(sb, 2)
 	var errMsg string
 	if optional == 0 {
@@ -132,12 +133,6 @@ func (g *PackageGenerator) writeArgChecks(sb *strings.Builder, name string, args
 		if i >= expected_arg_count && optionalArgs == 0 {
 			break
 		}
-		if arg == nil {
-			continue
-		}
-		if arg.Name == nil {
-			fmt.Printf("WARNING: arg.Ident is nil for %q", name)
-		}
 		checks := arg.GetArgChecks(g)
 		g.WriteArgCheck(sb, checks, name, i, arg, is_void)
 		g.WriteArgGetter(sb, checks, name, arg, i)
@@ -162,7 +157,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod) {
 		m.ExpectedArgs = arg_count
 	} else {
 		for _, arg := range *m.Overloads[0] {
-			isEnum, _ := g.IsTypeEnum(*arg.Type)
+			isEnum, _ := g.IsTypeEnum(arg.Type.Name)
 			if arg.DefaultValue != nil && isEnum {
 				optional_args++
 			} else {
@@ -182,36 +177,40 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod) {
 			break
 		}
 		isArgTransform, argTransformVal := g.conf.IsArgTransform(*m.Name, *arg.Name)
-		isEnum, _ := g.IsTypeEnum(*arg.Type)
+		isEnum, _ := g.IsTypeEnum(arg.Type.Name)
 
 		if isArgTransform && strings.Contains(*argTransformVal, "/arg_") {
-			g.writeIndent(sb, 2)
+			g.writeIndent(sb, 1)
 			for j, val := range *m.Overloads[0] {
 				*argTransformVal = strings.ReplaceAll(*argTransformVal, fmt.Sprintf("/arg_%d/", j), *val.Name)
 			}
 			sb.WriteString(strings.ReplaceAll(*argTransformVal, "/arg/", fmt.Sprintf("info[%d]", i)))
 			// TODO: this might need better handling for class wrappers
-		} else if g.isClass(*arg.Type) {
+		} else if g.isClass(arg.Type.Name) {
 			obj_name = *arg.Name
 			// rework below conditional
-		} else if IsArgTemplate(arg) && !strings.EqualFold(*arg.Template.Args[0].Name, m.Returns.Name) {
-			g.writeIndent(sb, 2)
+		} else if IsArgTemplate(arg) && !strings.EqualFold(*arg.Type.Template.Args[0].Name, m.Returns.Name) {
+			g.writeIndent(sb, 1)
 			invertVal := "false"
 			if g.conf.VectorOpts.DimAccessor != "" {
 				invertVal = fmt.Sprintf("%s->%s", obj_name, g.conf.VectorOpts.DimAccessor)
 			}
-			sb.WriteString(fmt.Sprintf("auto %s = jsArrayToVector<%s>(info[%d].As<Napi::Array>(), g_row_major, %s);\n", *arg.Name, *arg.Template.Args[0].Name, i, invertVal))
-		} else if !arg.IsPrimitive && !isEnum {
+			if *arg.Type.Template.Args[0].Name == "pair" {
+				g.WritePairHandler(sb, arg.Type, *arg.Name, i)
+			} else {
+				sb.WriteString(fmt.Sprintf("auto %s = jsArrayToVector<%s>(info[%d].As<Napi::Array>(), g_row_major, %s);\n", *arg.Name, *arg.Type.Template.Args[0].Name, i, invertVal))
+			}
+		} else if !arg.Type.IsPrimitive && !isEnum {
 			// TODO: all arg coercions should probably be written in a single place to prevent duplication
 			var ptrType string
-			if arg.IsPointer {
+			if arg.Type.IsPointer {
 				ptrType = "*"
 			}
-			fmt.Printf("TODO: Method %q has unhandled argument: `%s %s%s`\n", *m.Name, *arg.Type, ptrType, *arg.Name)
+			fmt.Printf("TODO: Method %q has unhandled argument: `%s %s%s`\n", *m.Name, arg.Type.Name, ptrType, *arg.Name)
 		}
 	}
 	if !is_void {
-		g.writeIndent(sb, 2)
+		g.writeIndent(sb, 1)
 		_, arrayType, needsCast, _ := PrimitivePtrToTS(m.Returns.Name)
 
 		if !m.Returns.IsPrimitive {
@@ -240,12 +239,12 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod) {
 				if i > 0 {
 					sb.WriteString(", ")
 				}
-				isEnum, _ := g.IsTypeEnum(*arg.Type)
+				isEnum, _ := g.IsTypeEnum(arg.Type.Name)
 				if isEnum {
 					sb.WriteString(*arg.Name)
-				} else if _, ok := g.conf.TypeMappings[*arg.Type]; ok {
-					sb.WriteString(fmt.Sprintf("%s::%s(%s)", *g.NameSpace, *arg.Type, *arg.Name))
-				} else if g.isClass(*arg.Type) {
+				} else if _, ok := g.conf.TypeMappings[arg.Type.Name]; ok {
+					sb.WriteString(fmt.Sprintf("%s::%s(%s)", *g.NameSpace, arg.Type.Name, *arg.Name))
+				} else if g.isClass(arg.Type.Name) {
 					sb.WriteString(fmt.Sprintf("*(%s)", *arg.Name))
 				} else {
 					sb.WriteString(*arg.Name)
@@ -256,7 +255,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod) {
 		parsed_transform := strings.ReplaceAll(*transform, "/return/", "_res")
 		for i, arg := range *m.Overloads[0] {
 			fmtd_arg := ""
-			if g.isClass(*arg.Type) {
+			if g.isClass(arg.Type.Name) {
 				fmtd_arg = fmt.Sprintf("*(%s)", *arg.Name)
 			} else {
 				fmtd_arg = *arg.Name
@@ -291,9 +290,9 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod) {
 			if i > 0 {
 				sb.WriteString(", ")
 			}
-			if _, ok := g.conf.TypeMappings[*arg.Type]; ok {
-				sb.WriteString(fmt.Sprintf("%s::%s(%s)", *g.NameSpace, *arg.Type, *arg.Name))
-			} else if g.isClass(*arg.Type) {
+			if _, ok := g.conf.TypeMappings[arg.Type.Name]; ok {
+				sb.WriteString(fmt.Sprintf("%s::%s(%s)", *g.NameSpace, arg.Type.Name, *arg.Name))
+			} else if g.isClass(arg.Type.Name) {
 				sb.WriteString(fmt.Sprintf("*(%s)", *arg.Name))
 			} else {
 				sb.WriteString(*arg.Name)
@@ -360,8 +359,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod) {
 }
 
 func (g *PackageGenerator) writeClassField(sb *strings.Builder, f *CPPFieldDecl, className string) {
-	classData := g.getClass(className)
-	if f.Name != nil && g.conf.IsFieldWrapped(className, *f.Name) {
+	if f.Name != nil && !g.conf.IsFieldIgnored(className, *f.Name) {
 		var returnType string
 		isVoid := false
 		if f.Returns != nil && f.Returns.Name != "void" {
@@ -378,16 +376,8 @@ func (g *PackageGenerator) writeClassField(sb *strings.Builder, f *CPPFieldDecl,
 		sb.WriteString(fmt.Sprintf("_%s(const Napi::CallbackInfo& info) {\n", *f.Name))
 		g.writeIndent(sb, 1)
 		sb.WriteString("Napi::Env env = info.Env();\n")
-		argCount := 1
+		argCount := len(f.Args)
 		if f.Args != nil {
-			argCount += len(f.Args)
-		}
-		g.writeArgTypeChecker(sb, *f.Name, "IsExternal", 0, fmt.Sprintf("native `%s` (typeof `Napi::External<%s::%s>`)", stripNameSpace(className), *classData.NameSpace, stripNameSpace(className)), 1, nil, nil, isVoid)
-		g.writeIndent(sb, 1)
-		sb.WriteString(fmt.Sprintf("%s::%s* _tmp_external = UnExternalize<%s::%s>(info[%d]);\n", *classData.NameSpace, stripNameSpace(className), *classData.NameSpace, stripNameSpace(className), 0))
-
-		if f.Args != nil {
-			f.Args = append([]*CPPArg{nil}, f.Args...)
 			g.writeArgChecks(sb, *f.Name, &f.Args, argCount, 0, isVoid)
 		}
 
@@ -399,15 +389,15 @@ func (g *PackageGenerator) writeClassField(sb *strings.Builder, f *CPPFieldDecl,
 		sb.WriteString(fmt.Sprintf("_tmp_external->%s(", *f.Name))
 		if f.Args != nil {
 			for i, arg := range f.Args {
-				if arg == nil {
+				if arg == nil || i == 0 {
 					continue
 				}
 				if i > 1 {
 					sb.WriteString(", ")
 				}
-				if _, ok := g.conf.TypeMappings[*arg.Type]; ok {
-					sb.WriteString(fmt.Sprintf("%s::%s(%s)", *g.NameSpace, *arg.Type, *arg.Name))
-				} else if g.isClass(*arg.Type) {
+				if _, ok := g.conf.TypeMappings[arg.Type.Name]; ok {
+					sb.WriteString(fmt.Sprintf("%s::%s(%s)", *g.NameSpace, arg.Type.Name, *arg.Name))
+				} else if g.isClass(arg.Type.Name) {
 					// TODO: check whether expects ptr to Class
 					sb.WriteString(fmt.Sprintf("*(%s)", *arg.Name))
 				} else {
@@ -490,7 +480,7 @@ func (g *PackageGenerator) writeBindings(sb *strings.Builder) {
 			// write exports for wrapped class fields (specified in config)
 			if c.FieldDecl != nil {
 				for _, f := range *c.FieldDecl {
-					if f.Name != nil && g.conf.IsFieldWrapped(name, *f.Name) {
+					if f.Name != nil && !g.conf.IsFieldIgnored(name, *f.Name) {
 						g.writeAddonExport(sb, *f.Name)
 					}
 				}

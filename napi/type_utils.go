@@ -17,30 +17,33 @@ type ArgChecks struct {
 
 // `node-addon-api` types
 const napi_number_type = "Number"
-const napi_object_type = "Object"
 const napi_bigint_type = "BigInt"
-const napi_typedarray_type = "TypedArray"
-const napi_array_type = "Array"
 const napi_boolean_type = "Boolean"
 const napi_string_type = "String"
 const napi_external_type = "External"
+
+// const napi_object_type = "Object"
+// const napi_typedarray_type = "TypedArray"
+// const napi_array_type = "Array"
 
 // js types
 const js_number_type = "number"
 const js_bigint_type = "bigint"
 const js_boolean_type = "boolean"
 const js_string_type = "string"
-const js_array_type = "Array"
+
+// const js_array_type = "Array"
 
 // `node-addon-api` type checkers
 var numCheck = "IsNumber"
-var objCheck = "IsObject"
 var bigIntCheck = "IsBigInt"
 var typedArrayCheck = "IsTypedArray"
 var arrayCheck = "IsArray"
 var boolCheck = "IsBoolean"
 var stringCheck = "IsString"
 var externalCheck = "IsExternal"
+
+// var objCheck = "IsObject"
 
 // `node-addon-api` value getters
 var floatGetter = "FloatValue"
@@ -68,7 +71,7 @@ func (g *PackageGenerator) WriteArgCheck(sb *strings.Builder, checks *ArgChecks,
 	if checks != nil {
 		g.writeArgTypeChecker(sb, name, *checks.NapiChecker, i, checks.ErrorDetails, 1, nil, a, is_void)
 		if checks.IsArray != nil {
-			tsType, isObject := g.CPPTypeToTS(*a.Template.Args[0].Name, false)
+			tsType, isObject := g.CPPTypeToTS(*a.Type.Template.Args[0].Name, false)
 			if isObject {
 				g.writeArgTypeChecker(sb, name, "IsExternal", i, fmt.Sprintf("native `%s` (typeof `Napi::External<%s::%s>`)", tsType, *g.NameSpace, tsType), 2, checks.IsArray, nil, is_void)
 			} else {
@@ -78,9 +81,9 @@ func (g *PackageGenerator) WriteArgCheck(sb *strings.Builder, checks *ArgChecks,
 	}
 }
 
-func (g *PackageGenerator) WritePrimitiveGetter(sb *strings.Builder, arg *CPPArg, checks *ArgChecks, i int) {
+func (g *PackageGenerator) WritePrimitiveGetter(sb *strings.Builder, t *CPPType, name string, checks *ArgChecks, i int) {
 	g.writeIndent(sb, 1)
-	sb.WriteString(fmt.Sprintf("%s %s = ", *arg.Type, *arg.Name))
+	sb.WriteString(fmt.Sprintf("%s %s = ", t.Name, name))
 	// only cast when necessary
 	if checks.CastTo != nil {
 		sb.WriteString(fmt.Sprintf("static_cast<%s>(", *checks.CastTo))
@@ -101,7 +104,7 @@ func (g *PackageGenerator) WriteArgGetter(sb *strings.Builder, checks *ArgChecks
 	}
 
 	if checks != nil {
-		isEnum, enumName := g.IsArgEnum(a)
+		isEnum, enumName := g.IsArgEnum(a.Type)
 		// hasDefault := a != nil && a.DefaultValue != nil
 		if isEnum {
 			g.writeIndent(sb, 1)
@@ -109,24 +112,133 @@ func (g *PackageGenerator) WriteArgGetter(sb *strings.Builder, checks *ArgChecks
 			return
 		}
 
-		if a.IsPrimitive && !isArgTransform {
-			g.WritePrimitiveGetter(sb, a, checks, i)
+		if a.Type.IsPrimitive && !isArgTransform {
+			g.WritePrimitiveGetter(sb, a.Type, *a.Name, checks, i)
 			return
 		}
 
-		if g.isClass(*a.Type) && !isArgTransform {
-			classData := g.getClass(*a.Type)
+		if g.isClass(a.Type.Name) && !isArgTransform {
+			classData := g.getClass(a.Type.Name)
 			g.writeIndent(sb, 1)
-			sb.WriteString(fmt.Sprintf("%s::%s* %s = UnExternalize<%s::%s>(info[%d]);\n", *classData.NameSpace, stripNameSpace(*a.Type), *a.Name, *classData.NameSpace, stripNameSpace(*a.Type), i))
+			sb.WriteString(fmt.Sprintf("%s::%s* %s = UnExternalize<%s::%s>(info[%d]);\n", *classData.NameSpace, stripNameSpace(a.Type.Name), *a.Name, *classData.NameSpace, stripNameSpace(a.Type.Name), i))
 			return
 		}
 	}
 }
 
-func (a *CPPArg) GetArgChecks(g *PackageGenerator) *ArgChecks {
+func (g *PackageGenerator) GetTypeHelpers(t string) *ArgChecks {
 	checks := &ArgChecks{}
 
-	isEnum, _ := g.IsArgEnum(a)
+	isEnum, enumName := g.IsTypeEnum(t)
+	if isEnum {
+		checks.NapiChecker = &numCheck
+		checks.NapiType = napi_number_type
+		checks.JSType = js_number_type
+		checks.NapiGetter = &i32Getter
+		checks.CastTo = enumName
+		return checks
+	}
+
+	if g.isClass(t) {
+		checks.NapiChecker = &externalCheck
+		checks.NapiType = napi_external_type
+		checks.JSType = t
+		checks.NapiGetter = &ptrGetter
+		return checks
+	}
+
+	/* TODO: handle
+	if t.IsPrimitive && t.IsPointer {
+		return checks
+	}
+	*/
+
+	checks.NapiType = napi_number_type
+	checks.JSType = js_number_type
+	checks.ErrorDetails = "typeof `number`"
+	switch t {
+	case "float":
+		{
+			checks.NapiChecker = &numCheck
+			checks.NapiGetter = &floatGetter
+		}
+	case "double":
+		{
+			checks.NapiChecker = &numCheck
+			checks.NapiGetter = &doubleGetter
+		}
+	case "int32_t":
+		{
+			checks.NapiChecker = &numCheck
+			checks.NapiGetter = &i32Getter
+		}
+	case "long long", "signed", "int8_t", "int16_t", "short", "int":
+		{
+			checks.NapiChecker = &numCheck
+			checks.NapiGetter = &i32Getter
+			checks.CastTo = &t
+		}
+	case "unsigned long long", "unsigned", "uint8_t", "uint16_t", "unsigned short", "unsigned int":
+		{
+			checks.NapiChecker = &numCheck
+			checks.NapiGetter = &u32Getter
+			checks.CastTo = &t
+		}
+	case "uint32_t":
+		{
+			checks.NapiChecker = &numCheck
+			checks.NapiGetter = &u32Getter
+		}
+	case "int64_t":
+		{
+			checks.NapiChecker = &bigIntCheck
+			checks.NapiType = napi_bigint_type
+			checks.JSType = js_bigint_type
+			checks.ErrorDetails = "typeof `bigint`"
+			checks.NapiGetter = &i64Getter
+		}
+	case "uint64_t", "size_t", "uintptr_t":
+		{
+			checks.NapiChecker = &bigIntCheck
+			checks.NapiType = napi_bigint_type
+			checks.JSType = js_bigint_type
+			checks.ErrorDetails = "typeof `bigint`"
+			checks.NapiGetter = &i64Getter
+			checks.CastTo = &t
+		}
+	case "bool":
+		{
+			checks.NapiChecker = &boolCheck
+			checks.NapiType = napi_boolean_type
+			checks.ErrorDetails = "typeof `boolean`"
+			checks.JSType = js_boolean_type
+			checks.NapiGetter = &defaultGetter
+		}
+	case "std::string", "string":
+		{
+			checks.NapiChecker = &stringCheck
+			checks.ErrorDetails = "typeof `string`"
+			checks.NapiType = napi_string_type
+			checks.JSType = js_string_type
+			checks.NapiGetter = &utf8Getter
+		}
+	case "std::u16string":
+		{
+			checks.NapiChecker = &stringCheck
+			checks.NapiType = napi_string_type
+			checks.ErrorDetails = "typeof `string`"
+			checks.JSType = js_string_type
+			checks.NapiGetter = &utf16Getter
+		}
+	}
+
+	return checks
+}
+
+func (t *CPPType) GetTypeHandlers(g *PackageGenerator) *ArgChecks {
+	checks := &ArgChecks{}
+
+	isEnum, enumName := g.IsArgEnum(t)
 	// enums are passed as `number`
 	if isEnum {
 		checks.NapiChecker = &numCheck
@@ -134,21 +246,22 @@ func (a *CPPArg) GetArgChecks(g *PackageGenerator) *ArgChecks {
 		checks.ErrorDetails = "typeof `number`"
 		checks.JSType = js_number_type
 		checks.NapiGetter = &i32Getter
+		checks.CastTo = enumName
 		return checks
 	}
 
-	if g.isClass(*a.Type) {
+	if g.isClass(t.Name) {
 		checks.NapiChecker = &externalCheck
 		checks.NapiType = napi_external_type
-		checks.ErrorDetails = fmt.Sprintf("native `%s` (typeof `Napi::External<%s::%s>`)", *a.Type, *g.NameSpace, *a.Type)
-		checks.JSType = *a.Type
+		checks.ErrorDetails = fmt.Sprintf("native `%s` (typeof `Napi::External<%s::%s>`)", t.Name, *g.NameSpace, t.Name)
+		checks.JSType = t.Name
 		checks.NapiGetter = &ptrGetter
 		return checks
 	}
 
 	// handles `TypedArray` check
-	if a.IsPrimitive && a.IsPointer {
-		jsType, arrayType, needsCast, _ := PrimitivePtrToTS(*a.Type)
+	if t.IsPrimitive && t.IsPointer {
+		jsType, arrayType, needsCast, _ := PrimitivePtrToTS(t.Name)
 		checks.NapiChecker = &typedArrayCheck
 		checks.JSType = jsType
 		checks.NapiGetter = &ptrGetter
@@ -159,28 +272,26 @@ func (a *CPPArg) GetArgChecks(g *PackageGenerator) *ArgChecks {
 	}
 
 	// handles Temlate `std::*` types
-	if a.Template != nil {
-		switch *a.Template.Name {
+	if t.Template != nil {
+		switch *t.Template.Name {
 		case "vector":
 			{
-				checks.IsArray = GetArrayName(a)
 				checks.NapiChecker = &arrayCheck
-				if len(a.Template.Args[0].Args) > 0 {
-					if *a.Template.Name == "pair" {
-						checks.JSType = g.PairToJsType(a.Template.Args[0])
+				if len(t.Template.Args[0].Args) > 0 {
+					if *t.Template.Name == "pair" {
+						checks.JSType = g.PairToJsType(t.Template.Args[0])
 					}
 				} else {
-					checks.JSType = fmt.Sprintf("Array<%s>", *a.Template.Args[0].Name)
+					checks.JSType = fmt.Sprintf("Array<%s>", *t.Template.Args[0].Name)
 				}
 				checks.ErrorDetails = fmt.Sprintf("`%s`", checks.JSType)
 				return checks
 			}
 		case "pair":
 			{
-				checks.IsArray = GetArrayName(a)
 				checks.NapiChecker = &arrayCheck
 				checks.ErrorDetails = fmt.Sprintf("`%s`", checks.JSType)
-				checks.JSType = g.PairToJsType(a.Template)
+				checks.JSType = g.PairToJsType(t.Template)
 				return checks
 			}
 			// TODO: need to handle addtl types (e.g. `std::map`)
@@ -189,11 +300,11 @@ func (a *CPPArg) GetArgChecks(g *PackageGenerator) *ArgChecks {
 
 	// TODO: fix handling of `char` and other string types
 	// handles primitive types (and `std::string`/`string`)
-	if a.IsPrimitive {
+	if t.IsPrimitive {
 		checks.NapiType = napi_number_type
 		checks.JSType = js_number_type
 		checks.ErrorDetails = "typeof `number`"
-		switch *a.Type {
+		switch t.Name {
 		case "float":
 			{
 				checks.NapiChecker = &numCheck
@@ -213,13 +324,13 @@ func (a *CPPArg) GetArgChecks(g *PackageGenerator) *ArgChecks {
 			{
 				checks.NapiChecker = &numCheck
 				checks.NapiGetter = &i32Getter
-				checks.CastTo = a.Type
+				checks.CastTo = &t.Name
 			}
 		case "unsigned long long", "unsigned", "uint8_t", "uint16_t", "unsigned short", "unsigned int":
 			{
 				checks.NapiChecker = &numCheck
 				checks.NapiGetter = &u32Getter
-				checks.CastTo = a.Type
+				checks.CastTo = &t.Name
 			}
 		case "uint32_t":
 			{
@@ -241,7 +352,7 @@ func (a *CPPArg) GetArgChecks(g *PackageGenerator) *ArgChecks {
 				checks.JSType = js_bigint_type
 				checks.ErrorDetails = "typeof `bigint`"
 				checks.NapiGetter = &i64Getter
-				checks.CastTo = a.Type
+				checks.CastTo = &t.Name
 			}
 		case "bool":
 			{
@@ -271,6 +382,25 @@ func (a *CPPArg) GetArgChecks(g *PackageGenerator) *ArgChecks {
 		return checks
 	}
 
-	// return nil; no simple validation for this type
+	// return nil; we don't know how to handle this type
 	return nil
+}
+
+func (a *CPPArg) GetArgChecks(g *PackageGenerator) *ArgChecks {
+	checks := a.Type.GetTypeHandlers(g)
+	// handles Temlate `std::*` types
+	if a.Type.Template != nil {
+		switch *a.Type.Template.Name {
+		case "vector":
+			{
+				checks.IsArray = GetArrayName(a)
+			}
+		case "pair":
+			{
+				checks.IsArray = GetArrayName(a)
+			}
+			// TODO: need to handle addtl types (e.g. `std::map`)
+		}
+	}
+	return checks
 }

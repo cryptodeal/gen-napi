@@ -28,7 +28,7 @@ packages:
     ignored_methods:
       - scalar
       - device
-      - pad
+      #- pad
       - host
       - fromScalar
       - releaseAdapter
@@ -227,17 +227,3 @@ packages:
             g_bytes_used -= byte_count;
             Napi::MemoryManagement::AdjustExternalMemory(env, -byte_count);
           }
-        fields:
-          - name: copy
-          - name: shape
-          - name: elements
-          - name: ndim
-          - name: isEmpty
-          - name: bytes
-          - name: strides
-          - name: astype
-          - name: type
-          - name: isSparse
-          - name: flatten
-          - name: asContiguousTensor
-          - name: isContiguous

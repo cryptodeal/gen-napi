@@ -269,7 +269,7 @@ func (g *PackageGenerator) WriteEnvWrappedFns() string {
 					sb.WriteString(", ")
 				}
 				sb.WriteString(*p.Name)
-				tsType, isClass := g.CPPTypeToTS(*p.Type, p.IsPointer)
+				tsType, isClass := g.CPPTypeToTS(p.Type.Name, p.Type.IsPointer)
 				if v, ok := g.conf.TypeMappings[tsType]; ok && v.TSType != "" {
 					if g.conf.IsEnvTS() {
 						sb.WriteString(fmt.Sprintf(": %s", stripNameSpace(v.TSType)))
@@ -281,9 +281,16 @@ func (g *PackageGenerator) WriteEnvWrappedFns() string {
 						sb.WriteString(fmt.Sprintf(" = %s", val))
 					}
 				} else {
-					if IsArgTemplate(p) && *p.Template.Name == "vector" {
-						tsType, _ = g.CPPTypeToTS(*p.Template.Args[0].Name, p.IsPointer)
-						tsType = tsType + "[]"
+					// TODO: write types for `pair` aka `[T1, T2]`
+					if IsArgTemplate(p) && *p.Type.Template.Name == "vector" {
+						tsType, _ = g.CPPTypeToTS(*p.Type.Template.Args[0].Name, p.Type.IsPointer)
+						if tsType == "pair" {
+							helpers_1 := g.GetTypeHelpers(*p.Type.Template.Args[0].Args[0].Name)
+							helpers_2 := g.GetTypeHelpers(*p.Type.Template.Args[0].Args[1].Name)
+							tsType = fmt.Sprintf("Array<[%s, %s]>", helpers_1.JSType, helpers_2.JSType)
+						} else {
+							tsType = tsType + "[]"
+						}
 						if p.DefaultValue != nil && p.DefaultValue.Val != nil {
 							val := *p.DefaultValue.Val
 							val = strings.ReplaceAll(val, "{", "[")
@@ -296,9 +303,9 @@ func (g *PackageGenerator) WriteEnvWrappedFns() string {
 					} else {
 						sb.WriteString(fmt.Sprintf(": %s", stripNameSpace(tsType)))
 					}
-					isEnum, _ := g.IsTypeEnum(*p.Type)
+					isEnum, _ := g.IsTypeEnum(p.Type.Name)
 					if isEnum && p.DefaultValue != nil && p.DefaultValue.Val != nil {
-						sb.WriteString(fmt.Sprintf(" = %s.%s", *p.Type, *p.DefaultValue.Val))
+						sb.WriteString(fmt.Sprintf(" = %s.%s", p.Type.Name, *p.DefaultValue.Val))
 					} else if !isClass && p.DefaultValue != nil && p.DefaultValue.Val != nil {
 						val := *p.DefaultValue.Val
 						val = strings.ReplaceAll(val, "{", "[")
@@ -335,7 +342,7 @@ func (g *PackageGenerator) WriteEnvWrappedFns() string {
 					sb.WriteString(", ")
 				}
 				sb.WriteString(*p.Name)
-				if g.isClass(*p.Type) {
+				if g.isClass(p.Type.Name) {
 					sb.WriteString("._native_self")
 				}
 			}
@@ -427,7 +434,7 @@ func (g *PackageGenerator) WriteEnvWrappedFns() string {
 					}
 					sb.WriteString(*p.Name)
 					if g.conf.IsEnvTS() {
-						tsType, _ := g.CPPTypeToTS(*p.Type, p.IsPointer)
+						tsType, _ := g.CPPTypeToTS(p.Type.Name, p.Type.IsPointer)
 						if v, ok := g.conf.TypeMappings[tsType]; ok {
 							sb.WriteString(fmt.Sprintf(": %s", v.TSType))
 						} else {
@@ -460,7 +467,7 @@ func (g *PackageGenerator) WriteEnvWrappedFns() string {
 						sb.WriteString(", ")
 					}
 					sb.WriteString(*p.Name)
-					if g.isClass(*p.Type) {
+					if g.isClass(p.Type.Name) {
 						sb.WriteString("._native_self")
 					}
 				}

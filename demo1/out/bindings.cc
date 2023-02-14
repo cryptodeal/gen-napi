@@ -74,228 +74,6 @@ static inline T* UnExternalize(Napi::Value val) {
   return val.As<Napi::External<T>>().Data();
 }
 
-static Napi::Value _copy(const Napi::CallbackInfo& info) {
-  Napi::Env env = info.Env();
-  fl::Tensor* _tmp_external = UnExternalize<fl::Tensor>(info[0]);
-  const auto _arg_count = info.Length();
-  if (_arg_count != 1) {
-    Napi::TypeError::New(env, "`copy` expects exactly 1 arg, but received " +
-                                  std::to_string(_arg_count))
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  auto _res = _tmp_external->copy();
-  auto _out_byte_count = _res.bytes();
-  g_bytes_used += _out_byte_count;
-  Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
-  auto* out = new fl::Tensor(_res);
-  return ExternalizeTensor(env, out);
-}
-
-static Napi::Value _shape(const Napi::CallbackInfo& info) {
-  Napi::Env env = info.Env();
-  fl::Tensor* _tmp_external = UnExternalize<fl::Tensor>(info[0]);
-  auto _res = _tmp_external->shape();
-  const size_t length =
-      static_cast<const size_t>(UnExternalize<fl::Tensor>(info[0])->ndim());
-  Napi::TypedArrayOf<int64_t> _out =
-      Napi::TypedArrayOf<int64_t>::New(env, length, napi_bigint64_array);
-  const int out_len = static_cast<int>(length);
-  for (auto i = 0; i < out_len; ++i) {
-    const auto idx = g_row_major ? out_len - i - 1 : i;
-    _out[i] = static_cast<long long>(_res[idx]);
-  }
-  return _out;
-}
-
-static Napi::Value _elements(const Napi::CallbackInfo& info) {
-  Napi::Env env = info.Env();
-  fl::Tensor* _tmp_external = UnExternalize<fl::Tensor>(info[0]);
-  const auto _arg_count = info.Length();
-  if (_arg_count != 1) {
-    Napi::TypeError::New(env,
-                         "`elements` expects exactly 1 arg, but received " +
-                             std::to_string(_arg_count))
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  auto _res = _tmp_external->elements();
-  return Napi::BigInt::New(env, (int64_t)_res);
-}
-
-static Napi::Value _ndim(const Napi::CallbackInfo& info) {
-  Napi::Env env = info.Env();
-  fl::Tensor* _tmp_external = UnExternalize<fl::Tensor>(info[0]);
-  const auto _arg_count = info.Length();
-  if (_arg_count != 1) {
-    Napi::TypeError::New(env, "`ndim` expects exactly 1 arg, but received " +
-                                  std::to_string(_arg_count))
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  auto _res = _tmp_external->ndim();
-  return Napi::Number::New(env, _res);
-}
-
-static Napi::Value _isEmpty(const Napi::CallbackInfo& info) {
-  Napi::Env env = info.Env();
-  fl::Tensor* _tmp_external = UnExternalize<fl::Tensor>(info[0]);
-  const auto _arg_count = info.Length();
-  if (_arg_count != 1) {
-    Napi::TypeError::New(env, "`isEmpty` expects exactly 1 arg, but received " +
-                                  std::to_string(_arg_count))
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  auto _res = _tmp_external->isEmpty();
-  return Napi::Boolean::New(env, _res);
-}
-
-static Napi::Value _bytes(const Napi::CallbackInfo& info) {
-  Napi::Env env = info.Env();
-  fl::Tensor* _tmp_external = UnExternalize<fl::Tensor>(info[0]);
-  const auto _arg_count = info.Length();
-  if (_arg_count != 1) {
-    Napi::TypeError::New(env, "`bytes` expects exactly 1 arg, but received " +
-                                  std::to_string(_arg_count))
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  auto _res = _tmp_external->bytes();
-  return Napi::BigInt::New(env, (int64_t)_res);
-}
-
-static Napi::Value _type(const Napi::CallbackInfo& info) {
-  Napi::Env env = info.Env();
-  fl::Tensor* _tmp_external = UnExternalize<fl::Tensor>(info[0]);
-  const auto _arg_count = info.Length();
-  if (_arg_count != 1) {
-    Napi::TypeError::New(env, "`type` expects exactly 1 arg, but received " +
-                                  std::to_string(_arg_count))
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  auto _res = _tmp_external->type();
-  Napi::Number _out = Napi::Number::New(env, static_cast<double>(_res));
-  return _out;
-}
-
-static Napi::Value _isSparse(const Napi::CallbackInfo& info) {
-  Napi::Env env = info.Env();
-  fl::Tensor* _tmp_external = UnExternalize<fl::Tensor>(info[0]);
-  const auto _arg_count = info.Length();
-  if (_arg_count != 1) {
-    Napi::TypeError::New(env,
-                         "`isSparse` expects exactly 1 arg, but received " +
-                             std::to_string(_arg_count))
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  auto _res = _tmp_external->isSparse();
-  return Napi::Boolean::New(env, _res);
-}
-
-static Napi::Value _strides(const Napi::CallbackInfo& info) {
-  Napi::Env env = info.Env();
-  fl::Tensor* _tmp_external = UnExternalize<fl::Tensor>(info[0]);
-  const auto _arg_count = info.Length();
-  if (_arg_count != 1) {
-    Napi::TypeError::New(env, "`strides` expects exactly 1 arg, but received " +
-                                  std::to_string(_arg_count))
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  auto _res = _tmp_external->strides();
-  const size_t length =
-      static_cast<const size_t>(UnExternalize<fl::Tensor>(info[0])->ndim());
-  Napi::TypedArrayOf<int64_t> _out =
-      Napi::TypedArrayOf<int64_t>::New(env, length, napi_bigint64_array);
-  const int out_len = static_cast<int>(length);
-  for (auto i = 0; i < out_len; ++i) {
-    const auto idx = g_row_major ? out_len - i - 1 : i;
-    _out[i] = static_cast<long long>(_res[idx]);
-  }
-  return _out;
-}
-
-static Napi::Value _astype(const Napi::CallbackInfo& info) {
-  Napi::Env env = info.Env();
-  fl::Tensor* _tmp_external = UnExternalize<fl::Tensor>(info[0]);
-  const auto _arg_count = info.Length();
-  if (_arg_count != 2) {
-    Napi::TypeError::New(env, "`astype` expects exactly 2 args, but received " +
-                                  std::to_string(_arg_count))
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  if (!info[1].IsNumber()) {
-    Napi::TypeError::New(env, "`astype` expects args[1] to be typeof `number`")
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  fl::dtype type =
-      static_cast<fl::dtype>(info[1].As<Napi::Number>().Int32Value());
-
-  auto _res = _tmp_external->astype(type);
-  auto _out_byte_count = _res.bytes();
-  g_bytes_used += _out_byte_count;
-  Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
-  auto* out = new fl::Tensor(_res);
-  return ExternalizeTensor(env, out);
-}
-
-static Napi::Value _flatten(const Napi::CallbackInfo& info) {
-  Napi::Env env = info.Env();
-  fl::Tensor* _tmp_external = UnExternalize<fl::Tensor>(info[0]);
-  const auto _arg_count = info.Length();
-  if (_arg_count != 1) {
-    Napi::TypeError::New(env, "`flatten` expects exactly 1 arg, but received " +
-                                  std::to_string(_arg_count))
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  auto _res = _tmp_external->flatten();
-  auto _out_byte_count = _res.bytes();
-  g_bytes_used += _out_byte_count;
-  Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
-  auto* out = new fl::Tensor(_res);
-  return ExternalizeTensor(env, out);
-}
-
-static Napi::Value _asContiguousTensor(const Napi::CallbackInfo& info) {
-  Napi::Env env = info.Env();
-  fl::Tensor* _tmp_external = UnExternalize<fl::Tensor>(info[0]);
-  const auto _arg_count = info.Length();
-  if (_arg_count != 1) {
-    Napi::TypeError::New(
-        env, "`asContiguousTensor` expects exactly 1 arg, but received " +
-                 std::to_string(_arg_count))
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  auto _res = _tmp_external->asContiguousTensor();
-  auto _out_byte_count = _res.bytes();
-  g_bytes_used += _out_byte_count;
-  Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
-  auto* out = new fl::Tensor(_res);
-  return ExternalizeTensor(env, out);
-}
-
-static Napi::Value _isContiguous(const Napi::CallbackInfo& info) {
-  Napi::Env env = info.Env();
-  fl::Tensor* _tmp_external = UnExternalize<fl::Tensor>(info[0]);
-  const auto _arg_count = info.Length();
-  if (_arg_count != 1) {
-    Napi::TypeError::New(env,
-                         "`isContiguous` expects exactly 1 arg, but received " +
-                             std::to_string(_arg_count))
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  auto _res = _tmp_external->isContiguous();
-  return Napi::Boolean::New(env, _res);
-}
-
 static Napi::Value _toFloat32Array(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   fl::Tensor* t = UnExternalize<fl::Tensor>(info[0]);
@@ -865,45 +643,6 @@ static inline uint32_t axisArg(int32_t axis, bool reverse, int ndim) {
 }
 // exported functions
 
-static Napi::Value _roll(const Napi::CallbackInfo& info) {
-  Napi::Env env = info.Env();
-  const auto _arg_count = info.Length();
-  if (_arg_count != 3) {
-    Napi::TypeError::New(env, "`roll` expects exactly 3 args, but received " +
-                                  std::to_string(_arg_count))
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  if (!info[0].IsExternal()) {
-    Napi::TypeError::New(env,
-                         "`roll` expects args[0] to be native `Tensor` (typeof "
-                         "`Napi::External<fl::Tensor>`)")
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  fl::Tensor* tensor = UnExternalize<fl::Tensor>(info[0]);
-  if (!info[1].IsNumber()) {
-    Napi::TypeError::New(env, "`roll` expects args[1] to be typeof `number`")
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  int shift = static_cast<int>(info[1].As<Napi::Number>().Int32Value());
-  if (!info[2].IsNumber()) {
-    Napi::TypeError::New(env, "`roll` expects args[2] to be typeof `number`")
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  unsigned axis =
-      static_cast<unsigned>(info[2].As<Napi::Number>().Uint32Value());
-  fl::Tensor _res;
-  _res = fl::roll(*(tensor), shift, axis);
-  auto _out_byte_count = _res.bytes();
-  g_bytes_used += _out_byte_count;
-  Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
-  auto* out = new fl::Tensor(_res);
-  return ExternalizeTensor(env, out);
-}
-
 static Napi::Value _sum(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   const auto _arg_count = info.Length();
@@ -940,240 +679,6 @@ static Napi::Value _sum(const Napi::CallbackInfo& info) {
   }
   const auto& shape = fl::Shape(new_shape);
   _res = fl::reshape(_res, shape);
-  auto _out_byte_count = _res.bytes();
-  g_bytes_used += _out_byte_count;
-  Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
-  auto* out = new fl::Tensor(_res);
-  return ExternalizeTensor(env, out);
-}
-
-static void _min(const Napi::CallbackInfo& info) {
-  Napi::Env env = info.Env();
-  const auto _arg_count = info.Length();
-  if (_arg_count != 5) {
-    Napi::TypeError::New(env, "`min` expects exactly 5 args, but received " +
-                                  std::to_string(_arg_count))
-        .ThrowAsJavaScriptException();
-    return;
-  }
-  if (!info[0].IsExternal()) {
-    Napi::TypeError::New(env,
-                         "`min` expects args[0] to be native `Tensor` (typeof "
-                         "`Napi::External<fl::Tensor>`)")
-        .ThrowAsJavaScriptException();
-    return;
-  }
-  fl::Tensor* values = UnExternalize<fl::Tensor>(info[0]);
-  if (!info[1].IsExternal()) {
-    Napi::TypeError::New(env,
-                         "`min` expects args[1] to be native `Tensor` (typeof "
-                         "`Napi::External<fl::Tensor>`)")
-        .ThrowAsJavaScriptException();
-    return;
-  }
-  fl::Tensor* indices = UnExternalize<fl::Tensor>(info[1]);
-  if (!info[2].IsExternal()) {
-    Napi::TypeError::New(env,
-                         "`min` expects args[2] to be native `Tensor` (typeof "
-                         "`Napi::External<fl::Tensor>`)")
-        .ThrowAsJavaScriptException();
-    return;
-  }
-  fl::Tensor* input = UnExternalize<fl::Tensor>(info[2]);
-  if (!info[3].IsNumber()) {
-    Napi::TypeError::New(env, "`min` expects args[3] to be typeof `number`")
-        .ThrowAsJavaScriptException();
-    return;
-  }
-  unsigned axis =
-      static_cast<unsigned>(info[3].As<Napi::Number>().Uint32Value());
-  bool keepDims = info[4].As<Napi::Boolean>().Value();
-  fl::min(*(values), *(indices), *(input), axis, keepDims);
-}
-
-static Napi::Value _all(const Napi::CallbackInfo& info) {
-  Napi::Env env = info.Env();
-  const auto _arg_count = info.Length();
-  if (_arg_count != 3) {
-    Napi::TypeError::New(env, "`all` expects exactly 3 args, but received " +
-                                  std::to_string(_arg_count))
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  if (!info[0].IsExternal()) {
-    Napi::TypeError::New(env,
-                         "`all` expects args[0] to be native `Tensor` (typeof "
-                         "`Napi::External<fl::Tensor>`)")
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  fl::Tensor* input = UnExternalize<fl::Tensor>(info[0]);
-  bool keepDims = info[2].As<Napi::Boolean>().Value();
-  auto axes = jsArrayToVector<int>(info[1].As<Napi::Array>(), g_row_major,
-                                   input->ndim());
-  fl::Tensor _res;
-  _res = fl::all(*(input), axes, keepDims);
-  auto axes_set = std::unordered_set<int>(axes.begin(), axes.end());
-  auto base_shape = (*(input)).shape().get();
-  std::vector<fl::Dim> new_shape;
-  for (size_t idx = 0; idx < base_shape.size(); ++idx) {
-    if (axes_set.count(idx) || (axes_set.size() == 0)) {
-      if (keepDims) {
-        new_shape.emplace_back(1);
-      }
-      continue;
-    }
-    new_shape.emplace_back(base_shape[idx]);
-  }
-  const auto& shape = fl::Shape(new_shape);
-  _res = fl::reshape(_res, shape);
-  auto _out_byte_count = _res.bytes();
-  g_bytes_used += _out_byte_count;
-  Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
-  auto* out = new fl::Tensor(_res);
-  return ExternalizeTensor(env, out);
-}
-
-static Napi::Value _nonzero(const Napi::CallbackInfo& info) {
-  Napi::Env env = info.Env();
-  const auto _arg_count = info.Length();
-  if (_arg_count != 1) {
-    Napi::TypeError::New(env, "`nonzero` expects exactly 1 arg, but received " +
-                                  std::to_string(_arg_count))
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  if (!info[0].IsExternal()) {
-    Napi::TypeError::New(env,
-                         "`nonzero` expects args[0] to be native `Tensor` "
-                         "(typeof `Napi::External<fl::Tensor>`)")
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  fl::Tensor* tensor = UnExternalize<fl::Tensor>(info[0]);
-  fl::Tensor _res;
-  _res = fl::nonzero(*(tensor));
-  auto _out_byte_count = _res.bytes();
-  g_bytes_used += _out_byte_count;
-  Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
-  auto* out = new fl::Tensor(_res);
-  return ExternalizeTensor(env, out);
-}
-
-static Napi::Value _ceil(const Napi::CallbackInfo& info) {
-  Napi::Env env = info.Env();
-  const auto _arg_count = info.Length();
-  if (_arg_count != 1) {
-    Napi::TypeError::New(env, "`ceil` expects exactly 1 arg, but received " +
-                                  std::to_string(_arg_count))
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  if (!info[0].IsExternal()) {
-    Napi::TypeError::New(env,
-                         "`ceil` expects args[0] to be native `Tensor` (typeof "
-                         "`Napi::External<fl::Tensor>`)")
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  fl::Tensor* tensor = UnExternalize<fl::Tensor>(info[0]);
-  fl::Tensor _res;
-  _res = fl::ceil(*(tensor));
-  auto _out_byte_count = _res.bytes();
-  g_bytes_used += _out_byte_count;
-  Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
-  auto* out = new fl::Tensor(_res);
-  return ExternalizeTensor(env, out);
-}
-
-static Napi::Value _sigmoid(const Napi::CallbackInfo& info) {
-  Napi::Env env = info.Env();
-  const auto _arg_count = info.Length();
-  if (_arg_count != 1) {
-    Napi::TypeError::New(env, "`sigmoid` expects exactly 1 arg, but received " +
-                                  std::to_string(_arg_count))
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  if (!info[0].IsExternal()) {
-    Napi::TypeError::New(env,
-                         "`sigmoid` expects args[0] to be native `Tensor` "
-                         "(typeof `Napi::External<fl::Tensor>`)")
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  fl::Tensor* tensor = UnExternalize<fl::Tensor>(info[0]);
-  fl::Tensor _res;
-  _res = fl::sigmoid(*(tensor));
-  auto _out_byte_count = _res.bytes();
-  g_bytes_used += _out_byte_count;
-  Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
-  auto* out = new fl::Tensor(_res);
-  return ExternalizeTensor(env, out);
-}
-
-static Napi::Value _where(const Napi::CallbackInfo& info) {
-  Napi::Env env = info.Env();
-  const auto _arg_count = info.Length();
-  if (_arg_count != 3) {
-    Napi::TypeError::New(env, "`where` expects exactly 3 args, but received " +
-                                  std::to_string(_arg_count))
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  if (!info[0].IsExternal()) {
-    Napi::TypeError::New(env,
-                         "`where` expects args[0] to be native `Tensor` "
-                         "(typeof `Napi::External<fl::Tensor>`)")
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  fl::Tensor* condition = UnExternalize<fl::Tensor>(info[0]);
-  if (!info[1].IsExternal()) {
-    Napi::TypeError::New(env,
-                         "`where` expects args[1] to be native `Tensor` "
-                         "(typeof `Napi::External<fl::Tensor>`)")
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  fl::Tensor* x = UnExternalize<fl::Tensor>(info[1]);
-  if (!info[2].IsExternal()) {
-    Napi::TypeError::New(env,
-                         "`where` expects args[2] to be native `Tensor` "
-                         "(typeof `Napi::External<fl::Tensor>`)")
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  fl::Tensor* y = UnExternalize<fl::Tensor>(info[2]);
-  fl::Tensor _res;
-  _res = fl::where(*(condition), *(x), *(y));
-  auto _out_byte_count = _res.bytes();
-  g_bytes_used += _out_byte_count;
-  Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
-  auto* out = new fl::Tensor(_res);
-  return ExternalizeTensor(env, out);
-}
-
-static Napi::Value _negative(const Napi::CallbackInfo& info) {
-  Napi::Env env = info.Env();
-  const auto _arg_count = info.Length();
-  if (_arg_count != 1) {
-    Napi::TypeError::New(env,
-                         "`negative` expects exactly 1 arg, but received " +
-                             std::to_string(_arg_count))
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  if (!info[0].IsExternal()) {
-    Napi::TypeError::New(env,
-                         "`negative` expects args[0] to be native `Tensor` "
-                         "(typeof `Napi::External<fl::Tensor>`)")
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  fl::Tensor* tensor = UnExternalize<fl::Tensor>(info[0]);
-  fl::Tensor _res;
-  _res = fl::negative(*(tensor));
   auto _out_byte_count = _res.bytes();
   g_bytes_used += _out_byte_count;
   Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
@@ -1225,129 +730,55 @@ static Napi::Value _matmul(const Napi::CallbackInfo& info) {
   return ExternalizeTensor(env, out);
 }
 
-static Napi::Value _norm(const Napi::CallbackInfo& info) {
+static Napi::Value _isinf(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   const auto _arg_count = info.Length();
-  if (_arg_count != 4) {
-    Napi::TypeError::New(env, "`norm` expects exactly 4 args, but received " +
+  if (_arg_count != 1) {
+    Napi::TypeError::New(env, "`isinf` expects exactly 1 arg, but received " +
                                   std::to_string(_arg_count))
         .ThrowAsJavaScriptException();
     return env.Undefined();
   }
   if (!info[0].IsExternal()) {
     Napi::TypeError::New(env,
-                         "`norm` expects args[0] to be native `Tensor` (typeof "
+                         "`isinf` expects args[0] to be native `Tensor` "
+                         "(typeof `Napi::External<fl::Tensor>`)")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  fl::Tensor* tensor = UnExternalize<fl::Tensor>(info[0]);
+  fl::Tensor _res;
+  _res = fl::isinf(*(tensor));
+  auto _out_byte_count = _res.bytes();
+  g_bytes_used += _out_byte_count;
+  Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
+  auto* out = new fl::Tensor(_res);
+  return ExternalizeTensor(env, out);
+}
+
+static Napi::Value _tril(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  const auto _arg_count = info.Length();
+  if (_arg_count != 1) {
+    Napi::TypeError::New(env, "`tril` expects exactly 1 arg, but received " +
+                                  std::to_string(_arg_count))
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  if (!info[0].IsExternal()) {
+    Napi::TypeError::New(env,
+                         "`tril` expects args[0] to be native `Tensor` (typeof "
                          "`Napi::External<fl::Tensor>`)")
         .ThrowAsJavaScriptException();
     return env.Undefined();
   }
-  fl::Tensor* input = UnExternalize<fl::Tensor>(info[0]);
-  double p = info[2].As<Napi::Number>().DoubleValue();
-  bool keepDims = info[3].As<Napi::Boolean>().Value();
-  auto axes = jsArrayToVector<int>(info[1].As<Napi::Array>(), g_row_major,
-                                   input->ndim());
+  fl::Tensor* tensor = UnExternalize<fl::Tensor>(info[0]);
   fl::Tensor _res;
-  _res = fl::norm(*(input), axes, p, keepDims);
-  if (p == std::numeric_limits<double>::infinity()) {
-    _res = fl::abs(*(input));
-    _res = fl::amax(*(input), axes, keepDims);
+  if (g_row_major) {
+    _res = fl::triu(*(tensor));
+  } else {
+    _res = fl::tril(*(tensor));
   }
-  auto axes_set = std::unordered_set<int>(axes.begin(), axes.end());
-  auto base_shape = (*(input)).shape().get();
-  std::vector<fl::Dim> new_shape;
-  for (size_t idx = 0; idx < base_shape.size(); ++idx) {
-    if (axes_set.count(idx) || (axes_set.size() == 0)) {
-      if (keepDims) {
-        new_shape.emplace_back(1);
-      }
-      continue;
-    }
-    new_shape.emplace_back(base_shape[idx]);
-  }
-  const auto& shape = fl::Shape(new_shape);
-  _res = fl::reshape(_res, shape);
-  auto _out_byte_count = _res.bytes();
-  g_bytes_used += _out_byte_count;
-  Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
-  auto* out = new fl::Tensor(_res);
-  return ExternalizeTensor(env, out);
-}
-
-static Napi::Value _power(const Napi::CallbackInfo& info) {
-  Napi::Env env = info.Env();
-  const auto _arg_count = info.Length();
-  if (_arg_count != 2) {
-    Napi::TypeError::New(env, "`power` expects exactly 2 args, but received " +
-                                  std::to_string(_arg_count))
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  if (!info[0].IsExternal()) {
-    Napi::TypeError::New(env,
-                         "`power` expects args[0] to be native `Tensor` "
-                         "(typeof `Napi::External<fl::Tensor>`)")
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  fl::Tensor* lhs = UnExternalize<fl::Tensor>(info[0]);
-  if (!info[1].IsExternal()) {
-    Napi::TypeError::New(env,
-                         "`power` expects args[1] to be native `Tensor` "
-                         "(typeof `Napi::External<fl::Tensor>`)")
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  fl::Tensor* rhs = UnExternalize<fl::Tensor>(info[1]);
-  fl::Tensor _res;
-  _res = fl::power(*(lhs), *(rhs));
-  auto _out_byte_count = _res.bytes();
-  g_bytes_used += _out_byte_count;
-  Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
-  auto* out = new fl::Tensor(_res);
-  return ExternalizeTensor(env, out);
-}
-
-static Napi::Value _argmin(const Napi::CallbackInfo& info) {
-  Napi::Env env = info.Env();
-  const auto _arg_count = info.Length();
-  if (_arg_count != 3) {
-    Napi::TypeError::New(env, "`argmin` expects exactly 3 args, but received " +
-                                  std::to_string(_arg_count))
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  if (!info[0].IsExternal()) {
-    Napi::TypeError::New(env,
-                         "`argmin` expects args[0] to be native `Tensor` "
-                         "(typeof `Napi::External<fl::Tensor>`)")
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  fl::Tensor* input = UnExternalize<fl::Tensor>(info[0]);
-  if (!info[1].IsNumber()) {
-    Napi::TypeError::New(env, "`argmin` expects args[1] to be typeof `number`")
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  bool keepDims = info[2].As<Napi::Boolean>().Value();
-  auto axis = axisArg(info[1].As<Napi::Number>().Uint32Value(), g_row_major,
-                      input->ndim());
-  fl::Tensor _res;
-  _res = fl::argmin(*(input), axis, keepDims);
-  auto axes_set = std::unordered_set<int>{static_cast<int>(axis)};
-  auto base_shape = (*(input)).shape().get();
-  std::vector<fl::Dim> new_shape;
-  for (size_t idx = 0; idx < base_shape.size(); ++idx) {
-    if (axes_set.count(idx) || (axes_set.size() == 0)) {
-      if (keepDims) {
-        new_shape.emplace_back(1);
-      }
-      continue;
-    }
-    new_shape.emplace_back(base_shape[idx]);
-  }
-  const auto& shape = fl::Shape(new_shape);
-  _res = fl::reshape(_res, shape);
   auto _out_byte_count = _res.bytes();
   g_bytes_used += _out_byte_count;
   Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
@@ -1399,29 +830,6 @@ static Napi::Value _var(const Napi::CallbackInfo& info) {
   return ExternalizeTensor(env, out);
 }
 
-static Napi::Value _isInvalidArray(const Napi::CallbackInfo& info) {
-  Napi::Env env = info.Env();
-  const auto _arg_count = info.Length();
-  if (_arg_count != 1) {
-    Napi::TypeError::New(
-        env, "`isInvalidArray` expects exactly 1 arg, but received " +
-                 std::to_string(_arg_count))
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  if (!info[0].IsExternal()) {
-    Napi::TypeError::New(env,
-                         "`isInvalidArray` expects args[0] to be native "
-                         "`Tensor` (typeof `Napi::External<fl::Tensor>`)")
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  fl::Tensor* tensor = UnExternalize<fl::Tensor>(info[0]);
-  bool _res;
-  _res = fl::isInvalidArray(*(tensor));
-  return Napi::Boolean::New(env, _res);
-}
-
 static Napi::Value _countNonzero(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   const auto _arg_count = info.Length();
@@ -1466,25 +874,25 @@ static Napi::Value _countNonzero(const Napi::CallbackInfo& info) {
   return ExternalizeTensor(env, out);
 }
 
-static Napi::Value _floor(const Napi::CallbackInfo& info) {
+static Napi::Value _tanh(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   const auto _arg_count = info.Length();
   if (_arg_count != 1) {
-    Napi::TypeError::New(env, "`floor` expects exactly 1 arg, but received " +
+    Napi::TypeError::New(env, "`tanh` expects exactly 1 arg, but received " +
                                   std::to_string(_arg_count))
         .ThrowAsJavaScriptException();
     return env.Undefined();
   }
   if (!info[0].IsExternal()) {
     Napi::TypeError::New(env,
-                         "`floor` expects args[0] to be native `Tensor` "
-                         "(typeof `Napi::External<fl::Tensor>`)")
+                         "`tanh` expects args[0] to be native `Tensor` (typeof "
+                         "`Napi::External<fl::Tensor>`)")
         .ThrowAsJavaScriptException();
     return env.Undefined();
   }
   fl::Tensor* tensor = UnExternalize<fl::Tensor>(info[0]);
   fl::Tensor _res;
-  _res = fl::floor(*(tensor));
+  _res = fl::tanh(*(tensor));
   auto _out_byte_count = _res.bytes();
   g_bytes_used += _out_byte_count;
   Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
@@ -1492,29 +900,74 @@ static Napi::Value _floor(const Napi::CallbackInfo& info) {
   return ExternalizeTensor(env, out);
 }
 
-static Napi::Value _sort(const Napi::CallbackInfo& info) {
+static Napi::Value _flip(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   const auto _arg_count = info.Length();
-  if (_arg_count < 2 || _arg_count > 3) {
-    Napi::TypeError::New(env, "`sort` expects 2 to 3 args, but received " +
+  if (_arg_count != 2) {
+    Napi::TypeError::New(env, "`flip` expects exactly 2 args, but received " +
                                   std::to_string(_arg_count))
         .ThrowAsJavaScriptException();
     return env.Undefined();
   }
   if (!info[0].IsExternal()) {
     Napi::TypeError::New(env,
-                         "`sort` expects args[0] to be native `Tensor` (typeof "
+                         "`flip` expects args[0] to be native `Tensor` (typeof "
                          "`Napi::External<fl::Tensor>`)")
         .ThrowAsJavaScriptException();
     return env.Undefined();
   }
-  fl::Tensor* input = UnExternalize<fl::Tensor>(info[0]);
-  auto axis = info[1].As<Napi::Number>().Uint32Value();
-  fl::SortMode sortMode =
-      static_cast<fl::SortMode>(info[2].As<Napi::Number>().Int32Value());
-
+  fl::Tensor* tensor = UnExternalize<fl::Tensor>(info[0]);
+  if (!info[1].IsNumber()) {
+    Napi::TypeError::New(env, "`flip` expects args[1] to be typeof `number`")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  unsigned dim =
+      static_cast<unsigned>(info[1].As<Napi::Number>().Uint32Value());
   fl::Tensor _res;
-  _res = fl::sort(*(input), fl::Dim(axis), sortMode);
+  _res = fl::flip(*(tensor), dim);
+  auto _out_byte_count = _res.bytes();
+  g_bytes_used += _out_byte_count;
+  Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
+  auto* out = new fl::Tensor(_res);
+  return ExternalizeTensor(env, out);
+}
+
+static Napi::Value _clip(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  const auto _arg_count = info.Length();
+  if (_arg_count != 3) {
+    Napi::TypeError::New(env, "`clip` expects exactly 3 args, but received " +
+                                  std::to_string(_arg_count))
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  if (!info[0].IsExternal()) {
+    Napi::TypeError::New(env,
+                         "`clip` expects args[0] to be native `Tensor` (typeof "
+                         "`Napi::External<fl::Tensor>`)")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  fl::Tensor* tensor = UnExternalize<fl::Tensor>(info[0]);
+  if (!info[1].IsExternal()) {
+    Napi::TypeError::New(env,
+                         "`clip` expects args[1] to be native `Tensor` (typeof "
+                         "`Napi::External<fl::Tensor>`)")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  fl::Tensor* low = UnExternalize<fl::Tensor>(info[1]);
+  if (!info[2].IsExternal()) {
+    Napi::TypeError::New(env,
+                         "`clip` expects args[2] to be native `Tensor` (typeof "
+                         "`Napi::External<fl::Tensor>`)")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  fl::Tensor* high = UnExternalize<fl::Tensor>(info[2]);
+  fl::Tensor _res;
+  _res = fl::clip(*(tensor), *(low), *(high));
   auto _out_byte_count = _res.bytes();
   g_bytes_used += _out_byte_count;
   Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
@@ -1566,226 +1019,6 @@ static void _max(const Napi::CallbackInfo& info) {
   fl::max(*(values), *(indices), *(input), axis, keepDims);
 }
 
-static Napi::Value _median(const Napi::CallbackInfo& info) {
-  Napi::Env env = info.Env();
-  const auto _arg_count = info.Length();
-  if (_arg_count != 3) {
-    Napi::TypeError::New(env, "`median` expects exactly 3 args, but received " +
-                                  std::to_string(_arg_count))
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  if (!info[0].IsExternal()) {
-    Napi::TypeError::New(env,
-                         "`median` expects args[0] to be native `Tensor` "
-                         "(typeof `Napi::External<fl::Tensor>`)")
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  fl::Tensor* input = UnExternalize<fl::Tensor>(info[0]);
-  bool keepDims = info[2].As<Napi::Boolean>().Value();
-  auto axes = jsArrayToVector<int>(info[1].As<Napi::Array>(), g_row_major,
-                                   input->ndim());
-  fl::Tensor _res;
-  _res = fl::median(*(input), axes, keepDims);
-  auto axes_set = std::unordered_set<int>(axes.begin(), axes.end());
-  auto base_shape = (*(input)).shape().get();
-  std::vector<fl::Dim> new_shape;
-  for (size_t idx = 0; idx < base_shape.size(); ++idx) {
-    if (axes_set.count(idx) || (axes_set.size() == 0)) {
-      if (keepDims) {
-        new_shape.emplace_back(1);
-      }
-      continue;
-    }
-    new_shape.emplace_back(base_shape[idx]);
-  }
-  const auto& shape = fl::Shape(new_shape);
-  _res = fl::reshape(_res, shape);
-  auto _out_byte_count = _res.bytes();
-  g_bytes_used += _out_byte_count;
-  Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
-  auto* out = new fl::Tensor(_res);
-  return ExternalizeTensor(env, out);
-}
-
-static Napi::Value _identity(const Napi::CallbackInfo& info) {
-  Napi::Env env = info.Env();
-  const auto _arg_count = info.Length();
-  if (_arg_count < 1 || _arg_count > 2) {
-    Napi::TypeError::New(env, "`identity` expects 1 to 2 args, but received " +
-                                  std::to_string(_arg_count))
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  int64_t dim = info[0].As<Napi::Number>().Int64Value();
-  fl::dtype type =
-      static_cast<fl::dtype>(info[1].As<Napi::Number>().Int32Value());
-
-  fl::Tensor _res;
-  _res = fl::identity(fl::Dim(dim), type);
-  auto _out_byte_count = _res.bytes();
-  g_bytes_used += _out_byte_count;
-  Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
-  auto* out = new fl::Tensor(_res);
-  return ExternalizeTensor(env, out);
-}
-
-static Napi::Value _maximum(const Napi::CallbackInfo& info) {
-  Napi::Env env = info.Env();
-  const auto _arg_count = info.Length();
-  if (_arg_count != 2) {
-    Napi::TypeError::New(env,
-                         "`maximum` expects exactly 2 args, but received " +
-                             std::to_string(_arg_count))
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  if (!info[0].IsExternal()) {
-    Napi::TypeError::New(env,
-                         "`maximum` expects args[0] to be native `Tensor` "
-                         "(typeof `Napi::External<fl::Tensor>`)")
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  fl::Tensor* lhs = UnExternalize<fl::Tensor>(info[0]);
-  if (!info[1].IsExternal()) {
-    Napi::TypeError::New(env,
-                         "`maximum` expects args[1] to be native `Tensor` "
-                         "(typeof `Napi::External<fl::Tensor>`)")
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  fl::Tensor* rhs = UnExternalize<fl::Tensor>(info[1]);
-  fl::Tensor _res;
-  _res = fl::maximum(*(lhs), *(rhs));
-  auto _out_byte_count = _res.bytes();
-  g_bytes_used += _out_byte_count;
-  Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
-  auto* out = new fl::Tensor(_res);
-  return ExternalizeTensor(env, out);
-}
-
-static Napi::Value _transpose(const Napi::CallbackInfo& info) {
-  Napi::Env env = info.Env();
-  const auto _arg_count = info.Length();
-  if (_arg_count != 2) {
-    Napi::TypeError::New(env,
-                         "`transpose` expects exactly 2 args, but received " +
-                             std::to_string(_arg_count))
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  if (!info[0].IsExternal()) {
-    Napi::TypeError::New(env,
-                         "`transpose` expects args[0] to be native `Tensor` "
-                         "(typeof `Napi::External<fl::Tensor>`)")
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  fl::Tensor* tensor = UnExternalize<fl::Tensor>(info[0]);
-  auto axes = jsArrayToVector<long long>(info[1].As<Napi::Array>(), g_row_major,
-                                         tensor->ndim());
-  fl::Tensor _res;
-  _res = fl::transpose(*(tensor), fl::Shape(axes));
-  auto _out_byte_count = _res.bytes();
-  g_bytes_used += _out_byte_count;
-  Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
-  auto* out = new fl::Tensor(_res);
-  return ExternalizeTensor(env, out);
-}
-
-static Napi::Value _sqrt(const Napi::CallbackInfo& info) {
-  Napi::Env env = info.Env();
-  const auto _arg_count = info.Length();
-  if (_arg_count != 1) {
-    Napi::TypeError::New(env, "`sqrt` expects exactly 1 arg, but received " +
-                                  std::to_string(_arg_count))
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  if (!info[0].IsExternal()) {
-    Napi::TypeError::New(env,
-                         "`sqrt` expects args[0] to be native `Tensor` (typeof "
-                         "`Napi::External<fl::Tensor>`)")
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  fl::Tensor* tensor = UnExternalize<fl::Tensor>(info[0]);
-  fl::Tensor _res;
-  _res = fl::sqrt(*(tensor));
-  auto _out_byte_count = _res.bytes();
-  g_bytes_used += _out_byte_count;
-  Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
-  auto* out = new fl::Tensor(_res);
-  return ExternalizeTensor(env, out);
-}
-
-static Napi::Value _triu(const Napi::CallbackInfo& info) {
-  Napi::Env env = info.Env();
-  const auto _arg_count = info.Length();
-  if (_arg_count != 1) {
-    Napi::TypeError::New(env, "`triu` expects exactly 1 arg, but received " +
-                                  std::to_string(_arg_count))
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  if (!info[0].IsExternal()) {
-    Napi::TypeError::New(env,
-                         "`triu` expects args[0] to be native `Tensor` (typeof "
-                         "`Napi::External<fl::Tensor>`)")
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  fl::Tensor* tensor = UnExternalize<fl::Tensor>(info[0]);
-  fl::Tensor _res;
-  if (g_row_major) {
-    _res = fl::tril(*(tensor));
-  } else {
-    _res = fl::triu(*(tensor));
-  }
-  auto _out_byte_count = _res.bytes();
-  g_bytes_used += _out_byte_count;
-  Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
-  auto* out = new fl::Tensor(_res);
-  return ExternalizeTensor(env, out);
-}
-
-static Napi::Value _minimum(const Napi::CallbackInfo& info) {
-  Napi::Env env = info.Env();
-  const auto _arg_count = info.Length();
-  if (_arg_count != 2) {
-    Napi::TypeError::New(env,
-                         "`minimum` expects exactly 2 args, but received " +
-                             std::to_string(_arg_count))
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  if (!info[0].IsExternal()) {
-    Napi::TypeError::New(env,
-                         "`minimum` expects args[0] to be native `Tensor` "
-                         "(typeof `Napi::External<fl::Tensor>`)")
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  fl::Tensor* lhs = UnExternalize<fl::Tensor>(info[0]);
-  if (!info[1].IsExternal()) {
-    Napi::TypeError::New(env,
-                         "`minimum` expects args[1] to be native `Tensor` "
-                         "(typeof `Napi::External<fl::Tensor>`)")
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  fl::Tensor* rhs = UnExternalize<fl::Tensor>(info[1]);
-  fl::Tensor _res;
-  _res = fl::minimum(*(lhs), *(rhs));
-  auto _out_byte_count = _res.bytes();
-  g_bytes_used += _out_byte_count;
-  Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
-  auto* out = new fl::Tensor(_res);
-  return ExternalizeTensor(env, out);
-}
-
 static Napi::Value _std(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   const auto _arg_count = info.Length();
@@ -1829,27 +1062,89 @@ static Napi::Value _std(const Napi::CallbackInfo& info) {
   return ExternalizeTensor(env, out);
 }
 
-static Napi::Value _concatenate(const Napi::CallbackInfo& info) {
+static Napi::Value _cos(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  const auto _arg_count = info.Length();
+  if (_arg_count != 1) {
+    Napi::TypeError::New(env, "`cos` expects exactly 1 arg, but received " +
+                                  std::to_string(_arg_count))
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  if (!info[0].IsExternal()) {
+    Napi::TypeError::New(env,
+                         "`cos` expects args[0] to be native `Tensor` (typeof "
+                         "`Napi::External<fl::Tensor>`)")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  fl::Tensor* tensor = UnExternalize<fl::Tensor>(info[0]);
+  fl::Tensor _res;
+  _res = fl::cos(*(tensor));
+  auto _out_byte_count = _res.bytes();
+  g_bytes_used += _out_byte_count;
+  Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
+  auto* out = new fl::Tensor(_res);
+  return ExternalizeTensor(env, out);
+}
+
+static Napi::Value _arange(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  const auto _arg_count = info.Length();
+  if (_arg_count != 3) {
+    Napi::TypeError::New(env, "`arange` expects exactly 3 args, but received " +
+                                  std::to_string(_arg_count))
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  if (!info[0].IsNumber()) {
+    Napi::TypeError::New(env, "`arange` expects args[0] to be typeof `number`")
+        .ThrowAsJavaScriptException();
+    return env.Null();
+  }
+  if (!info[1].IsNumber()) {
+    Napi::TypeError::New(env, "`arange` expects args[1] to be typeof `number`")
+        .ThrowAsJavaScriptException();
+    return env.Null();
+  }
+  if (!info[2].IsNumber()) {
+    Napi::TypeError::New(env, "`arange` expects args[2] to be typeof `number`")
+        .ThrowAsJavaScriptException();
+    return env.Null();
+  }
+  float start = info[0].As<Napi::Number>().FloatValue();
+  float end = info[1].As<Napi::Number>().FloatValue();
+  float step = info[2].As<Napi::Number>().FloatValue();
+  fl::Tensor _res;
+  _res = fl::arange(start, end, step);
+  auto _out_byte_count = _res.bytes();
+  g_bytes_used += _out_byte_count;
+  Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
+  auto* out = new fl::Tensor(_res);
+  return ExternalizeTensor(env, out);
+}
+
+static Napi::Value _tile(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   const auto _arg_count = info.Length();
   if (_arg_count != 2) {
-    Napi::TypeError::New(env,
-                         "`concatenate` expects exactly 2 args, but received " +
-                             std::to_string(_arg_count))
+    Napi::TypeError::New(env, "`tile` expects exactly 2 args, but received " +
+                                  std::to_string(_arg_count))
         .ThrowAsJavaScriptException();
     return env.Undefined();
   }
-  if (!info[0].IsArray()) {
+  if (!info[0].IsExternal()) {
     Napi::TypeError::New(env,
-                         "`concatenate` expects args[0] to be `Array<Tensor>`")
+                         "`tile` expects args[0] to be native `Tensor` (typeof "
+                         "`Napi::External<fl::Tensor>`)")
         .ThrowAsJavaScriptException();
     return env.Undefined();
   }
-  auto tensors = jsTensorArrayArg<fl::Tensor>(info[0].As<Napi::Array>());
-  auto axis = axisArg(info[1].As<Napi::Number>().Int32Value(), g_row_major,
-                      (&tensors[0])->ndim());
+  fl::Tensor* tensor = UnExternalize<fl::Tensor>(info[0]);
+  auto shape =
+      jsArrayToVector<long long>(info[1].As<Napi::Array>(), g_row_major, false);
   fl::Tensor _res;
-  _res = fl::concatenate(tensors, axis);
+  _res = fl::tile(*(tensor), fl::Shape(shape));
   auto _out_byte_count = _res.bytes();
   g_bytes_used += _out_byte_count;
   Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
@@ -1857,25 +1152,25 @@ static Napi::Value _concatenate(const Napi::CallbackInfo& info) {
   return ExternalizeTensor(env, out);
 }
 
-static Napi::Value _tanh(const Napi::CallbackInfo& info) {
+static Napi::Value _floor(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   const auto _arg_count = info.Length();
   if (_arg_count != 1) {
-    Napi::TypeError::New(env, "`tanh` expects exactly 1 arg, but received " +
+    Napi::TypeError::New(env, "`floor` expects exactly 1 arg, but received " +
                                   std::to_string(_arg_count))
         .ThrowAsJavaScriptException();
     return env.Undefined();
   }
   if (!info[0].IsExternal()) {
     Napi::TypeError::New(env,
-                         "`tanh` expects args[0] to be native `Tensor` (typeof "
-                         "`Napi::External<fl::Tensor>`)")
+                         "`floor` expects args[0] to be native `Tensor` "
+                         "(typeof `Napi::External<fl::Tensor>`)")
         .ThrowAsJavaScriptException();
     return env.Undefined();
   }
   fl::Tensor* tensor = UnExternalize<fl::Tensor>(info[0]);
   fl::Tensor _res;
-  _res = fl::tanh(*(tensor));
+  _res = fl::floor(*(tensor));
   auto _out_byte_count = _res.bytes();
   g_bytes_used += _out_byte_count;
   Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
@@ -1883,25 +1178,25 @@ static Napi::Value _tanh(const Napi::CallbackInfo& info) {
   return ExternalizeTensor(env, out);
 }
 
-static Napi::Value _rint(const Napi::CallbackInfo& info) {
+static Napi::Value _sigmoid(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   const auto _arg_count = info.Length();
   if (_arg_count != 1) {
-    Napi::TypeError::New(env, "`rint` expects exactly 1 arg, but received " +
+    Napi::TypeError::New(env, "`sigmoid` expects exactly 1 arg, but received " +
                                   std::to_string(_arg_count))
         .ThrowAsJavaScriptException();
     return env.Undefined();
   }
   if (!info[0].IsExternal()) {
     Napi::TypeError::New(env,
-                         "`rint` expects args[0] to be native `Tensor` (typeof "
-                         "`Napi::External<fl::Tensor>`)")
+                         "`sigmoid` expects args[0] to be native `Tensor` "
+                         "(typeof `Napi::External<fl::Tensor>`)")
         .ThrowAsJavaScriptException();
     return env.Undefined();
   }
   fl::Tensor* tensor = UnExternalize<fl::Tensor>(info[0]);
   fl::Tensor _res;
-  _res = fl::rint(*(tensor));
+  _res = fl::sigmoid(*(tensor));
   auto _out_byte_count = _res.bytes();
   g_bytes_used += _out_byte_count;
   Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
@@ -1952,66 +1247,55 @@ static Napi::Value _amin(const Napi::CallbackInfo& info) {
   return ExternalizeTensor(env, out);
 }
 
-static Napi::Value _areTensorTypesEqual(const Napi::CallbackInfo& info) {
+static Napi::Value _full(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   const auto _arg_count = info.Length();
   if (_arg_count != 2) {
-    Napi::TypeError::New(
-        env, "`areTensorTypesEqual` expects exactly 2 args, but received " +
-                 std::to_string(_arg_count))
+    Napi::TypeError::New(env, "`full` expects exactly 2 args, but received " +
+                                  std::to_string(_arg_count))
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  std::vector<long long> dims =
+      jsArrayToVector<long long>(info[0].As<Napi::Array>(), g_row_major, false);
+  float val = info[1].As<Napi::Number>().FloatValue();
+  fl::Tensor _res;
+  _res = fl::full(fl::Shape(dims), val);
+  auto _out_byte_count = _res.bytes();
+  g_bytes_used += _out_byte_count;
+  Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
+  auto* out = new fl::Tensor(_res);
+  return ExternalizeTensor(env, out);
+}
+
+static Napi::Value _maximum(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  const auto _arg_count = info.Length();
+  if (_arg_count != 2) {
+    Napi::TypeError::New(env,
+                         "`maximum` expects exactly 2 args, but received " +
+                             std::to_string(_arg_count))
         .ThrowAsJavaScriptException();
     return env.Undefined();
   }
   if (!info[0].IsExternal()) {
     Napi::TypeError::New(env,
-                         "`areTensorTypesEqual` expects args[0] to be native "
-                         "`Tensor` (typeof `Napi::External<fl::Tensor>`)")
+                         "`maximum` expects args[0] to be native `Tensor` "
+                         "(typeof `Napi::External<fl::Tensor>`)")
         .ThrowAsJavaScriptException();
     return env.Undefined();
   }
-  fl::Tensor* a = UnExternalize<fl::Tensor>(info[0]);
+  fl::Tensor* lhs = UnExternalize<fl::Tensor>(info[0]);
   if (!info[1].IsExternal()) {
     Napi::TypeError::New(env,
-                         "`areTensorTypesEqual` expects args[1] to be native "
-                         "`Tensor` (typeof `Napi::External<fl::Tensor>`)")
+                         "`maximum` expects args[1] to be native `Tensor` "
+                         "(typeof `Napi::External<fl::Tensor>`)")
         .ThrowAsJavaScriptException();
     return env.Undefined();
   }
-  fl::Tensor* b = UnExternalize<fl::Tensor>(info[1]);
-  bool _res;
-  _res = fl::detail::areTensorTypesEqual(*(a), *(b));
-  return Napi::Boolean::New(env, _res);
-}
-
-static Napi::Value _arange(const Napi::CallbackInfo& info) {
-  Napi::Env env = info.Env();
-  const auto _arg_count = info.Length();
-  if (_arg_count != 3) {
-    Napi::TypeError::New(env, "`arange` expects exactly 3 args, but received " +
-                                  std::to_string(_arg_count))
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  if (!info[0].IsNumber()) {
-    Napi::TypeError::New(env, "`arange` expects args[0] to be typeof `number`")
-        .ThrowAsJavaScriptException();
-    return env.Null();
-  }
-  if (!info[1].IsNumber()) {
-    Napi::TypeError::New(env, "`arange` expects args[1] to be typeof `number`")
-        .ThrowAsJavaScriptException();
-    return env.Null();
-  }
-  if (!info[2].IsNumber()) {
-    Napi::TypeError::New(env, "`arange` expects args[2] to be typeof `number`")
-        .ThrowAsJavaScriptException();
-    return env.Null();
-  }
-  float start = info[0].As<Napi::Number>().FloatValue();
-  float end = info[1].As<Napi::Number>().FloatValue();
-  float step = info[2].As<Napi::Number>().FloatValue();
+  fl::Tensor* rhs = UnExternalize<fl::Tensor>(info[1]);
   fl::Tensor _res;
-  _res = fl::arange(start, end, step);
+  _res = fl::maximum(*(lhs), *(rhs));
   auto _out_byte_count = _res.bytes();
   g_bytes_used += _out_byte_count;
   Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
@@ -2041,260 +1325,6 @@ static Napi::Value _reshape(const Napi::CallbackInfo& info) {
       jsArrayToVector<long long>(info[1].As<Napi::Array>(), g_row_major, false);
   fl::Tensor _res;
   _res = fl::reshape(*(tensor), fl::Shape(shape));
-  auto _out_byte_count = _res.bytes();
-  g_bytes_used += _out_byte_count;
-  Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
-  auto* out = new fl::Tensor(_res);
-  return ExternalizeTensor(env, out);
-}
-
-static Napi::Value _flip(const Napi::CallbackInfo& info) {
-  Napi::Env env = info.Env();
-  const auto _arg_count = info.Length();
-  if (_arg_count != 2) {
-    Napi::TypeError::New(env, "`flip` expects exactly 2 args, but received " +
-                                  std::to_string(_arg_count))
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  if (!info[0].IsExternal()) {
-    Napi::TypeError::New(env,
-                         "`flip` expects args[0] to be native `Tensor` (typeof "
-                         "`Napi::External<fl::Tensor>`)")
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  fl::Tensor* tensor = UnExternalize<fl::Tensor>(info[0]);
-  if (!info[1].IsNumber()) {
-    Napi::TypeError::New(env, "`flip` expects args[1] to be typeof `number`")
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  unsigned dim =
-      static_cast<unsigned>(info[1].As<Napi::Number>().Uint32Value());
-  fl::Tensor _res;
-  _res = fl::flip(*(tensor), dim);
-  auto _out_byte_count = _res.bytes();
-  g_bytes_used += _out_byte_count;
-  Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
-  auto* out = new fl::Tensor(_res);
-  return ExternalizeTensor(env, out);
-}
-
-static Napi::Value _isinf(const Napi::CallbackInfo& info) {
-  Napi::Env env = info.Env();
-  const auto _arg_count = info.Length();
-  if (_arg_count != 1) {
-    Napi::TypeError::New(env, "`isinf` expects exactly 1 arg, but received " +
-                                  std::to_string(_arg_count))
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  if (!info[0].IsExternal()) {
-    Napi::TypeError::New(env,
-                         "`isinf` expects args[0] to be native `Tensor` "
-                         "(typeof `Napi::External<fl::Tensor>`)")
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  fl::Tensor* tensor = UnExternalize<fl::Tensor>(info[0]);
-  fl::Tensor _res;
-  _res = fl::isinf(*(tensor));
-  auto _out_byte_count = _res.bytes();
-  g_bytes_used += _out_byte_count;
-  Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
-  auto* out = new fl::Tensor(_res);
-  return ExternalizeTensor(env, out);
-}
-
-static Napi::Value _exp(const Napi::CallbackInfo& info) {
-  Napi::Env env = info.Env();
-  const auto _arg_count = info.Length();
-  if (_arg_count != 1) {
-    Napi::TypeError::New(env, "`exp` expects exactly 1 arg, but received " +
-                                  std::to_string(_arg_count))
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  if (!info[0].IsExternal()) {
-    Napi::TypeError::New(env,
-                         "`exp` expects args[0] to be native `Tensor` (typeof "
-                         "`Napi::External<fl::Tensor>`)")
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  fl::Tensor* tensor = UnExternalize<fl::Tensor>(info[0]);
-  fl::Tensor _res;
-  _res = fl::exp(*(tensor));
-  auto _out_byte_count = _res.bytes();
-  g_bytes_used += _out_byte_count;
-  Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
-  auto* out = new fl::Tensor(_res);
-  return ExternalizeTensor(env, out);
-}
-
-static Napi::Value _sin(const Napi::CallbackInfo& info) {
-  Napi::Env env = info.Env();
-  const auto _arg_count = info.Length();
-  if (_arg_count != 1) {
-    Napi::TypeError::New(env, "`sin` expects exactly 1 arg, but received " +
-                                  std::to_string(_arg_count))
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  if (!info[0].IsExternal()) {
-    Napi::TypeError::New(env,
-                         "`sin` expects args[0] to be native `Tensor` (typeof "
-                         "`Napi::External<fl::Tensor>`)")
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  fl::Tensor* tensor = UnExternalize<fl::Tensor>(info[0]);
-  fl::Tensor _res;
-  _res = fl::sin(*(tensor));
-  auto _out_byte_count = _res.bytes();
-  g_bytes_used += _out_byte_count;
-  Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
-  auto* out = new fl::Tensor(_res);
-  return ExternalizeTensor(env, out);
-}
-
-static Napi::Value _clip(const Napi::CallbackInfo& info) {
-  Napi::Env env = info.Env();
-  const auto _arg_count = info.Length();
-  if (_arg_count != 3) {
-    Napi::TypeError::New(env, "`clip` expects exactly 3 args, but received " +
-                                  std::to_string(_arg_count))
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  if (!info[0].IsExternal()) {
-    Napi::TypeError::New(env,
-                         "`clip` expects args[0] to be native `Tensor` (typeof "
-                         "`Napi::External<fl::Tensor>`)")
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  fl::Tensor* tensor = UnExternalize<fl::Tensor>(info[0]);
-  if (!info[1].IsExternal()) {
-    Napi::TypeError::New(env,
-                         "`clip` expects args[1] to be native `Tensor` (typeof "
-                         "`Napi::External<fl::Tensor>`)")
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  fl::Tensor* low = UnExternalize<fl::Tensor>(info[1]);
-  if (!info[2].IsExternal()) {
-    Napi::TypeError::New(env,
-                         "`clip` expects args[2] to be native `Tensor` (typeof "
-                         "`Napi::External<fl::Tensor>`)")
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  fl::Tensor* high = UnExternalize<fl::Tensor>(info[2]);
-  fl::Tensor _res;
-  _res = fl::clip(*(tensor), *(low), *(high));
-  auto _out_byte_count = _res.bytes();
-  g_bytes_used += _out_byte_count;
-  Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
-  auto* out = new fl::Tensor(_res);
-  return ExternalizeTensor(env, out);
-}
-
-static Napi::Value _argmax(const Napi::CallbackInfo& info) {
-  Napi::Env env = info.Env();
-  const auto _arg_count = info.Length();
-  if (_arg_count != 3) {
-    Napi::TypeError::New(env, "`argmax` expects exactly 3 args, but received " +
-                                  std::to_string(_arg_count))
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  if (!info[0].IsExternal()) {
-    Napi::TypeError::New(env,
-                         "`argmax` expects args[0] to be native `Tensor` "
-                         "(typeof `Napi::External<fl::Tensor>`)")
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  fl::Tensor* input = UnExternalize<fl::Tensor>(info[0]);
-  if (!info[1].IsNumber()) {
-    Napi::TypeError::New(env, "`argmax` expects args[1] to be typeof `number`")
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  bool keepDims = info[2].As<Napi::Boolean>().Value();
-  auto axis = axisArg(info[1].As<Napi::Number>().Uint32Value(), g_row_major,
-                      input->ndim());
-  fl::Tensor _res;
-  _res = fl::argmax(*(input), axis, keepDims);
-  auto axes_set = std::unordered_set<int>{static_cast<int>(axis)};
-  auto base_shape = (*(input)).shape().get();
-  std::vector<fl::Dim> new_shape;
-  for (size_t idx = 0; idx < base_shape.size(); ++idx) {
-    if (axes_set.count(idx) || (axes_set.size() == 0)) {
-      if (keepDims) {
-        new_shape.emplace_back(1);
-      }
-      continue;
-    }
-    new_shape.emplace_back(base_shape[idx]);
-  }
-  const auto& shape = fl::Shape(new_shape);
-  _res = fl::reshape(_res, shape);
-  auto _out_byte_count = _res.bytes();
-  g_bytes_used += _out_byte_count;
-  Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
-  auto* out = new fl::Tensor(_res);
-  return ExternalizeTensor(env, out);
-}
-
-static Napi::Value _logicalNot(const Napi::CallbackInfo& info) {
-  Napi::Env env = info.Env();
-  const auto _arg_count = info.Length();
-  if (_arg_count != 1) {
-    Napi::TypeError::New(env,
-                         "`logicalNot` expects exactly 1 arg, but received " +
-                             std::to_string(_arg_count))
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  if (!info[0].IsExternal()) {
-    Napi::TypeError::New(env,
-                         "`logicalNot` expects args[0] to be native `Tensor` "
-                         "(typeof `Napi::External<fl::Tensor>`)")
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  fl::Tensor* tensor = UnExternalize<fl::Tensor>(info[0]);
-  fl::Tensor _res;
-  _res = fl::logicalNot(*(tensor));
-  auto _out_byte_count = _res.bytes();
-  g_bytes_used += _out_byte_count;
-  Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
-  auto* out = new fl::Tensor(_res);
-  return ExternalizeTensor(env, out);
-}
-
-static Napi::Value _sign(const Napi::CallbackInfo& info) {
-  Napi::Env env = info.Env();
-  const auto _arg_count = info.Length();
-  if (_arg_count != 1) {
-    Napi::TypeError::New(env, "`sign` expects exactly 1 arg, but received " +
-                                  std::to_string(_arg_count))
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  if (!info[0].IsExternal()) {
-    Napi::TypeError::New(env,
-                         "`sign` expects args[0] to be native `Tensor` (typeof "
-                         "`Napi::External<fl::Tensor>`)")
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  fl::Tensor* tensor = UnExternalize<fl::Tensor>(info[0]);
-  fl::Tensor _res;
-  _res = fl::sign(*(tensor));
   auto _out_byte_count = _res.bytes();
   g_bytes_used += _out_byte_count;
   Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
@@ -2375,6 +1405,180 @@ static Napi::Value _amax(const Napi::CallbackInfo& info) {
   return ExternalizeTensor(env, out);
 }
 
+static Napi::Value _erf(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  const auto _arg_count = info.Length();
+  if (_arg_count != 1) {
+    Napi::TypeError::New(env, "`erf` expects exactly 1 arg, but received " +
+                                  std::to_string(_arg_count))
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  if (!info[0].IsExternal()) {
+    Napi::TypeError::New(env,
+                         "`erf` expects args[0] to be native `Tensor` (typeof "
+                         "`Napi::External<fl::Tensor>`)")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  fl::Tensor* tensor = UnExternalize<fl::Tensor>(info[0]);
+  fl::Tensor _res;
+  _res = fl::erf(*(tensor));
+  auto _out_byte_count = _res.bytes();
+  g_bytes_used += _out_byte_count;
+  Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
+  auto* out = new fl::Tensor(_res);
+  return ExternalizeTensor(env, out);
+}
+
+static Napi::Value _concatenate(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  const auto _arg_count = info.Length();
+  if (_arg_count != 2) {
+    Napi::TypeError::New(env,
+                         "`concatenate` expects exactly 2 args, but received " +
+                             std::to_string(_arg_count))
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  if (!info[0].IsArray()) {
+    Napi::TypeError::New(env,
+                         "`concatenate` expects args[0] to be `Array<Tensor>`")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  auto tensors = jsTensorArrayArg<fl::Tensor>(info[0].As<Napi::Array>());
+  auto axis = axisArg(info[1].As<Napi::Number>().Int32Value(), g_row_major,
+                      (&tensors[0])->ndim());
+  fl::Tensor _res;
+  _res = fl::concatenate(tensors, axis);
+  auto _out_byte_count = _res.bytes();
+  g_bytes_used += _out_byte_count;
+  Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
+  auto* out = new fl::Tensor(_res);
+  return ExternalizeTensor(env, out);
+}
+
+static Napi::Value _triu(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  const auto _arg_count = info.Length();
+  if (_arg_count != 1) {
+    Napi::TypeError::New(env, "`triu` expects exactly 1 arg, but received " +
+                                  std::to_string(_arg_count))
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  if (!info[0].IsExternal()) {
+    Napi::TypeError::New(env,
+                         "`triu` expects args[0] to be native `Tensor` (typeof "
+                         "`Napi::External<fl::Tensor>`)")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  fl::Tensor* tensor = UnExternalize<fl::Tensor>(info[0]);
+  fl::Tensor _res;
+  if (g_row_major) {
+    _res = fl::tril(*(tensor));
+  } else {
+    _res = fl::triu(*(tensor));
+  }
+  auto _out_byte_count = _res.bytes();
+  g_bytes_used += _out_byte_count;
+  Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
+  auto* out = new fl::Tensor(_res);
+  return ExternalizeTensor(env, out);
+}
+
+static Napi::Value _power(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  const auto _arg_count = info.Length();
+  if (_arg_count != 2) {
+    Napi::TypeError::New(env, "`power` expects exactly 2 args, but received " +
+                                  std::to_string(_arg_count))
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  if (!info[0].IsExternal()) {
+    Napi::TypeError::New(env,
+                         "`power` expects args[0] to be native `Tensor` "
+                         "(typeof `Napi::External<fl::Tensor>`)")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  fl::Tensor* lhs = UnExternalize<fl::Tensor>(info[0]);
+  if (!info[1].IsExternal()) {
+    Napi::TypeError::New(env,
+                         "`power` expects args[1] to be native `Tensor` "
+                         "(typeof `Napi::External<fl::Tensor>`)")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  fl::Tensor* rhs = UnExternalize<fl::Tensor>(info[1]);
+  fl::Tensor _res;
+  _res = fl::power(*(lhs), *(rhs));
+  auto _out_byte_count = _res.bytes();
+  g_bytes_used += _out_byte_count;
+  Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
+  auto* out = new fl::Tensor(_res);
+  return ExternalizeTensor(env, out);
+}
+
+static Napi::Value _transpose(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  const auto _arg_count = info.Length();
+  if (_arg_count != 2) {
+    Napi::TypeError::New(env,
+                         "`transpose` expects exactly 2 args, but received " +
+                             std::to_string(_arg_count))
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  if (!info[0].IsExternal()) {
+    Napi::TypeError::New(env,
+                         "`transpose` expects args[0] to be native `Tensor` "
+                         "(typeof `Napi::External<fl::Tensor>`)")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  fl::Tensor* tensor = UnExternalize<fl::Tensor>(info[0]);
+  auto axes = jsArrayToVector<long long>(info[1].As<Napi::Array>(), g_row_major,
+                                         tensor->ndim());
+  fl::Tensor _res;
+  _res = fl::transpose(*(tensor), fl::Shape(axes));
+  auto _out_byte_count = _res.bytes();
+  g_bytes_used += _out_byte_count;
+  Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
+  auto* out = new fl::Tensor(_res);
+  return ExternalizeTensor(env, out);
+}
+
+static Napi::Value _negative(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  const auto _arg_count = info.Length();
+  if (_arg_count != 1) {
+    Napi::TypeError::New(env,
+                         "`negative` expects exactly 1 arg, but received " +
+                             std::to_string(_arg_count))
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  if (!info[0].IsExternal()) {
+    Napi::TypeError::New(env,
+                         "`negative` expects args[0] to be native `Tensor` "
+                         "(typeof `Napi::External<fl::Tensor>`)")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  fl::Tensor* tensor = UnExternalize<fl::Tensor>(info[0]);
+  fl::Tensor _res;
+  _res = fl::negative(*(tensor));
+  auto _out_byte_count = _res.bytes();
+  g_bytes_used += _out_byte_count;
+  Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
+  auto* out = new fl::Tensor(_res);
+  return ExternalizeTensor(env, out);
+}
+
 static Napi::Value _absolute(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   const auto _arg_count = info.Length();
@@ -2402,29 +1606,294 @@ static Napi::Value _absolute(const Napi::CallbackInfo& info) {
   return ExternalizeTensor(env, out);
 }
 
-static Napi::Value _tril(const Napi::CallbackInfo& info) {
+static Napi::Value _all(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   const auto _arg_count = info.Length();
-  if (_arg_count != 1) {
-    Napi::TypeError::New(env, "`tril` expects exactly 1 arg, but received " +
+  if (_arg_count != 3) {
+    Napi::TypeError::New(env, "`all` expects exactly 3 args, but received " +
                                   std::to_string(_arg_count))
         .ThrowAsJavaScriptException();
     return env.Undefined();
   }
   if (!info[0].IsExternal()) {
     Napi::TypeError::New(env,
-                         "`tril` expects args[0] to be native `Tensor` (typeof "
+                         "`all` expects args[0] to be native `Tensor` (typeof "
+                         "`Napi::External<fl::Tensor>`)")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  fl::Tensor* input = UnExternalize<fl::Tensor>(info[0]);
+  bool keepDims = info[2].As<Napi::Boolean>().Value();
+  auto axes = jsArrayToVector<int>(info[1].As<Napi::Array>(), g_row_major,
+                                   input->ndim());
+  fl::Tensor _res;
+  _res = fl::all(*(input), axes, keepDims);
+  auto axes_set = std::unordered_set<int>(axes.begin(), axes.end());
+  auto base_shape = (*(input)).shape().get();
+  std::vector<fl::Dim> new_shape;
+  for (size_t idx = 0; idx < base_shape.size(); ++idx) {
+    if (axes_set.count(idx) || (axes_set.size() == 0)) {
+      if (keepDims) {
+        new_shape.emplace_back(1);
+      }
+      continue;
+    }
+    new_shape.emplace_back(base_shape[idx]);
+  }
+  const auto& shape = fl::Shape(new_shape);
+  _res = fl::reshape(_res, shape);
+  auto _out_byte_count = _res.bytes();
+  g_bytes_used += _out_byte_count;
+  Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
+  auto* out = new fl::Tensor(_res);
+  return ExternalizeTensor(env, out);
+}
+
+static Napi::Value _pad(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  const auto _arg_count = info.Length();
+  if (_arg_count < 2 || _arg_count > 3) {
+    Napi::TypeError::New(env, "`pad` expects 2 to 3 args, but received " +
+                                  std::to_string(_arg_count))
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  if (!info[0].IsExternal()) {
+    Napi::TypeError::New(env,
+                         "`pad` expects args[0] to be native `Tensor` (typeof "
+                         "`Napi::External<fl::Tensor>`)")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  fl::Tensor* input = UnExternalize<fl::Tensor>(info[0]);
+  if (!info[1].IsArray()) {
+    Napi::TypeError::New(env, "`pad` expects args[1] to be ``")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  fl::PadType type =
+      static_cast<fl::PadType>(info[2].As<Napi::Number>().Int32Value());
+
+  Napi::Array _tmp_array_padWidths = info[1].As<Napi::Array>();
+  auto _tmp_len_padWidths = _tmp_array_padWidths.Length();
+  std::vector<std::pair<int, int>> padWidths;
+  padWidths.reserve(_tmp_len_padWidths);
+  for (size_t i = 0; i < _tmp_len_padWidths; i++) {
+    Napi::Value _tmp_array_item = _tmp_array_padWidths[i];
+    Napi::Array _tmp_pair = _tmp_array_item.As<Napi::Array>();
+    size_t idx1 = 0, idx2 = 1;
+    Napi::Value _tmp_pair_item1 = _tmp_pair[idx1];
+    Napi::Value _tmp_pair_item2 = _tmp_pair[idx2];
+    padWidths.emplace_back(
+        static_cast<int>(_tmp_pair_item1.As<Napi::Number>().Int32Value()),
+        static_cast<int>(_tmp_pair_item2.As<Napi::Number>().Int32Value()));
+  }
+  fl::Tensor _res;
+  _res = fl::pad(*(input), padWidths, type);
+  auto _out_byte_count = _res.bytes();
+  g_bytes_used += _out_byte_count;
+  Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
+  auto* out = new fl::Tensor(_res);
+  return ExternalizeTensor(env, out);
+}
+
+static Napi::Value _sin(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  const auto _arg_count = info.Length();
+  if (_arg_count != 1) {
+    Napi::TypeError::New(env, "`sin` expects exactly 1 arg, but received " +
+                                  std::to_string(_arg_count))
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  if (!info[0].IsExternal()) {
+    Napi::TypeError::New(env,
+                         "`sin` expects args[0] to be native `Tensor` (typeof "
                          "`Napi::External<fl::Tensor>`)")
         .ThrowAsJavaScriptException();
     return env.Undefined();
   }
   fl::Tensor* tensor = UnExternalize<fl::Tensor>(info[0]);
   fl::Tensor _res;
-  if (g_row_major) {
-    _res = fl::triu(*(tensor));
-  } else {
-    _res = fl::tril(*(tensor));
+  _res = fl::sin(*(tensor));
+  auto _out_byte_count = _res.bytes();
+  g_bytes_used += _out_byte_count;
+  Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
+  auto* out = new fl::Tensor(_res);
+  return ExternalizeTensor(env, out);
+}
+
+static Napi::Value _argmax(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  const auto _arg_count = info.Length();
+  if (_arg_count != 3) {
+    Napi::TypeError::New(env, "`argmax` expects exactly 3 args, but received " +
+                                  std::to_string(_arg_count))
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
   }
+  if (!info[0].IsExternal()) {
+    Napi::TypeError::New(env,
+                         "`argmax` expects args[0] to be native `Tensor` "
+                         "(typeof `Napi::External<fl::Tensor>`)")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  fl::Tensor* input = UnExternalize<fl::Tensor>(info[0]);
+  if (!info[1].IsNumber()) {
+    Napi::TypeError::New(env, "`argmax` expects args[1] to be typeof `number`")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  bool keepDims = info[2].As<Napi::Boolean>().Value();
+  auto axis = axisArg(info[1].As<Napi::Number>().Uint32Value(), g_row_major,
+                      input->ndim());
+  fl::Tensor _res;
+  _res = fl::argmax(*(input), axis, keepDims);
+  auto axes_set = std::unordered_set<int>{static_cast<int>(axis)};
+  auto base_shape = (*(input)).shape().get();
+  std::vector<fl::Dim> new_shape;
+  for (size_t idx = 0; idx < base_shape.size(); ++idx) {
+    if (axes_set.count(idx) || (axes_set.size() == 0)) {
+      if (keepDims) {
+        new_shape.emplace_back(1);
+      }
+      continue;
+    }
+    new_shape.emplace_back(base_shape[idx]);
+  }
+  const auto& shape = fl::Shape(new_shape);
+  _res = fl::reshape(_res, shape);
+  auto _out_byte_count = _res.bytes();
+  g_bytes_used += _out_byte_count;
+  Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
+  auto* out = new fl::Tensor(_res);
+  return ExternalizeTensor(env, out);
+}
+
+static Napi::Value _argmin(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  const auto _arg_count = info.Length();
+  if (_arg_count != 3) {
+    Napi::TypeError::New(env, "`argmin` expects exactly 3 args, but received " +
+                                  std::to_string(_arg_count))
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  if (!info[0].IsExternal()) {
+    Napi::TypeError::New(env,
+                         "`argmin` expects args[0] to be native `Tensor` "
+                         "(typeof `Napi::External<fl::Tensor>`)")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  fl::Tensor* input = UnExternalize<fl::Tensor>(info[0]);
+  if (!info[1].IsNumber()) {
+    Napi::TypeError::New(env, "`argmin` expects args[1] to be typeof `number`")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  bool keepDims = info[2].As<Napi::Boolean>().Value();
+  auto axis = axisArg(info[1].As<Napi::Number>().Uint32Value(), g_row_major,
+                      input->ndim());
+  fl::Tensor _res;
+  _res = fl::argmin(*(input), axis, keepDims);
+  auto axes_set = std::unordered_set<int>{static_cast<int>(axis)};
+  auto base_shape = (*(input)).shape().get();
+  std::vector<fl::Dim> new_shape;
+  for (size_t idx = 0; idx < base_shape.size(); ++idx) {
+    if (axes_set.count(idx) || (axes_set.size() == 0)) {
+      if (keepDims) {
+        new_shape.emplace_back(1);
+      }
+      continue;
+    }
+    new_shape.emplace_back(base_shape[idx]);
+  }
+  const auto& shape = fl::Shape(new_shape);
+  _res = fl::reshape(_res, shape);
+  auto _out_byte_count = _res.bytes();
+  g_bytes_used += _out_byte_count;
+  Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
+  auto* out = new fl::Tensor(_res);
+  return ExternalizeTensor(env, out);
+}
+
+static Napi::Value _nonzero(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  const auto _arg_count = info.Length();
+  if (_arg_count != 1) {
+    Napi::TypeError::New(env, "`nonzero` expects exactly 1 arg, but received " +
+                                  std::to_string(_arg_count))
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  if (!info[0].IsExternal()) {
+    Napi::TypeError::New(env,
+                         "`nonzero` expects args[0] to be native `Tensor` "
+                         "(typeof `Napi::External<fl::Tensor>`)")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  fl::Tensor* tensor = UnExternalize<fl::Tensor>(info[0]);
+  fl::Tensor _res;
+  _res = fl::nonzero(*(tensor));
+  auto _out_byte_count = _res.bytes();
+  g_bytes_used += _out_byte_count;
+  Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
+  auto* out = new fl::Tensor(_res);
+  return ExternalizeTensor(env, out);
+}
+
+static Napi::Value _sqrt(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  const auto _arg_count = info.Length();
+  if (_arg_count != 1) {
+    Napi::TypeError::New(env, "`sqrt` expects exactly 1 arg, but received " +
+                                  std::to_string(_arg_count))
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  if (!info[0].IsExternal()) {
+    Napi::TypeError::New(env,
+                         "`sqrt` expects args[0] to be native `Tensor` (typeof "
+                         "`Napi::External<fl::Tensor>`)")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  fl::Tensor* tensor = UnExternalize<fl::Tensor>(info[0]);
+  fl::Tensor _res;
+  _res = fl::sqrt(*(tensor));
+  auto _out_byte_count = _res.bytes();
+  g_bytes_used += _out_byte_count;
+  Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
+  auto* out = new fl::Tensor(_res);
+  return ExternalizeTensor(env, out);
+}
+
+static Napi::Value _sort(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  const auto _arg_count = info.Length();
+  if (_arg_count < 2 || _arg_count > 3) {
+    Napi::TypeError::New(env, "`sort` expects 2 to 3 args, but received " +
+                                  std::to_string(_arg_count))
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  if (!info[0].IsExternal()) {
+    Napi::TypeError::New(env,
+                         "`sort` expects args[0] to be native `Tensor` (typeof "
+                         "`Napi::External<fl::Tensor>`)")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  fl::Tensor* input = UnExternalize<fl::Tensor>(info[0]);
+  auto axis = info[1].As<Napi::Number>().Uint32Value();
+  fl::SortMode sortMode =
+      static_cast<fl::SortMode>(info[2].As<Napi::Number>().Int32Value());
+
+  fl::Tensor _res;
+  _res = fl::sort(*(input), fl::Dim(axis), sortMode);
   auto _out_byte_count = _res.bytes();
   g_bytes_used += _out_byte_count;
   Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
@@ -2475,76 +1944,25 @@ static Napi::Value _mean(const Napi::CallbackInfo& info) {
   return ExternalizeTensor(env, out);
 }
 
-static Napi::Value _iota(const Napi::CallbackInfo& info) {
-  Napi::Env env = info.Env();
-  const auto _arg_count = info.Length();
-  if (_arg_count < 2 || _arg_count > 3) {
-    Napi::TypeError::New(env, "`iota` expects 2 to 3 args, but received " +
-                                  std::to_string(_arg_count))
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  auto dims =
-      jsArrayToVector<long long>(info[0].As<Napi::Array>(), g_row_major, false);
-  auto tileDims =
-      jsArrayToVector<long long>(info[1].As<Napi::Array>(), g_row_major, false);
-  fl::dtype type =
-      static_cast<fl::dtype>(info[2].As<Napi::Number>().Int32Value());
-
-  fl::Tensor _res;
-  _res = fl::iota(fl::Shape(dims), fl::Shape(tileDims), type);
-  auto _out_byte_count = _res.bytes();
-  g_bytes_used += _out_byte_count;
-  Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
-  auto* out = new fl::Tensor(_res);
-  return ExternalizeTensor(env, out);
-}
-
-static Napi::Value _log(const Napi::CallbackInfo& info) {
+static Napi::Value _exp(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   const auto _arg_count = info.Length();
   if (_arg_count != 1) {
-    Napi::TypeError::New(env, "`log` expects exactly 1 arg, but received " +
+    Napi::TypeError::New(env, "`exp` expects exactly 1 arg, but received " +
                                   std::to_string(_arg_count))
         .ThrowAsJavaScriptException();
     return env.Undefined();
   }
   if (!info[0].IsExternal()) {
     Napi::TypeError::New(env,
-                         "`log` expects args[0] to be native `Tensor` (typeof "
+                         "`exp` expects args[0] to be native `Tensor` (typeof "
                          "`Napi::External<fl::Tensor>`)")
         .ThrowAsJavaScriptException();
     return env.Undefined();
   }
   fl::Tensor* tensor = UnExternalize<fl::Tensor>(info[0]);
   fl::Tensor _res;
-  _res = fl::log(*(tensor));
-  auto _out_byte_count = _res.bytes();
-  g_bytes_used += _out_byte_count;
-  Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
-  auto* out = new fl::Tensor(_res);
-  return ExternalizeTensor(env, out);
-}
-
-static Napi::Value _cos(const Napi::CallbackInfo& info) {
-  Napi::Env env = info.Env();
-  const auto _arg_count = info.Length();
-  if (_arg_count != 1) {
-    Napi::TypeError::New(env, "`cos` expects exactly 1 arg, but received " +
-                                  std::to_string(_arg_count))
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  if (!info[0].IsExternal()) {
-    Napi::TypeError::New(env,
-                         "`cos` expects args[0] to be native `Tensor` (typeof "
-                         "`Napi::External<fl::Tensor>`)")
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  fl::Tensor* tensor = UnExternalize<fl::Tensor>(info[0]);
-  fl::Tensor _res;
-  _res = fl::cos(*(tensor));
+  _res = fl::exp(*(tensor));
   auto _out_byte_count = _res.bytes();
   g_bytes_used += _out_byte_count;
   Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
@@ -2578,6 +1996,190 @@ static Napi::Value _isnan(const Napi::CallbackInfo& info) {
   return ExternalizeTensor(env, out);
 }
 
+static Napi::Value _minimum(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  const auto _arg_count = info.Length();
+  if (_arg_count != 2) {
+    Napi::TypeError::New(env,
+                         "`minimum` expects exactly 2 args, but received " +
+                             std::to_string(_arg_count))
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  if (!info[0].IsExternal()) {
+    Napi::TypeError::New(env,
+                         "`minimum` expects args[0] to be native `Tensor` "
+                         "(typeof `Napi::External<fl::Tensor>`)")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  fl::Tensor* lhs = UnExternalize<fl::Tensor>(info[0]);
+  if (!info[1].IsExternal()) {
+    Napi::TypeError::New(env,
+                         "`minimum` expects args[1] to be native `Tensor` "
+                         "(typeof `Napi::External<fl::Tensor>`)")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  fl::Tensor* rhs = UnExternalize<fl::Tensor>(info[1]);
+  fl::Tensor _res;
+  _res = fl::minimum(*(lhs), *(rhs));
+  auto _out_byte_count = _res.bytes();
+  g_bytes_used += _out_byte_count;
+  Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
+  auto* out = new fl::Tensor(_res);
+  return ExternalizeTensor(env, out);
+}
+
+static Napi::Value _norm(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  const auto _arg_count = info.Length();
+  if (_arg_count != 4) {
+    Napi::TypeError::New(env, "`norm` expects exactly 4 args, but received " +
+                                  std::to_string(_arg_count))
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  if (!info[0].IsExternal()) {
+    Napi::TypeError::New(env,
+                         "`norm` expects args[0] to be native `Tensor` (typeof "
+                         "`Napi::External<fl::Tensor>`)")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  fl::Tensor* input = UnExternalize<fl::Tensor>(info[0]);
+  double p = info[2].As<Napi::Number>().DoubleValue();
+  bool keepDims = info[3].As<Napi::Boolean>().Value();
+  auto axes = jsArrayToVector<int>(info[1].As<Napi::Array>(), g_row_major,
+                                   input->ndim());
+  fl::Tensor _res;
+  _res = fl::norm(*(input), axes, p, keepDims);
+  if (p == std::numeric_limits<double>::infinity()) {
+    _res = fl::abs(*(input));
+    _res = fl::amax(*(input), axes, keepDims);
+  }
+  auto axes_set = std::unordered_set<int>(axes.begin(), axes.end());
+  auto base_shape = (*(input)).shape().get();
+  std::vector<fl::Dim> new_shape;
+  for (size_t idx = 0; idx < base_shape.size(); ++idx) {
+    if (axes_set.count(idx) || (axes_set.size() == 0)) {
+      if (keepDims) {
+        new_shape.emplace_back(1);
+      }
+      continue;
+    }
+    new_shape.emplace_back(base_shape[idx]);
+  }
+  const auto& shape = fl::Shape(new_shape);
+  _res = fl::reshape(_res, shape);
+  auto _out_byte_count = _res.bytes();
+  g_bytes_used += _out_byte_count;
+  Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
+  auto* out = new fl::Tensor(_res);
+  return ExternalizeTensor(env, out);
+}
+
+static Napi::Value _identity(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  const auto _arg_count = info.Length();
+  if (_arg_count < 1 || _arg_count > 2) {
+    Napi::TypeError::New(env, "`identity` expects 1 to 2 args, but received " +
+                                  std::to_string(_arg_count))
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  int64_t dim = info[0].As<Napi::Number>().Int64Value();
+  fl::dtype type =
+      static_cast<fl::dtype>(info[1].As<Napi::Number>().Int32Value());
+
+  fl::Tensor _res;
+  _res = fl::identity(fl::Dim(dim), type);
+  auto _out_byte_count = _res.bytes();
+  g_bytes_used += _out_byte_count;
+  Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
+  auto* out = new fl::Tensor(_res);
+  return ExternalizeTensor(env, out);
+}
+
+static Napi::Value _sign(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  const auto _arg_count = info.Length();
+  if (_arg_count != 1) {
+    Napi::TypeError::New(env, "`sign` expects exactly 1 arg, but received " +
+                                  std::to_string(_arg_count))
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  if (!info[0].IsExternal()) {
+    Napi::TypeError::New(env,
+                         "`sign` expects args[0] to be native `Tensor` (typeof "
+                         "`Napi::External<fl::Tensor>`)")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  fl::Tensor* tensor = UnExternalize<fl::Tensor>(info[0]);
+  fl::Tensor _res;
+  _res = fl::sign(*(tensor));
+  auto _out_byte_count = _res.bytes();
+  g_bytes_used += _out_byte_count;
+  Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
+  auto* out = new fl::Tensor(_res);
+  return ExternalizeTensor(env, out);
+}
+
+static Napi::Value _rint(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  const auto _arg_count = info.Length();
+  if (_arg_count != 1) {
+    Napi::TypeError::New(env, "`rint` expects exactly 1 arg, but received " +
+                                  std::to_string(_arg_count))
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  if (!info[0].IsExternal()) {
+    Napi::TypeError::New(env,
+                         "`rint` expects args[0] to be native `Tensor` (typeof "
+                         "`Napi::External<fl::Tensor>`)")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  fl::Tensor* tensor = UnExternalize<fl::Tensor>(info[0]);
+  fl::Tensor _res;
+  _res = fl::rint(*(tensor));
+  auto _out_byte_count = _res.bytes();
+  g_bytes_used += _out_byte_count;
+  Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
+  auto* out = new fl::Tensor(_res);
+  return ExternalizeTensor(env, out);
+}
+
+static Napi::Value _logicalNot(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  const auto _arg_count = info.Length();
+  if (_arg_count != 1) {
+    Napi::TypeError::New(env,
+                         "`logicalNot` expects exactly 1 arg, but received " +
+                             std::to_string(_arg_count))
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  if (!info[0].IsExternal()) {
+    Napi::TypeError::New(env,
+                         "`logicalNot` expects args[0] to be native `Tensor` "
+                         "(typeof `Napi::External<fl::Tensor>`)")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  fl::Tensor* tensor = UnExternalize<fl::Tensor>(info[0]);
+  fl::Tensor _res;
+  _res = fl::logicalNot(*(tensor));
+  auto _out_byte_count = _res.bytes();
+  g_bytes_used += _out_byte_count;
+  Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
+  auto* out = new fl::Tensor(_res);
+  return ExternalizeTensor(env, out);
+}
+
 static Napi::Value _log1p(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   const auto _arg_count = info.Length();
@@ -2597,6 +2199,226 @@ static Napi::Value _log1p(const Napi::CallbackInfo& info) {
   fl::Tensor* tensor = UnExternalize<fl::Tensor>(info[0]);
   fl::Tensor _res;
   _res = fl::log1p(*(tensor));
+  auto _out_byte_count = _res.bytes();
+  g_bytes_used += _out_byte_count;
+  Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
+  auto* out = new fl::Tensor(_res);
+  return ExternalizeTensor(env, out);
+}
+
+static Napi::Value _ceil(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  const auto _arg_count = info.Length();
+  if (_arg_count != 1) {
+    Napi::TypeError::New(env, "`ceil` expects exactly 1 arg, but received " +
+                                  std::to_string(_arg_count))
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  if (!info[0].IsExternal()) {
+    Napi::TypeError::New(env,
+                         "`ceil` expects args[0] to be native `Tensor` (typeof "
+                         "`Napi::External<fl::Tensor>`)")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  fl::Tensor* tensor = UnExternalize<fl::Tensor>(info[0]);
+  fl::Tensor _res;
+  _res = fl::ceil(*(tensor));
+  auto _out_byte_count = _res.bytes();
+  g_bytes_used += _out_byte_count;
+  Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
+  auto* out = new fl::Tensor(_res);
+  return ExternalizeTensor(env, out);
+}
+
+static Napi::Value _cumsum(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  const auto _arg_count = info.Length();
+  if (_arg_count != 2) {
+    Napi::TypeError::New(env, "`cumsum` expects exactly 2 args, but received " +
+                                  std::to_string(_arg_count))
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  if (!info[0].IsExternal()) {
+    Napi::TypeError::New(env,
+                         "`cumsum` expects args[0] to be native `Tensor` "
+                         "(typeof `Napi::External<fl::Tensor>`)")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  fl::Tensor* input = UnExternalize<fl::Tensor>(info[0]);
+  if (!info[1].IsNumber()) {
+    Napi::TypeError::New(env, "`cumsum` expects args[1] to be typeof `number`")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  unsigned axis =
+      static_cast<unsigned>(info[1].As<Napi::Number>().Uint32Value());
+  fl::Tensor _res;
+  _res = fl::cumsum(*(input), axis);
+  auto _out_byte_count = _res.bytes();
+  g_bytes_used += _out_byte_count;
+  Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
+  auto* out = new fl::Tensor(_res);
+  return ExternalizeTensor(env, out);
+}
+
+static Napi::Value _allClose(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  const auto _arg_count = info.Length();
+  if (_arg_count != 3) {
+    Napi::TypeError::New(env,
+                         "`allClose` expects exactly 3 args, but received " +
+                             std::to_string(_arg_count))
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  if (!info[0].IsExternal()) {
+    Napi::TypeError::New(env,
+                         "`allClose` expects args[0] to be native `fl::Tensor` "
+                         "(typeof `Napi::External<fl::fl::Tensor>`)")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  fl::Tensor* a = UnExternalize<fl::Tensor>(info[0]);
+  if (!info[1].IsExternal()) {
+    Napi::TypeError::New(env,
+                         "`allClose` expects args[1] to be native `fl::Tensor` "
+                         "(typeof `Napi::External<fl::fl::Tensor>`)")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  fl::Tensor* b = UnExternalize<fl::Tensor>(info[1]);
+  double absTolerance = info[2].As<Napi::Number>().DoubleValue();
+  bool _res;
+  _res = fl::allClose(*(a), *(b), absTolerance);
+  return Napi::Boolean::New(env, _res);
+}
+
+static Napi::Value _isInvalidArray(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  const auto _arg_count = info.Length();
+  if (_arg_count != 1) {
+    Napi::TypeError::New(
+        env, "`isInvalidArray` expects exactly 1 arg, but received " +
+                 std::to_string(_arg_count))
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  if (!info[0].IsExternal()) {
+    Napi::TypeError::New(env,
+                         "`isInvalidArray` expects args[0] to be native "
+                         "`Tensor` (typeof `Napi::External<fl::Tensor>`)")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  fl::Tensor* tensor = UnExternalize<fl::Tensor>(info[0]);
+  bool _res;
+  _res = fl::isInvalidArray(*(tensor));
+  return Napi::Boolean::New(env, _res);
+}
+
+static Napi::Value _iota(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  const auto _arg_count = info.Length();
+  if (_arg_count < 2 || _arg_count > 3) {
+    Napi::TypeError::New(env, "`iota` expects 2 to 3 args, but received " +
+                                  std::to_string(_arg_count))
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  auto dims =
+      jsArrayToVector<long long>(info[0].As<Napi::Array>(), g_row_major, false);
+  auto tileDims =
+      jsArrayToVector<long long>(info[1].As<Napi::Array>(), g_row_major, false);
+  fl::dtype type =
+      static_cast<fl::dtype>(info[2].As<Napi::Number>().Int32Value());
+
+  fl::Tensor _res;
+  _res = fl::iota(fl::Shape(dims), fl::Shape(tileDims), type);
+  auto _out_byte_count = _res.bytes();
+  g_bytes_used += _out_byte_count;
+  Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
+  auto* out = new fl::Tensor(_res);
+  return ExternalizeTensor(env, out);
+}
+
+static Napi::Value _roll(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  const auto _arg_count = info.Length();
+  if (_arg_count != 3) {
+    Napi::TypeError::New(env, "`roll` expects exactly 3 args, but received " +
+                                  std::to_string(_arg_count))
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  if (!info[0].IsExternal()) {
+    Napi::TypeError::New(env,
+                         "`roll` expects args[0] to be native `Tensor` (typeof "
+                         "`Napi::External<fl::Tensor>`)")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  fl::Tensor* tensor = UnExternalize<fl::Tensor>(info[0]);
+  if (!info[1].IsNumber()) {
+    Napi::TypeError::New(env, "`roll` expects args[1] to be typeof `number`")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  int shift = static_cast<int>(info[1].As<Napi::Number>().Int32Value());
+  if (!info[2].IsNumber()) {
+    Napi::TypeError::New(env, "`roll` expects args[2] to be typeof `number`")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  unsigned axis =
+      static_cast<unsigned>(info[2].As<Napi::Number>().Uint32Value());
+  fl::Tensor _res;
+  _res = fl::roll(*(tensor), shift, axis);
+  auto _out_byte_count = _res.bytes();
+  g_bytes_used += _out_byte_count;
+  Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
+  auto* out = new fl::Tensor(_res);
+  return ExternalizeTensor(env, out);
+}
+
+static Napi::Value _where(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  const auto _arg_count = info.Length();
+  if (_arg_count != 3) {
+    Napi::TypeError::New(env, "`where` expects exactly 3 args, but received " +
+                                  std::to_string(_arg_count))
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  if (!info[0].IsExternal()) {
+    Napi::TypeError::New(env,
+                         "`where` expects args[0] to be native `Tensor` "
+                         "(typeof `Napi::External<fl::Tensor>`)")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  fl::Tensor* condition = UnExternalize<fl::Tensor>(info[0]);
+  if (!info[1].IsExternal()) {
+    Napi::TypeError::New(env,
+                         "`where` expects args[1] to be native `Tensor` "
+                         "(typeof `Napi::External<fl::Tensor>`)")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  fl::Tensor* x = UnExternalize<fl::Tensor>(info[1]);
+  if (!info[2].IsExternal()) {
+    Napi::TypeError::New(env,
+                         "`where` expects args[2] to be native `Tensor` "
+                         "(typeof `Napi::External<fl::Tensor>`)")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  fl::Tensor* y = UnExternalize<fl::Tensor>(info[2]);
+  fl::Tensor _res;
+  _res = fl::where(*(condition), *(x), *(y));
   auto _out_byte_count = _res.bytes();
   g_bytes_used += _out_byte_count;
   Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
@@ -2647,139 +2469,99 @@ static Napi::Value _any(const Napi::CallbackInfo& info) {
   return ExternalizeTensor(env, out);
 }
 
-static Napi::Value _allClose(const Napi::CallbackInfo& info) {
+static Napi::Value _log(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   const auto _arg_count = info.Length();
-  if (_arg_count != 3) {
-    Napi::TypeError::New(env,
-                         "`allClose` expects exactly 3 args, but received " +
-                             std::to_string(_arg_count))
+  if (_arg_count != 1) {
+    Napi::TypeError::New(env, "`log` expects exactly 1 arg, but received " +
+                                  std::to_string(_arg_count))
         .ThrowAsJavaScriptException();
     return env.Undefined();
   }
   if (!info[0].IsExternal()) {
     Napi::TypeError::New(env,
-                         "`allClose` expects args[0] to be native `fl::Tensor` "
-                         "(typeof `Napi::External<fl::fl::Tensor>`)")
+                         "`log` expects args[0] to be native `Tensor` (typeof "
+                         "`Napi::External<fl::Tensor>`)")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  fl::Tensor* tensor = UnExternalize<fl::Tensor>(info[0]);
+  fl::Tensor _res;
+  _res = fl::log(*(tensor));
+  auto _out_byte_count = _res.bytes();
+  g_bytes_used += _out_byte_count;
+  Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
+  auto* out = new fl::Tensor(_res);
+  return ExternalizeTensor(env, out);
+}
+
+static Napi::Value _areTensorTypesEqual(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  const auto _arg_count = info.Length();
+  if (_arg_count != 2) {
+    Napi::TypeError::New(
+        env, "`areTensorTypesEqual` expects exactly 2 args, but received " +
+                 std::to_string(_arg_count))
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  if (!info[0].IsExternal()) {
+    Napi::TypeError::New(env,
+                         "`areTensorTypesEqual` expects args[0] to be native "
+                         "`Tensor` (typeof `Napi::External<fl::Tensor>`)")
         .ThrowAsJavaScriptException();
     return env.Undefined();
   }
   fl::Tensor* a = UnExternalize<fl::Tensor>(info[0]);
   if (!info[1].IsExternal()) {
     Napi::TypeError::New(env,
-                         "`allClose` expects args[1] to be native `fl::Tensor` "
-                         "(typeof `Napi::External<fl::fl::Tensor>`)")
+                         "`areTensorTypesEqual` expects args[1] to be native "
+                         "`Tensor` (typeof `Napi::External<fl::Tensor>`)")
         .ThrowAsJavaScriptException();
     return env.Undefined();
   }
   fl::Tensor* b = UnExternalize<fl::Tensor>(info[1]);
-  double absTolerance = info[2].As<Napi::Number>().DoubleValue();
   bool _res;
-  _res = fl::allClose(*(a), *(b), absTolerance);
+  _res = fl::detail::areTensorTypesEqual(*(a), *(b));
   return Napi::Boolean::New(env, _res);
 }
 
-static Napi::Value _full(const Napi::CallbackInfo& info) {
+static Napi::Value _median(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   const auto _arg_count = info.Length();
-  if (_arg_count != 2) {
-    Napi::TypeError::New(env, "`full` expects exactly 2 args, but received " +
-                                  std::to_string(_arg_count))
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  std::vector<long long> dims =
-      jsArrayToVector<long long>(info[0].As<Napi::Array>(), g_row_major, false);
-  float val = info[1].As<Napi::Number>().FloatValue();
-  fl::Tensor _res;
-  _res = fl::full(fl::Shape(dims), val);
-  auto _out_byte_count = _res.bytes();
-  g_bytes_used += _out_byte_count;
-  Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
-  auto* out = new fl::Tensor(_res);
-  return ExternalizeTensor(env, out);
-}
-
-static Napi::Value _tile(const Napi::CallbackInfo& info) {
-  Napi::Env env = info.Env();
-  const auto _arg_count = info.Length();
-  if (_arg_count != 2) {
-    Napi::TypeError::New(env, "`tile` expects exactly 2 args, but received " +
+  if (_arg_count != 3) {
+    Napi::TypeError::New(env, "`median` expects exactly 3 args, but received " +
                                   std::to_string(_arg_count))
         .ThrowAsJavaScriptException();
     return env.Undefined();
   }
   if (!info[0].IsExternal()) {
     Napi::TypeError::New(env,
-                         "`tile` expects args[0] to be native `Tensor` (typeof "
-                         "`Napi::External<fl::Tensor>`)")
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  fl::Tensor* tensor = UnExternalize<fl::Tensor>(info[0]);
-  auto shape =
-      jsArrayToVector<long long>(info[1].As<Napi::Array>(), g_row_major, false);
-  fl::Tensor _res;
-  _res = fl::tile(*(tensor), fl::Shape(shape));
-  auto _out_byte_count = _res.bytes();
-  g_bytes_used += _out_byte_count;
-  Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
-  auto* out = new fl::Tensor(_res);
-  return ExternalizeTensor(env, out);
-}
-
-static Napi::Value _erf(const Napi::CallbackInfo& info) {
-  Napi::Env env = info.Env();
-  const auto _arg_count = info.Length();
-  if (_arg_count != 1) {
-    Napi::TypeError::New(env, "`erf` expects exactly 1 arg, but received " +
-                                  std::to_string(_arg_count))
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  if (!info[0].IsExternal()) {
-    Napi::TypeError::New(env,
-                         "`erf` expects args[0] to be native `Tensor` (typeof "
-                         "`Napi::External<fl::Tensor>`)")
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  fl::Tensor* tensor = UnExternalize<fl::Tensor>(info[0]);
-  fl::Tensor _res;
-  _res = fl::erf(*(tensor));
-  auto _out_byte_count = _res.bytes();
-  g_bytes_used += _out_byte_count;
-  Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
-  auto* out = new fl::Tensor(_res);
-  return ExternalizeTensor(env, out);
-}
-
-static Napi::Value _cumsum(const Napi::CallbackInfo& info) {
-  Napi::Env env = info.Env();
-  const auto _arg_count = info.Length();
-  if (_arg_count != 2) {
-    Napi::TypeError::New(env, "`cumsum` expects exactly 2 args, but received " +
-                                  std::to_string(_arg_count))
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  if (!info[0].IsExternal()) {
-    Napi::TypeError::New(env,
-                         "`cumsum` expects args[0] to be native `Tensor` "
+                         "`median` expects args[0] to be native `Tensor` "
                          "(typeof `Napi::External<fl::Tensor>`)")
         .ThrowAsJavaScriptException();
     return env.Undefined();
   }
   fl::Tensor* input = UnExternalize<fl::Tensor>(info[0]);
-  if (!info[1].IsNumber()) {
-    Napi::TypeError::New(env, "`cumsum` expects args[1] to be typeof `number`")
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  unsigned axis =
-      static_cast<unsigned>(info[1].As<Napi::Number>().Uint32Value());
+  bool keepDims = info[2].As<Napi::Boolean>().Value();
+  auto axes = jsArrayToVector<int>(info[1].As<Napi::Array>(), g_row_major,
+                                   input->ndim());
   fl::Tensor _res;
-  _res = fl::cumsum(*(input), axis);
+  _res = fl::median(*(input), axes, keepDims);
+  auto axes_set = std::unordered_set<int>(axes.begin(), axes.end());
+  auto base_shape = (*(input)).shape().get();
+  std::vector<fl::Dim> new_shape;
+  for (size_t idx = 0; idx < base_shape.size(); ++idx) {
+    if (axes_set.count(idx) || (axes_set.size() == 0)) {
+      if (keepDims) {
+        new_shape.emplace_back(1);
+      }
+      continue;
+    }
+    new_shape.emplace_back(base_shape[idx]);
+  }
+  const auto& shape = fl::Shape(new_shape);
+  _res = fl::reshape(_res, shape);
   auto _out_byte_count = _res.bytes();
   g_bytes_used += _out_byte_count;
   Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
@@ -2787,33 +2569,77 @@ static Napi::Value _cumsum(const Napi::CallbackInfo& info) {
   return ExternalizeTensor(env, out);
 }
 
-static Napi::Value _lShift(const Napi::CallbackInfo& info) {
+static void _min(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  const auto _arg_count = info.Length();
+  if (_arg_count != 5) {
+    Napi::TypeError::New(env, "`min` expects exactly 5 args, but received " +
+                                  std::to_string(_arg_count))
+        .ThrowAsJavaScriptException();
+    return;
+  }
+  if (!info[0].IsExternal()) {
+    Napi::TypeError::New(env,
+                         "`min` expects args[0] to be native `Tensor` (typeof "
+                         "`Napi::External<fl::Tensor>`)")
+        .ThrowAsJavaScriptException();
+    return;
+  }
+  fl::Tensor* values = UnExternalize<fl::Tensor>(info[0]);
+  if (!info[1].IsExternal()) {
+    Napi::TypeError::New(env,
+                         "`min` expects args[1] to be native `Tensor` (typeof "
+                         "`Napi::External<fl::Tensor>`)")
+        .ThrowAsJavaScriptException();
+    return;
+  }
+  fl::Tensor* indices = UnExternalize<fl::Tensor>(info[1]);
+  if (!info[2].IsExternal()) {
+    Napi::TypeError::New(env,
+                         "`min` expects args[2] to be native `Tensor` (typeof "
+                         "`Napi::External<fl::Tensor>`)")
+        .ThrowAsJavaScriptException();
+    return;
+  }
+  fl::Tensor* input = UnExternalize<fl::Tensor>(info[2]);
+  if (!info[3].IsNumber()) {
+    Napi::TypeError::New(env, "`min` expects args[3] to be typeof `number`")
+        .ThrowAsJavaScriptException();
+    return;
+  }
+  unsigned axis =
+      static_cast<unsigned>(info[3].As<Napi::Number>().Uint32Value());
+  bool keepDims = info[4].As<Napi::Boolean>().Value();
+  fl::min(*(values), *(indices), *(input), axis, keepDims);
+}
+
+static Napi::Value _div(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   const auto _arg_count = info.Length();
   if (_arg_count != 2) {
-    Napi::TypeError::New(env, "`lShift` expects exactly 2 args, but received " +
+    Napi::TypeError::New(env, "`div` expects exactly 2 args, but received " +
                                   std::to_string(_arg_count))
         .ThrowAsJavaScriptException();
     return env.Undefined();
   }
   if (!info[0].IsExternal()) {
     Napi::TypeError::New(env,
-                         "`lShift` expects args[0] to be native `Tensor` "
-                         "(typeof `Napi::External<fl::Tensor>`)")
+                         "`div` expects args[0] to be native `Tensor` (typeof "
+                         "`Napi::External<fl::Tensor>`)")
         .ThrowAsJavaScriptException();
     return env.Undefined();
   }
   fl::Tensor* lhs = UnExternalize<fl::Tensor>(info[0]);
   if (!info[1].IsExternal()) {
     Napi::TypeError::New(env,
-                         "`lShift` expects args[1] to be native `Tensor` "
-                         "(typeof `Napi::External<fl::Tensor>`)")
+                         "`div` expects args[1] to be native `Tensor` (typeof "
+                         "`Napi::External<fl::Tensor>`)")
         .ThrowAsJavaScriptException();
     return env.Undefined();
   }
   fl::Tensor* rhs = UnExternalize<fl::Tensor>(info[1]);
   fl::Tensor _res;
-  _res = fl::lShift(*(lhs), *(rhs));
+  _res = fl::div(*(lhs), *(rhs));
   auto _out_byte_count = _res.bytes();
   g_bytes_used += _out_byte_count;
   Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
@@ -2856,68 +2682,33 @@ static Napi::Value _lessThan(const Napi::CallbackInfo& info) {
   return ExternalizeTensor(env, out);
 }
 
-static Napi::Value _greaterThan(const Napi::CallbackInfo& info) {
+static Napi::Value _mul(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   const auto _arg_count = info.Length();
   if (_arg_count != 2) {
-    Napi::TypeError::New(env,
-                         "`greaterThan` expects exactly 2 args, but received " +
-                             std::to_string(_arg_count))
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  if (!info[0].IsExternal()) {
-    Napi::TypeError::New(env,
-                         "`greaterThan` expects args[0] to be native `Tensor` "
-                         "(typeof `Napi::External<fl::Tensor>`)")
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  fl::Tensor* lhs = UnExternalize<fl::Tensor>(info[0]);
-  if (!info[1].IsExternal()) {
-    Napi::TypeError::New(env,
-                         "`greaterThan` expects args[1] to be native `Tensor` "
-                         "(typeof `Napi::External<fl::Tensor>`)")
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  fl::Tensor* rhs = UnExternalize<fl::Tensor>(info[1]);
-  fl::Tensor _res;
-  _res = fl::greaterThan(*(lhs), *(rhs));
-  auto _out_byte_count = _res.bytes();
-  g_bytes_used += _out_byte_count;
-  Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
-  auto* out = new fl::Tensor(_res);
-  return ExternalizeTensor(env, out);
-}
-
-static Napi::Value _rShift(const Napi::CallbackInfo& info) {
-  Napi::Env env = info.Env();
-  const auto _arg_count = info.Length();
-  if (_arg_count != 2) {
-    Napi::TypeError::New(env, "`rShift` expects exactly 2 args, but received " +
+    Napi::TypeError::New(env, "`mul` expects exactly 2 args, but received " +
                                   std::to_string(_arg_count))
         .ThrowAsJavaScriptException();
     return env.Undefined();
   }
   if (!info[0].IsExternal()) {
     Napi::TypeError::New(env,
-                         "`rShift` expects args[0] to be native `Tensor` "
-                         "(typeof `Napi::External<fl::Tensor>`)")
+                         "`mul` expects args[0] to be native `Tensor` (typeof "
+                         "`Napi::External<fl::Tensor>`)")
         .ThrowAsJavaScriptException();
     return env.Undefined();
   }
   fl::Tensor* lhs = UnExternalize<fl::Tensor>(info[0]);
   if (!info[1].IsExternal()) {
     Napi::TypeError::New(env,
-                         "`rShift` expects args[1] to be native `Tensor` "
-                         "(typeof `Napi::External<fl::Tensor>`)")
+                         "`mul` expects args[1] to be native `Tensor` (typeof "
+                         "`Napi::External<fl::Tensor>`)")
         .ThrowAsJavaScriptException();
     return env.Undefined();
   }
   fl::Tensor* rhs = UnExternalize<fl::Tensor>(info[1]);
   fl::Tensor _res;
-  _res = fl::rShift(*(lhs), *(rhs));
+  _res = fl::mul(*(lhs), *(rhs));
   auto _out_byte_count = _res.bytes();
   g_bytes_used += _out_byte_count;
   Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
@@ -2925,34 +2716,33 @@ static Napi::Value _rShift(const Napi::CallbackInfo& info) {
   return ExternalizeTensor(env, out);
 }
 
-static Napi::Value _bitwiseOr(const Napi::CallbackInfo& info) {
+static Napi::Value _eq(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   const auto _arg_count = info.Length();
   if (_arg_count != 2) {
-    Napi::TypeError::New(env,
-                         "`bitwiseOr` expects exactly 2 args, but received " +
-                             std::to_string(_arg_count))
+    Napi::TypeError::New(env, "`eq` expects exactly 2 args, but received " +
+                                  std::to_string(_arg_count))
         .ThrowAsJavaScriptException();
     return env.Undefined();
   }
   if (!info[0].IsExternal()) {
     Napi::TypeError::New(env,
-                         "`bitwiseOr` expects args[0] to be native `Tensor` "
-                         "(typeof `Napi::External<fl::Tensor>`)")
+                         "`eq` expects args[0] to be native `Tensor` (typeof "
+                         "`Napi::External<fl::Tensor>`)")
         .ThrowAsJavaScriptException();
     return env.Undefined();
   }
   fl::Tensor* lhs = UnExternalize<fl::Tensor>(info[0]);
   if (!info[1].IsExternal()) {
     Napi::TypeError::New(env,
-                         "`bitwiseOr` expects args[1] to be native `Tensor` "
-                         "(typeof `Napi::External<fl::Tensor>`)")
+                         "`eq` expects args[1] to be native `Tensor` (typeof "
+                         "`Napi::External<fl::Tensor>`)")
         .ThrowAsJavaScriptException();
     return env.Undefined();
   }
   fl::Tensor* rhs = UnExternalize<fl::Tensor>(info[1]);
   fl::Tensor _res;
-  _res = fl::bitwiseOr(*(lhs), *(rhs));
+  _res = fl::eq(*(lhs), *(rhs));
   auto _out_byte_count = _res.bytes();
   g_bytes_used += _out_byte_count;
   Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
@@ -2960,19 +2750,86 @@ static Napi::Value _bitwiseOr(const Napi::CallbackInfo& info) {
   return ExternalizeTensor(env, out);
 }
 
-static Napi::Value _bitwiseAnd(const Napi::CallbackInfo& info) {
+static Napi::Value _sub(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   const auto _arg_count = info.Length();
   if (_arg_count != 2) {
-    Napi::TypeError::New(env,
-                         "`bitwiseAnd` expects exactly 2 args, but received " +
-                             std::to_string(_arg_count))
+    Napi::TypeError::New(env, "`sub` expects exactly 2 args, but received " +
+                                  std::to_string(_arg_count))
         .ThrowAsJavaScriptException();
     return env.Undefined();
   }
   if (!info[0].IsExternal()) {
     Napi::TypeError::New(env,
-                         "`bitwiseAnd` expects args[0] to be native `Tensor` "
+                         "`sub` expects args[0] to be native `Tensor` (typeof "
+                         "`Napi::External<fl::Tensor>`)")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  fl::Tensor* lhs = UnExternalize<fl::Tensor>(info[0]);
+  if (!info[1].IsExternal()) {
+    Napi::TypeError::New(env,
+                         "`sub` expects args[1] to be native `Tensor` (typeof "
+                         "`Napi::External<fl::Tensor>`)")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  fl::Tensor* rhs = UnExternalize<fl::Tensor>(info[1]);
+  fl::Tensor _res;
+  _res = fl::sub(*(lhs), *(rhs));
+  auto _out_byte_count = _res.bytes();
+  g_bytes_used += _out_byte_count;
+  Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
+  auto* out = new fl::Tensor(_res);
+  return ExternalizeTensor(env, out);
+}
+
+static Napi::Value _add(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  const auto _arg_count = info.Length();
+  if (_arg_count != 2) {
+    Napi::TypeError::New(env, "`add` expects exactly 2 args, but received " +
+                                  std::to_string(_arg_count))
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  if (!info[0].IsExternal()) {
+    Napi::TypeError::New(env,
+                         "`add` expects args[0] to be native `Tensor` (typeof "
+                         "`Napi::External<fl::Tensor>`)")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  fl::Tensor* lhs = UnExternalize<fl::Tensor>(info[0]);
+  if (!info[1].IsExternal()) {
+    Napi::TypeError::New(env,
+                         "`add` expects args[1] to be native `Tensor` (typeof "
+                         "`Napi::External<fl::Tensor>`)")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  fl::Tensor* rhs = UnExternalize<fl::Tensor>(info[1]);
+  fl::Tensor _res;
+  _res = fl::add(*(lhs), *(rhs));
+  auto _out_byte_count = _res.bytes();
+  g_bytes_used += _out_byte_count;
+  Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
+  auto* out = new fl::Tensor(_res);
+  return ExternalizeTensor(env, out);
+}
+
+static Napi::Value _lShift(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  const auto _arg_count = info.Length();
+  if (_arg_count != 2) {
+    Napi::TypeError::New(env, "`lShift` expects exactly 2 args, but received " +
+                                  std::to_string(_arg_count))
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  if (!info[0].IsExternal()) {
+    Napi::TypeError::New(env,
+                         "`lShift` expects args[0] to be native `Tensor` "
                          "(typeof `Napi::External<fl::Tensor>`)")
         .ThrowAsJavaScriptException();
     return env.Undefined();
@@ -2980,14 +2837,49 @@ static Napi::Value _bitwiseAnd(const Napi::CallbackInfo& info) {
   fl::Tensor* lhs = UnExternalize<fl::Tensor>(info[0]);
   if (!info[1].IsExternal()) {
     Napi::TypeError::New(env,
-                         "`bitwiseAnd` expects args[1] to be native `Tensor` "
+                         "`lShift` expects args[1] to be native `Tensor` "
                          "(typeof `Napi::External<fl::Tensor>`)")
         .ThrowAsJavaScriptException();
     return env.Undefined();
   }
   fl::Tensor* rhs = UnExternalize<fl::Tensor>(info[1]);
   fl::Tensor _res;
-  _res = fl::bitwiseAnd(*(lhs), *(rhs));
+  _res = fl::lShift(*(lhs), *(rhs));
+  auto _out_byte_count = _res.bytes();
+  g_bytes_used += _out_byte_count;
+  Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
+  auto* out = new fl::Tensor(_res);
+  return ExternalizeTensor(env, out);
+}
+
+static Napi::Value _lessThanEqual(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  const auto _arg_count = info.Length();
+  if (_arg_count != 2) {
+    Napi::TypeError::New(
+        env, "`lessThanEqual` expects exactly 2 args, but received " +
+                 std::to_string(_arg_count))
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  if (!info[0].IsExternal()) {
+    Napi::TypeError::New(env,
+                         "`lessThanEqual` expects args[0] to be native "
+                         "`Tensor` (typeof `Napi::External<fl::Tensor>`)")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  fl::Tensor* lhs = UnExternalize<fl::Tensor>(info[0]);
+  if (!info[1].IsExternal()) {
+    Napi::TypeError::New(env,
+                         "`lessThanEqual` expects args[1] to be native "
+                         "`Tensor` (typeof `Napi::External<fl::Tensor>`)")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  fl::Tensor* rhs = UnExternalize<fl::Tensor>(info[1]);
+  fl::Tensor _res;
+  _res = fl::lessThanEqual(*(lhs), *(rhs));
   auto _out_byte_count = _res.bytes();
   g_bytes_used += _out_byte_count;
   Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
@@ -3064,33 +2956,33 @@ static Napi::Value _bitwiseXor(const Napi::CallbackInfo& info) {
   return ExternalizeTensor(env, out);
 }
 
-static Napi::Value _sub(const Napi::CallbackInfo& info) {
+static Napi::Value _rShift(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   const auto _arg_count = info.Length();
   if (_arg_count != 2) {
-    Napi::TypeError::New(env, "`sub` expects exactly 2 args, but received " +
+    Napi::TypeError::New(env, "`rShift` expects exactly 2 args, but received " +
                                   std::to_string(_arg_count))
         .ThrowAsJavaScriptException();
     return env.Undefined();
   }
   if (!info[0].IsExternal()) {
     Napi::TypeError::New(env,
-                         "`sub` expects args[0] to be native `Tensor` (typeof "
-                         "`Napi::External<fl::Tensor>`)")
+                         "`rShift` expects args[0] to be native `Tensor` "
+                         "(typeof `Napi::External<fl::Tensor>`)")
         .ThrowAsJavaScriptException();
     return env.Undefined();
   }
   fl::Tensor* lhs = UnExternalize<fl::Tensor>(info[0]);
   if (!info[1].IsExternal()) {
     Napi::TypeError::New(env,
-                         "`sub` expects args[1] to be native `Tensor` (typeof "
-                         "`Napi::External<fl::Tensor>`)")
+                         "`rShift` expects args[1] to be native `Tensor` "
+                         "(typeof `Napi::External<fl::Tensor>`)")
         .ThrowAsJavaScriptException();
     return env.Undefined();
   }
   fl::Tensor* rhs = UnExternalize<fl::Tensor>(info[1]);
   fl::Tensor _res;
-  _res = fl::sub(*(lhs), *(rhs));
+  _res = fl::rShift(*(lhs), *(rhs));
   auto _out_byte_count = _res.bytes();
   g_bytes_used += _out_byte_count;
   Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
@@ -3098,18 +2990,18 @@ static Napi::Value _sub(const Napi::CallbackInfo& info) {
   return ExternalizeTensor(env, out);
 }
 
-static Napi::Value _mul(const Napi::CallbackInfo& info) {
+static Napi::Value _neq(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   const auto _arg_count = info.Length();
   if (_arg_count != 2) {
-    Napi::TypeError::New(env, "`mul` expects exactly 2 args, but received " +
+    Napi::TypeError::New(env, "`neq` expects exactly 2 args, but received " +
                                   std::to_string(_arg_count))
         .ThrowAsJavaScriptException();
     return env.Undefined();
   }
   if (!info[0].IsExternal()) {
     Napi::TypeError::New(env,
-                         "`mul` expects args[0] to be native `Tensor` (typeof "
+                         "`neq` expects args[0] to be native `Tensor` (typeof "
                          "`Napi::External<fl::Tensor>`)")
         .ThrowAsJavaScriptException();
     return env.Undefined();
@@ -3117,14 +3009,14 @@ static Napi::Value _mul(const Napi::CallbackInfo& info) {
   fl::Tensor* lhs = UnExternalize<fl::Tensor>(info[0]);
   if (!info[1].IsExternal()) {
     Napi::TypeError::New(env,
-                         "`mul` expects args[1] to be native `Tensor` (typeof "
+                         "`neq` expects args[1] to be native `Tensor` (typeof "
                          "`Napi::External<fl::Tensor>`)")
         .ThrowAsJavaScriptException();
     return env.Undefined();
   }
   fl::Tensor* rhs = UnExternalize<fl::Tensor>(info[1]);
   fl::Tensor _res;
-  _res = fl::mul(*(lhs), *(rhs));
+  _res = fl::neq(*(lhs), *(rhs));
   auto _out_byte_count = _res.bytes();
   g_bytes_used += _out_byte_count;
   Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
@@ -3167,33 +3059,104 @@ static Napi::Value _greaterThanEqual(const Napi::CallbackInfo& info) {
   return ExternalizeTensor(env, out);
 }
 
-static Napi::Value _div(const Napi::CallbackInfo& info) {
+static Napi::Value _bitwiseAnd(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   const auto _arg_count = info.Length();
   if (_arg_count != 2) {
-    Napi::TypeError::New(env, "`div` expects exactly 2 args, but received " +
-                                  std::to_string(_arg_count))
+    Napi::TypeError::New(env,
+                         "`bitwiseAnd` expects exactly 2 args, but received " +
+                             std::to_string(_arg_count))
         .ThrowAsJavaScriptException();
     return env.Undefined();
   }
   if (!info[0].IsExternal()) {
     Napi::TypeError::New(env,
-                         "`div` expects args[0] to be native `Tensor` (typeof "
-                         "`Napi::External<fl::Tensor>`)")
+                         "`bitwiseAnd` expects args[0] to be native `Tensor` "
+                         "(typeof `Napi::External<fl::Tensor>`)")
         .ThrowAsJavaScriptException();
     return env.Undefined();
   }
   fl::Tensor* lhs = UnExternalize<fl::Tensor>(info[0]);
   if (!info[1].IsExternal()) {
     Napi::TypeError::New(env,
-                         "`div` expects args[1] to be native `Tensor` (typeof "
-                         "`Napi::External<fl::Tensor>`)")
+                         "`bitwiseAnd` expects args[1] to be native `Tensor` "
+                         "(typeof `Napi::External<fl::Tensor>`)")
         .ThrowAsJavaScriptException();
     return env.Undefined();
   }
   fl::Tensor* rhs = UnExternalize<fl::Tensor>(info[1]);
   fl::Tensor _res;
-  _res = fl::div(*(lhs), *(rhs));
+  _res = fl::bitwiseAnd(*(lhs), *(rhs));
+  auto _out_byte_count = _res.bytes();
+  g_bytes_used += _out_byte_count;
+  Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
+  auto* out = new fl::Tensor(_res);
+  return ExternalizeTensor(env, out);
+}
+
+static Napi::Value _bitwiseOr(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  const auto _arg_count = info.Length();
+  if (_arg_count != 2) {
+    Napi::TypeError::New(env,
+                         "`bitwiseOr` expects exactly 2 args, but received " +
+                             std::to_string(_arg_count))
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  if (!info[0].IsExternal()) {
+    Napi::TypeError::New(env,
+                         "`bitwiseOr` expects args[0] to be native `Tensor` "
+                         "(typeof `Napi::External<fl::Tensor>`)")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  fl::Tensor* lhs = UnExternalize<fl::Tensor>(info[0]);
+  if (!info[1].IsExternal()) {
+    Napi::TypeError::New(env,
+                         "`bitwiseOr` expects args[1] to be native `Tensor` "
+                         "(typeof `Napi::External<fl::Tensor>`)")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  fl::Tensor* rhs = UnExternalize<fl::Tensor>(info[1]);
+  fl::Tensor _res;
+  _res = fl::bitwiseOr(*(lhs), *(rhs));
+  auto _out_byte_count = _res.bytes();
+  g_bytes_used += _out_byte_count;
+  Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
+  auto* out = new fl::Tensor(_res);
+  return ExternalizeTensor(env, out);
+}
+
+static Napi::Value _logicalOr(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  const auto _arg_count = info.Length();
+  if (_arg_count != 2) {
+    Napi::TypeError::New(env,
+                         "`logicalOr` expects exactly 2 args, but received " +
+                             std::to_string(_arg_count))
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  if (!info[0].IsExternal()) {
+    Napi::TypeError::New(env,
+                         "`logicalOr` expects args[0] to be native `Tensor` "
+                         "(typeof `Napi::External<fl::Tensor>`)")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  fl::Tensor* lhs = UnExternalize<fl::Tensor>(info[0]);
+  if (!info[1].IsExternal()) {
+    Napi::TypeError::New(env,
+                         "`logicalOr` expects args[1] to be native `Tensor` "
+                         "(typeof `Napi::External<fl::Tensor>`)")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  fl::Tensor* rhs = UnExternalize<fl::Tensor>(info[1]);
+  fl::Tensor _res;
+  _res = fl::logicalOr(*(lhs), *(rhs));
   auto _out_byte_count = _res.bytes();
   g_bytes_used += _out_byte_count;
   Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
@@ -3236,156 +3199,19 @@ static Napi::Value _logicalAnd(const Napi::CallbackInfo& info) {
   return ExternalizeTensor(env, out);
 }
 
-static Napi::Value _add(const Napi::CallbackInfo& info) {
-  Napi::Env env = info.Env();
-  const auto _arg_count = info.Length();
-  if (_arg_count != 2) {
-    Napi::TypeError::New(env, "`add` expects exactly 2 args, but received " +
-                                  std::to_string(_arg_count))
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  if (!info[0].IsExternal()) {
-    Napi::TypeError::New(env,
-                         "`add` expects args[0] to be native `Tensor` (typeof "
-                         "`Napi::External<fl::Tensor>`)")
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  fl::Tensor* lhs = UnExternalize<fl::Tensor>(info[0]);
-  if (!info[1].IsExternal()) {
-    Napi::TypeError::New(env,
-                         "`add` expects args[1] to be native `Tensor` (typeof "
-                         "`Napi::External<fl::Tensor>`)")
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  fl::Tensor* rhs = UnExternalize<fl::Tensor>(info[1]);
-  fl::Tensor _res;
-  _res = fl::add(*(lhs), *(rhs));
-  auto _out_byte_count = _res.bytes();
-  g_bytes_used += _out_byte_count;
-  Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
-  auto* out = new fl::Tensor(_res);
-  return ExternalizeTensor(env, out);
-}
-
-static Napi::Value _eq(const Napi::CallbackInfo& info) {
-  Napi::Env env = info.Env();
-  const auto _arg_count = info.Length();
-  if (_arg_count != 2) {
-    Napi::TypeError::New(env, "`eq` expects exactly 2 args, but received " +
-                                  std::to_string(_arg_count))
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  if (!info[0].IsExternal()) {
-    Napi::TypeError::New(env,
-                         "`eq` expects args[0] to be native `Tensor` (typeof "
-                         "`Napi::External<fl::Tensor>`)")
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  fl::Tensor* lhs = UnExternalize<fl::Tensor>(info[0]);
-  if (!info[1].IsExternal()) {
-    Napi::TypeError::New(env,
-                         "`eq` expects args[1] to be native `Tensor` (typeof "
-                         "`Napi::External<fl::Tensor>`)")
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  fl::Tensor* rhs = UnExternalize<fl::Tensor>(info[1]);
-  fl::Tensor _res;
-  _res = fl::eq(*(lhs), *(rhs));
-  auto _out_byte_count = _res.bytes();
-  g_bytes_used += _out_byte_count;
-  Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
-  auto* out = new fl::Tensor(_res);
-  return ExternalizeTensor(env, out);
-}
-
-static Napi::Value _neq(const Napi::CallbackInfo& info) {
-  Napi::Env env = info.Env();
-  const auto _arg_count = info.Length();
-  if (_arg_count != 2) {
-    Napi::TypeError::New(env, "`neq` expects exactly 2 args, but received " +
-                                  std::to_string(_arg_count))
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  if (!info[0].IsExternal()) {
-    Napi::TypeError::New(env,
-                         "`neq` expects args[0] to be native `Tensor` (typeof "
-                         "`Napi::External<fl::Tensor>`)")
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  fl::Tensor* lhs = UnExternalize<fl::Tensor>(info[0]);
-  if (!info[1].IsExternal()) {
-    Napi::TypeError::New(env,
-                         "`neq` expects args[1] to be native `Tensor` (typeof "
-                         "`Napi::External<fl::Tensor>`)")
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  fl::Tensor* rhs = UnExternalize<fl::Tensor>(info[1]);
-  fl::Tensor _res;
-  _res = fl::neq(*(lhs), *(rhs));
-  auto _out_byte_count = _res.bytes();
-  g_bytes_used += _out_byte_count;
-  Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
-  auto* out = new fl::Tensor(_res);
-  return ExternalizeTensor(env, out);
-}
-
-static Napi::Value _lessThanEqual(const Napi::CallbackInfo& info) {
-  Napi::Env env = info.Env();
-  const auto _arg_count = info.Length();
-  if (_arg_count != 2) {
-    Napi::TypeError::New(
-        env, "`lessThanEqual` expects exactly 2 args, but received " +
-                 std::to_string(_arg_count))
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  if (!info[0].IsExternal()) {
-    Napi::TypeError::New(env,
-                         "`lessThanEqual` expects args[0] to be native "
-                         "`Tensor` (typeof `Napi::External<fl::Tensor>`)")
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  fl::Tensor* lhs = UnExternalize<fl::Tensor>(info[0]);
-  if (!info[1].IsExternal()) {
-    Napi::TypeError::New(env,
-                         "`lessThanEqual` expects args[1] to be native "
-                         "`Tensor` (typeof `Napi::External<fl::Tensor>`)")
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  fl::Tensor* rhs = UnExternalize<fl::Tensor>(info[1]);
-  fl::Tensor _res;
-  _res = fl::lessThanEqual(*(lhs), *(rhs));
-  auto _out_byte_count = _res.bytes();
-  g_bytes_used += _out_byte_count;
-  Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
-  auto* out = new fl::Tensor(_res);
-  return ExternalizeTensor(env, out);
-}
-
-static Napi::Value _logicalOr(const Napi::CallbackInfo& info) {
+static Napi::Value _greaterThan(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   const auto _arg_count = info.Length();
   if (_arg_count != 2) {
     Napi::TypeError::New(env,
-                         "`logicalOr` expects exactly 2 args, but received " +
+                         "`greaterThan` expects exactly 2 args, but received " +
                              std::to_string(_arg_count))
         .ThrowAsJavaScriptException();
     return env.Undefined();
   }
   if (!info[0].IsExternal()) {
     Napi::TypeError::New(env,
-                         "`logicalOr` expects args[0] to be native `Tensor` "
+                         "`greaterThan` expects args[0] to be native `Tensor` "
                          "(typeof `Napi::External<fl::Tensor>`)")
         .ThrowAsJavaScriptException();
     return env.Undefined();
@@ -3393,14 +3219,14 @@ static Napi::Value _logicalOr(const Napi::CallbackInfo& info) {
   fl::Tensor* lhs = UnExternalize<fl::Tensor>(info[0]);
   if (!info[1].IsExternal()) {
     Napi::TypeError::New(env,
-                         "`logicalOr` expects args[1] to be native `Tensor` "
+                         "`greaterThan` expects args[1] to be native `Tensor` "
                          "(typeof `Napi::External<fl::Tensor>`)")
         .ThrowAsJavaScriptException();
     return env.Undefined();
   }
   fl::Tensor* rhs = UnExternalize<fl::Tensor>(info[1]);
   fl::Tensor _res;
-  _res = fl::logicalOr(*(lhs), *(rhs));
+  _res = fl::greaterThan(*(lhs), *(rhs));
   auto _out_byte_count = _res.bytes();
   g_bytes_used += _out_byte_count;
   Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
@@ -3515,29 +3341,6 @@ static Napi::Value _randn(const Napi::CallbackInfo& info) {
 // NAPI exports
 
 Napi::Object Init(Napi::Env env, Napi::Object exports) {
-  exports.Set(Napi::String::New(env, "_copy"), Napi::Function::New(env, _copy));
-  exports.Set(Napi::String::New(env, "_shape"),
-              Napi::Function::New(env, _shape));
-  exports.Set(Napi::String::New(env, "_elements"),
-              Napi::Function::New(env, _elements));
-  exports.Set(Napi::String::New(env, "_ndim"), Napi::Function::New(env, _ndim));
-  exports.Set(Napi::String::New(env, "_isEmpty"),
-              Napi::Function::New(env, _isEmpty));
-  exports.Set(Napi::String::New(env, "_bytes"),
-              Napi::Function::New(env, _bytes));
-  exports.Set(Napi::String::New(env, "_type"), Napi::Function::New(env, _type));
-  exports.Set(Napi::String::New(env, "_isSparse"),
-              Napi::Function::New(env, _isSparse));
-  exports.Set(Napi::String::New(env, "_strides"),
-              Napi::Function::New(env, _strides));
-  exports.Set(Napi::String::New(env, "_astype"),
-              Napi::Function::New(env, _astype));
-  exports.Set(Napi::String::New(env, "_flatten"),
-              Napi::Function::New(env, _flatten));
-  exports.Set(Napi::String::New(env, "_asContiguousTensor"),
-              Napi::Function::New(env, _asContiguousTensor));
-  exports.Set(Napi::String::New(env, "_isContiguous"),
-              Napi::Function::New(env, _isContiguous));
   exports.Set(Napi::String::New(env, "_toFloat32Array"),
               Napi::Function::New(env, _toFloat32Array));
   exports.Set(Napi::String::New(env, "_toFloat64Array"),
@@ -3602,121 +3405,122 @@ Napi::Object Init(Napi::Env env, Napi::Object exports) {
   exports.Set(Napi::String::New(env, "_tensorFromUint64Buffer"),
               Napi::Function::New(env, _tensorFromUint64Buffer));
   exports.Set(Napi::String::New(env, "_save"), Napi::Function::New(env, _save));
-  exports.Set(Napi::String::New(env, "_absolute"),
-              Napi::Function::New(env, _absolute));
-  exports.Set(Napi::String::New(env, "_log"), Napi::Function::New(env, _log));
-  exports.Set(Napi::String::New(env, "_cos"), Napi::Function::New(env, _cos));
-  exports.Set(Napi::String::New(env, "_isnan"),
-              Napi::Function::New(env, _isnan));
-  exports.Set(Napi::String::New(env, "_tril"), Napi::Function::New(env, _tril));
-  exports.Set(Napi::String::New(env, "_mean"), Napi::Function::New(env, _mean));
-  exports.Set(Napi::String::New(env, "_iota"), Napi::Function::New(env, _iota));
-  exports.Set(Napi::String::New(env, "_log1p"),
-              Napi::Function::New(env, _log1p));
-  exports.Set(Napi::String::New(env, "_tile"), Napi::Function::New(env, _tile));
-  exports.Set(Napi::String::New(env, "_erf"), Napi::Function::New(env, _erf));
-  exports.Set(Napi::String::New(env, "_cumsum"),
-              Napi::Function::New(env, _cumsum));
-  exports.Set(Napi::String::New(env, "_any"), Napi::Function::New(env, _any));
-  exports.Set(Napi::String::New(env, "_allClose"),
-              Napi::Function::New(env, _allClose));
-  exports.Set(Napi::String::New(env, "_full"), Napi::Function::New(env, _full));
-  exports.Set(Napi::String::New(env, "_roll"), Napi::Function::New(env, _roll));
-  exports.Set(Napi::String::New(env, "_sum"), Napi::Function::New(env, _sum));
-  exports.Set(Napi::String::New(env, "_ceil"), Napi::Function::New(env, _ceil));
-  exports.Set(Napi::String::New(env, "_sigmoid"),
-              Napi::Function::New(env, _sigmoid));
   exports.Set(Napi::String::New(env, "_where"),
               Napi::Function::New(env, _where));
-  exports.Set(Napi::String::New(env, "_min"), Napi::Function::New(env, _min));
-  exports.Set(Napi::String::New(env, "_all"), Napi::Function::New(env, _all));
-  exports.Set(Napi::String::New(env, "_nonzero"),
-              Napi::Function::New(env, _nonzero));
-  exports.Set(Napi::String::New(env, "_matmul"),
-              Napi::Function::New(env, _matmul));
-  exports.Set(Napi::String::New(env, "_norm"), Napi::Function::New(env, _norm));
-  exports.Set(Napi::String::New(env, "_negative"),
-              Napi::Function::New(env, _negative));
-  exports.Set(Napi::String::New(env, "_argmin"),
-              Napi::Function::New(env, _argmin));
-  exports.Set(Napi::String::New(env, "_var"), Napi::Function::New(env, _var));
-  exports.Set(Napi::String::New(env, "_isInvalidArray"),
-              Napi::Function::New(env, _isInvalidArray));
-  exports.Set(Napi::String::New(env, "_power"),
-              Napi::Function::New(env, _power));
-  exports.Set(Napi::String::New(env, "_sort"), Napi::Function::New(env, _sort));
-  exports.Set(Napi::String::New(env, "_max"), Napi::Function::New(env, _max));
-  exports.Set(Napi::String::New(env, "_median"),
-              Napi::Function::New(env, _median));
-  exports.Set(Napi::String::New(env, "_countNonzero"),
-              Napi::Function::New(env, _countNonzero));
-  exports.Set(Napi::String::New(env, "_floor"),
-              Napi::Function::New(env, _floor));
-  exports.Set(Napi::String::New(env, "_maximum"),
-              Napi::Function::New(env, _maximum));
-  exports.Set(Napi::String::New(env, "_identity"),
-              Napi::Function::New(env, _identity));
-  exports.Set(Napi::String::New(env, "_sqrt"), Napi::Function::New(env, _sqrt));
-  exports.Set(Napi::String::New(env, "_triu"), Napi::Function::New(env, _triu));
-  exports.Set(Napi::String::New(env, "_minimum"),
-              Napi::Function::New(env, _minimum));
-  exports.Set(Napi::String::New(env, "_transpose"),
-              Napi::Function::New(env, _transpose));
-  exports.Set(Napi::String::New(env, "_tanh"), Napi::Function::New(env, _tanh));
-  exports.Set(Napi::String::New(env, "_rint"), Napi::Function::New(env, _rint));
-  exports.Set(Napi::String::New(env, "_amin"), Napi::Function::New(env, _amin));
-  exports.Set(Napi::String::New(env, "_std"), Napi::Function::New(env, _std));
-  exports.Set(Napi::String::New(env, "_concatenate"),
-              Napi::Function::New(env, _concatenate));
-  exports.Set(Napi::String::New(env, "_reshape"),
-              Napi::Function::New(env, _reshape));
-  exports.Set(Napi::String::New(env, "_flip"), Napi::Function::New(env, _flip));
-  exports.Set(Napi::String::New(env, "_isinf"),
-              Napi::Function::New(env, _isinf));
+  exports.Set(Napi::String::New(env, "_any"), Napi::Function::New(env, _any));
+  exports.Set(Napi::String::New(env, "_log"), Napi::Function::New(env, _log));
+  exports.Set(Napi::String::New(env, "_roll"), Napi::Function::New(env, _roll));
   exports.Set(Napi::String::New(env, "_areTensorTypesEqual"),
               Napi::Function::New(env, _areTensorTypesEqual));
+  exports.Set(Napi::String::New(env, "_min"), Napi::Function::New(env, _min));
+  exports.Set(Napi::String::New(env, "_median"),
+              Napi::Function::New(env, _median));
+  exports.Set(Napi::String::New(env, "_matmul"),
+              Napi::Function::New(env, _matmul));
+  exports.Set(Napi::String::New(env, "_sum"), Napi::Function::New(env, _sum));
+  exports.Set(Napi::String::New(env, "_tril"), Napi::Function::New(env, _tril));
+  exports.Set(Napi::String::New(env, "_var"), Napi::Function::New(env, _var));
+  exports.Set(Napi::String::New(env, "_countNonzero"),
+              Napi::Function::New(env, _countNonzero));
+  exports.Set(Napi::String::New(env, "_tanh"), Napi::Function::New(env, _tanh));
+  exports.Set(Napi::String::New(env, "_isinf"),
+              Napi::Function::New(env, _isinf));
+  exports.Set(Napi::String::New(env, "_clip"), Napi::Function::New(env, _clip));
+  exports.Set(Napi::String::New(env, "_max"), Napi::Function::New(env, _max));
+  exports.Set(Napi::String::New(env, "_std"), Napi::Function::New(env, _std));
+  exports.Set(Napi::String::New(env, "_cos"), Napi::Function::New(env, _cos));
+  exports.Set(Napi::String::New(env, "_flip"), Napi::Function::New(env, _flip));
+  exports.Set(Napi::String::New(env, "_tile"), Napi::Function::New(env, _tile));
+  exports.Set(Napi::String::New(env, "_floor"),
+              Napi::Function::New(env, _floor));
+  exports.Set(Napi::String::New(env, "_sigmoid"),
+              Napi::Function::New(env, _sigmoid));
+  exports.Set(Napi::String::New(env, "_amin"), Napi::Function::New(env, _amin));
+  exports.Set(Napi::String::New(env, "_full"), Napi::Function::New(env, _full));
   exports.Set(Napi::String::New(env, "_arange"),
               Napi::Function::New(env, _arange));
-  exports.Set(Napi::String::New(env, "_sin"), Napi::Function::New(env, _sin));
-  exports.Set(Napi::String::New(env, "_clip"), Napi::Function::New(env, _clip));
-  exports.Set(Napi::String::New(env, "_exp"), Napi::Function::New(env, _exp));
-  exports.Set(Napi::String::New(env, "_sign"), Napi::Function::New(env, _sign));
+  exports.Set(Napi::String::New(env, "_reshape"),
+              Napi::Function::New(env, _reshape));
+  exports.Set(Napi::String::New(env, "_maximum"),
+              Napi::Function::New(env, _maximum));
+  exports.Set(Napi::String::New(env, "_amax"), Napi::Function::New(env, _amax));
+  exports.Set(Napi::String::New(env, "_erf"), Napi::Function::New(env, _erf));
   exports.Set(Napi::String::New(env, "_argsort"),
               Napi::Function::New(env, _argsort));
-  exports.Set(Napi::String::New(env, "_amax"), Napi::Function::New(env, _amax));
+  exports.Set(Napi::String::New(env, "_triu"), Napi::Function::New(env, _triu));
+  exports.Set(Napi::String::New(env, "_power"),
+              Napi::Function::New(env, _power));
+  exports.Set(Napi::String::New(env, "_transpose"),
+              Napi::Function::New(env, _transpose));
+  exports.Set(Napi::String::New(env, "_concatenate"),
+              Napi::Function::New(env, _concatenate));
+  exports.Set(Napi::String::New(env, "_absolute"),
+              Napi::Function::New(env, _absolute));
+  exports.Set(Napi::String::New(env, "_all"), Napi::Function::New(env, _all));
+  exports.Set(Napi::String::New(env, "_pad"), Napi::Function::New(env, _pad));
+  exports.Set(Napi::String::New(env, "_negative"),
+              Napi::Function::New(env, _negative));
   exports.Set(Napi::String::New(env, "_argmax"),
               Napi::Function::New(env, _argmax));
+  exports.Set(Napi::String::New(env, "_argmin"),
+              Napi::Function::New(env, _argmin));
+  exports.Set(Napi::String::New(env, "_nonzero"),
+              Napi::Function::New(env, _nonzero));
+  exports.Set(Napi::String::New(env, "_sin"), Napi::Function::New(env, _sin));
+  exports.Set(Napi::String::New(env, "_sort"), Napi::Function::New(env, _sort));
+  exports.Set(Napi::String::New(env, "_mean"), Napi::Function::New(env, _mean));
+  exports.Set(Napi::String::New(env, "_exp"), Napi::Function::New(env, _exp));
+  exports.Set(Napi::String::New(env, "_sqrt"), Napi::Function::New(env, _sqrt));
+  exports.Set(Napi::String::New(env, "_minimum"),
+              Napi::Function::New(env, _minimum));
+  exports.Set(Napi::String::New(env, "_norm"), Napi::Function::New(env, _norm));
+  exports.Set(Napi::String::New(env, "_identity"),
+              Napi::Function::New(env, _identity));
+  exports.Set(Napi::String::New(env, "_isnan"),
+              Napi::Function::New(env, _isnan));
+  exports.Set(Napi::String::New(env, "_rint"), Napi::Function::New(env, _rint));
+  exports.Set(Napi::String::New(env, "_sign"), Napi::Function::New(env, _sign));
+  exports.Set(Napi::String::New(env, "_log1p"),
+              Napi::Function::New(env, _log1p));
+  exports.Set(Napi::String::New(env, "_ceil"), Napi::Function::New(env, _ceil));
+  exports.Set(Napi::String::New(env, "_cumsum"),
+              Napi::Function::New(env, _cumsum));
+  exports.Set(Napi::String::New(env, "_allClose"),
+              Napi::Function::New(env, _allClose));
+  exports.Set(Napi::String::New(env, "_isInvalidArray"),
+              Napi::Function::New(env, _isInvalidArray));
+  exports.Set(Napi::String::New(env, "_iota"), Napi::Function::New(env, _iota));
   exports.Set(Napi::String::New(env, "_logicalNot"),
               Napi::Function::New(env, _logicalNot));
+  exports.Set(Napi::String::New(env, "_greaterThanEqual"),
+              Napi::Function::New(env, _greaterThanEqual));
   exports.Set(Napi::String::New(env, "_bitwiseAnd"),
               Napi::Function::New(env, _bitwiseAnd));
+  exports.Set(Napi::String::New(env, "_bitwiseOr"),
+              Napi::Function::New(env, _bitwiseOr));
+  exports.Set(Napi::String::New(env, "_rShift"),
+              Napi::Function::New(env, _rShift));
+  exports.Set(Napi::String::New(env, "_neq"), Napi::Function::New(env, _neq));
+  exports.Set(Napi::String::New(env, "_greaterThan"),
+              Napi::Function::New(env, _greaterThan));
+  exports.Set(Napi::String::New(env, "_logicalOr"),
+              Napi::Function::New(env, _logicalOr));
+  exports.Set(Napi::String::New(env, "_logicalAnd"),
+              Napi::Function::New(env, _logicalAnd));
+  exports.Set(Napi::String::New(env, "_mul"), Napi::Function::New(env, _mul));
+  exports.Set(Napi::String::New(env, "_eq"), Napi::Function::New(env, _eq));
+  exports.Set(Napi::String::New(env, "_div"), Napi::Function::New(env, _div));
+  exports.Set(Napi::String::New(env, "_lessThan"),
+              Napi::Function::New(env, _lessThan));
+  exports.Set(Napi::String::New(env, "_lessThanEqual"),
+              Napi::Function::New(env, _lessThanEqual));
   exports.Set(Napi::String::New(env, "_mod"), Napi::Function::New(env, _mod));
   exports.Set(Napi::String::New(env, "_bitwiseXor"),
               Napi::Function::New(env, _bitwiseXor));
   exports.Set(Napi::String::New(env, "_sub"), Napi::Function::New(env, _sub));
-  exports.Set(Napi::String::New(env, "_mul"), Napi::Function::New(env, _mul));
-  exports.Set(Napi::String::New(env, "_greaterThanEqual"),
-              Napi::Function::New(env, _greaterThanEqual));
-  exports.Set(Napi::String::New(env, "_div"), Napi::Function::New(env, _div));
-  exports.Set(Napi::String::New(env, "_logicalAnd"),
-              Napi::Function::New(env, _logicalAnd));
   exports.Set(Napi::String::New(env, "_add"), Napi::Function::New(env, _add));
-  exports.Set(Napi::String::New(env, "_eq"), Napi::Function::New(env, _eq));
-  exports.Set(Napi::String::New(env, "_neq"), Napi::Function::New(env, _neq));
-  exports.Set(Napi::String::New(env, "_lessThanEqual"),
-              Napi::Function::New(env, _lessThanEqual));
-  exports.Set(Napi::String::New(env, "_logicalOr"),
-              Napi::Function::New(env, _logicalOr));
   exports.Set(Napi::String::New(env, "_lShift"),
               Napi::Function::New(env, _lShift));
-  exports.Set(Napi::String::New(env, "_lessThan"),
-              Napi::Function::New(env, _lessThan));
-  exports.Set(Napi::String::New(env, "_greaterThan"),
-              Napi::Function::New(env, _greaterThan));
-  exports.Set(Napi::String::New(env, "_rShift"),
-              Napi::Function::New(env, _rShift));
-  exports.Set(Napi::String::New(env, "_bitwiseOr"),
-              Napi::Function::New(env, _bitwiseOr));
   exports.Set(Napi::String::New(env, "_init"), Napi::Function::New(env, _init));
   exports.Set(Napi::String::New(env, "_bytesUsed"),
               Napi::Function::New(env, _bytesUsed));
