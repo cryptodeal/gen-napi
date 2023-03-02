@@ -55,21 +55,61 @@ type CPPClass struct {
 	TemplateDecl *[]*TemplateMethod
 }
 
+type MappedType struct {
+	NameSpace *string
+	Name      string
+}
+
 type CPPType struct {
 	Name          string
 	IsPrimitive   bool
 	IsPointer     bool
 	IsConst       bool
 	Template      *TemplateType
+	MappedType    *CPPType
+	OGType        *string
 	TypeQualifier *string
 	RefDecl       *string
 	NameSpace     *string
+}
+
+func (t *CPPType) GetFullType() string {
+	var full_type string
+	if t.NameSpace != nil {
+		full_type = fmt.Sprintf("%s::", *t.NameSpace)
+	}
+	return full_type + t.Name
+}
+
+func (t *CPPType) UseMappedType(typeMap map[string]TypeMap, parser *sitter.Parser) {
+	if v, ok := typeMap[t.Name]; ok && v.NativeType != "" {
+		t.MappedType = ParseMappedType(v.NativeType, typeMap, parser, t.Name)
+	} else {
+		// if no match, ensure it's not due to namespace
+		for k, v := range typeMap {
+			name_split := strings.Split(k, "::")
+			if name_split[len(name_split)-1] == t.Name && v.NativeType != "" {
+				t.MappedType = ParseMappedType(v.NativeType, typeMap, parser, k)
+			}
+		}
+	}
 }
 
 type CPPArg struct {
 	Type         *CPPType
 	Name         *string
 	DefaultValue *CPPArgDefault
+}
+
+type CPPFieldDecl struct {
+	Name      *string
+	NameSpace *string
+	Args      []*CPPArg
+	Returns   *CPPType
+}
+
+func (f *CPPFieldDecl) IsVoid() bool {
+	return !(f.Returns != nil && (f.Returns.Name != "void" && f.Returns.Name != "") && !f.Returns.IsPointer)
 }
 
 type CPPMethod struct {
@@ -81,15 +121,20 @@ type CPPMethod struct {
 	OptionalArgs int
 }
 
-type CPPFieldDecl struct {
-	Name          *string
-	Args          []*CPPArg
-	Returns       *CPPType
-	TypeQualifier *string
-}
-
 func (c *CPPMethod) IsVoid() bool {
-	return !(c.Returns != nil && (c.Returns.Name != "void" && c.Returns.Name != "") && !c.Returns.IsPointer)
+	if c.Returns == nil {
+		return true
+	}
+
+	if c.Returns.Name == "void" && !c.Returns.IsPointer {
+		return true
+	}
+
+	if c.Returns.Name == "" {
+		return true
+	}
+
+	return false
 }
 
 type TemplateMethod struct {
@@ -136,16 +181,7 @@ type ParsedClass struct {
 	Properties []*ObjectProperty
 }
 
-func getRootNode(path string) (*sitter.Node, []byte) {
-	input, err := os.ReadFile(path)
-	if err != nil {
-		fmt.Println(err)
-		return nil, nil
-	}
-
-	parser := sitter.NewParser()
-	parser.SetLanguage(cpp.GetLanguage())
-
+func ParseByteToTree(input []byte, parser *sitter.Parser) (*sitter.Node, []byte) {
 	tree, err := parser.ParseCtx(context.Background(), nil, input)
 	if err != nil {
 		fmt.Println(err)
@@ -154,6 +190,46 @@ func getRootNode(path string) (*sitter.Node, []byte) {
 
 	n := tree.RootNode()
 	return n, input
+}
+
+func getRootNode(path string, parser *sitter.Parser) (*sitter.Node, []byte) {
+	input, err := os.ReadFile(path)
+	if err != nil {
+		fmt.Println(err)
+		return nil, nil
+	}
+
+	return ParseByteToTree(input, parser)
+}
+
+// Alias Declarations
+type AliasDecl struct {
+	Alias string
+	Type  *CPPType
+}
+
+func QueryAliasDecls(n *sitter.Node, input []byte) []*sitter.Node {
+	aliases := []*sitter.Node{}
+	q, err := sitter.NewQuery([]byte("(alias_declaration) @alias"), cpp.GetLanguage())
+
+	if err != nil {
+		fmt.Println(err)
+		panic(err)
+	}
+
+	qc := sitter.NewQueryCursor()
+	qc.Exec(q, n)
+
+	for {
+		m, ok := qc.NextMatch()
+		if !ok {
+			break
+		}
+		for _, c := range m.Captures {
+			aliases = append(aliases, c.Node)
+		}
+	}
+	return aliases
 }
 
 func parseLocalIncludes(n *sitter.Node, input []byte) []*string {
@@ -202,7 +278,7 @@ func (g *PackageGenerator) parseMethods(n *sitter.Node, input []byte) map[string
 			break
 		}
 		res, body := splitMatches(m.Captures)
-		parsed := parseCPPMethod(res.Node, body.Node, input)
+		parsed := g.parseCPPMethod(res.Node, body.Node, input)
 		if v, ok := methods[*parsed.Name]; ok {
 			// encountered method previously (fn overloading)
 			v.Overloads = append(v.Overloads, parsed.Args)
@@ -247,14 +323,14 @@ func parseNamespace(n *sitter.Node, input []byte) string {
 	return out
 }
 
-func parseCPPMethod(r *sitter.Node, b *sitter.Node, content []byte) *ParsedMethod {
+func (g *PackageGenerator) parseCPPMethod(r *sitter.Node, b *sitter.Node, content []byte) *ParsedMethod {
 	funcDeclNode := b
 	returnsPointer := false
 	if b.Type() == "pointer_declarator" {
 		returnsPointer = true
 		funcDeclNode = b.ChildByFieldName("declarator")
 	}
-	args := parseCPPArg(content, funcDeclNode.ChildByFieldName("parameters"))
+	args := g.parseCPPArg(content, funcDeclNode.ChildByFieldName("parameters"))
 	name := funcDeclNode.ChildByFieldName("declarator").Content(content)
 	parsed := &ParsedMethod{
 		Args:           args,
@@ -262,13 +338,13 @@ func parseCPPMethod(r *sitter.Node, b *sitter.Node, content []byte) *ParsedMetho
 		NameSpace:      parseNameSpace(b, content),
 		Name:           &name,
 	}
-	return_val := parseReturnType(r, content)
+	return_val := g.parseReturnType(r, content)
 	return_val.IsPointer = returnsPointer
 	parsed.Returns = return_val
 	return parsed
 }
 
-func parseCPPArg(content []byte, arg_list *sitter.Node) *[]*CPPArg {
+func (g *PackageGenerator) parseCPPArg(content []byte, arg_list *sitter.Node) *[]*CPPArg {
 	args := []*CPPArg{}
 	if arg_list == nil {
 		return &args
@@ -295,9 +371,10 @@ func parseCPPArg(content []byte, arg_list *sitter.Node) *[]*CPPArg {
 		type_data := &CPPType{
 			IsPrimitive:   isPrimitive,
 			Template:      template_type,
-			Name:          argType,
+			Name:          stripNameSpace(argType),
 			TypeQualifier: typeQualifier,
 		}
+		type_data.UseMappedType(g.conf.TypeMappings, g.Parser)
 
 		parsed_arg := &CPPArg{
 			Type: type_data,
@@ -357,7 +434,7 @@ func parseCPPArg(content []byte, arg_list *sitter.Node) *[]*CPPArg {
 	return &args
 }
 
-func parseClasses(n *sitter.Node, input []byte) map[string]*CPPClass {
+func (g *PackageGenerator) parseClasses(n *sitter.Node, input []byte) map[string]*CPPClass {
 	classes := map[string]*CPPClass{}
 
 	q, err := sitter.NewQuery([]byte("(class_specifier) @class_def"), cpp.GetLanguage())
@@ -394,7 +471,7 @@ func parseClasses(n *sitter.Node, input []byte) map[string]*CPPClass {
 				switch temp_child.Type() {
 				case "friend_declaration": // WORKING?? (needs unit tests)
 					{
-						new_friend := parseClassFriend(temp_child, input)
+						new_friend := g.parseClassFriend(temp_child, input)
 						*class_friends = append(*class_friends, new_friend)
 					}
 				case "template_declaration": // WORKING?? (needs unit tests)
@@ -402,7 +479,7 @@ func parseClasses(n *sitter.Node, input []byte) map[string]*CPPClass {
 						if classes[class_name].TemplateDecl == nil {
 							classes[class_name].TemplateDecl = &[]*TemplateMethod{}
 						}
-						temp_decl := parseClassTemplateMethod(temp_child, input)
+						temp_decl := g.parseClassTemplateMethod(temp_child, input)
 						// TODO: parse/handle these edge cases
 						/*
 							if temp_decl.Name == "" {
@@ -416,7 +493,7 @@ func parseClasses(n *sitter.Node, input []byte) map[string]*CPPClass {
 						if classes[class_name].Decl == nil {
 							classes[class_name].Decl = &[]*ParsedClassDecl{}
 						}
-						parsed := parseClassDecl(temp_child, input)
+						parsed := g.parseClassDecl(temp_child, input)
 						*classes[class_name].Decl = append(*classes[class_name].Decl, parsed)
 					}
 				case "field_declaration":
@@ -425,8 +502,8 @@ func parseClasses(n *sitter.Node, input []byte) map[string]*CPPClass {
 						if classes[class_name].FieldDecl == nil {
 							classes[class_name].FieldDecl = &[]*CPPFieldDecl{}
 						}
-						parsed := parseFieldDecl(temp_child, input)
-						selfName := "_tmp_external"
+						parsed := g.parseFieldDecl(temp_child, input)
+						selfName := GetPrefixedVarName("external", "self")
 						parsed.Args = append([]*CPPArg{{
 							Name: &selfName,
 							Type: &CPPType{Name: class_name},
@@ -448,7 +525,7 @@ func parseClasses(n *sitter.Node, input []byte) map[string]*CPPClass {
 	return classes
 }
 
-func parseClassDecl(n *sitter.Node, input []byte) *ParsedClassDecl {
+func (g *PackageGenerator) parseClassDecl(n *sitter.Node, input []byte) *ParsedClassDecl {
 	explicitNode := n.ChildByFieldName("explicit_function_specifier")
 	parsed := &ParsedClassDecl{}
 	if explicitNode != nil {
@@ -456,7 +533,7 @@ func parseClassDecl(n *sitter.Node, input []byte) *ParsedClassDecl {
 	}
 	decl := n.ChildByFieldName("declarator")
 	if decl != nil {
-		parsed.Args = parseCPPArg(input, decl.ChildByFieldName("parameters"))
+		parsed.Args = g.parseCPPArg(input, decl.ChildByFieldName("parameters"))
 		nameNode := decl.ChildByFieldName("declarator")
 		if nameNode != nil {
 			if nameNode.Type() == "destructor_name" {
@@ -473,21 +550,19 @@ func parseClassDecl(n *sitter.Node, input []byte) *ParsedClassDecl {
 	return parsed
 }
 
-func parseFieldDecl(n *sitter.Node, input []byte) *CPPFieldDecl {
+func (g *PackageGenerator) parseFieldDecl(n *sitter.Node, input []byte) *CPPFieldDecl {
 	field_decl := CPPFieldDecl{}
 
 	type_node := n.ChildByFieldName("type")
 	if type_node != nil {
-		parsed_type := parseReturnType(type_node, input)
-		field_decl.Returns = parsed_type
+		field_decl.Returns = g.parseReturnType(type_node, input)
 	}
 
 	declarator := n.ChildByFieldName("declarator")
 	if declarator != nil {
 		params := declarator.ChildByFieldName("parameters")
 		if params != nil {
-			args := parseCPPArg(input, declarator.ChildByFieldName("parameters"))
-			field_decl.Args = *args
+			field_decl.Args = *g.parseCPPArg(input, declarator.ChildByFieldName("parameters"))
 		}
 		child_decl := declarator.ChildByFieldName("declarator")
 		if child_decl != nil {
@@ -508,7 +583,7 @@ func parseFieldDecl(n *sitter.Node, input []byte) *CPPFieldDecl {
 	return &field_decl
 }
 
-func parseClassTemplateMethod(n *sitter.Node, input []byte) *TemplateMethod {
+func (g *PackageGenerator) parseClassTemplateMethod(n *sitter.Node, input []byte) *TemplateMethod {
 	template_method := &TemplateMethod{
 		TemplateDecl: &TemplateDecl{},
 	}
@@ -548,7 +623,7 @@ func parseClassTemplateMethod(n *sitter.Node, input []byte) *TemplateMethod {
 						switch decl.Type() {
 						case "function_declarator":
 							{
-								template_method.Args = parseCPPArg(input, decl.ChildByFieldName("parameters"))
+								template_method.Args = g.parseCPPArg(input, decl.ChildByFieldName("parameters"))
 								template_method.TypeQualifier = getTypeQualifier(decl, input)
 								nameNode := decl.ChildByFieldName("name")
 								if nameNode != nil {
@@ -562,14 +637,14 @@ func parseClassTemplateMethod(n *sitter.Node, input []byte) *TemplateMethod {
 							}
 						case "function_definition":
 							{
-								parseTemplateFuncDefNode(tempChild, input, template_method)
+								g.parseTemplateFuncDefNode(tempChild, input, template_method)
 							}
 						}
 					}
 				case "function_declarator":
 					{
 						decl := declarator.ChildByFieldName("declarator")
-						template_method.Args = parseCPPArg(input, decl.ChildByFieldName("parameters"))
+						template_method.Args = g.parseCPPArg(input, decl.ChildByFieldName("parameters"))
 						parseTemplateFuncIdent(decl, input, template_method)
 						template_method.TypeQualifier = getTypeQualifier(decl, input)
 					}
@@ -577,7 +652,7 @@ func parseClassTemplateMethod(n *sitter.Node, input []byte) *TemplateMethod {
 			}
 		case "function_definition":
 			{
-				parseTemplateFuncDefNode(tempChild, input, template_method)
+				g.parseTemplateFuncDefNode(tempChild, input, template_method)
 			}
 		}
 	}
@@ -612,7 +687,7 @@ func getTypeVal(n *sitter.Node, input []byte) *string {
 	return res
 }
 
-func parseTemplateFuncDefNode(n *sitter.Node, input []byte, method *TemplateMethod) {
+func (g *PackageGenerator) parseTemplateFuncDefNode(n *sitter.Node, input []byte, method *TemplateMethod) {
 	method.StorageClassSpecifier = getStorageClassSpecifier(n, input)
 	method.Returns = getTypeVal(n, input)
 	declarator := n.ChildByFieldName("declarator")
@@ -625,12 +700,12 @@ func parseTemplateFuncDefNode(n *sitter.Node, input []byte, method *TemplateMeth
 				if nameNode != nil {
 					method.Name = nameNode.Content(input)
 				}
-				method.Args = parseCPPArg(input, declarator.ChildByFieldName("parameters"))
+				method.Args = g.parseCPPArg(input, declarator.ChildByFieldName("parameters"))
 			}
 		case "reference_declarator":
 			{
 				funcDecl := findChildNodeByType(declarator, "function_declarator")
-				method.Args = parseCPPArg(input, funcDecl.ChildByFieldName("parameters"))
+				method.Args = g.parseCPPArg(input, funcDecl.ChildByFieldName("parameters"))
 				decl := funcDecl.ChildByFieldName("declarator")
 				method.Name = decl.Content(input)
 				refDecl := strings.ReplaceAll(funcDecl.Content(input), method.Name, "")
@@ -641,7 +716,7 @@ func parseTemplateFuncDefNode(n *sitter.Node, input []byte, method *TemplateMeth
 
 }
 
-func parseClassFriend(n *sitter.Node, input []byte) *CPPFriend {
+func (g *PackageGenerator) parseClassFriend(n *sitter.Node, input []byte) *CPPFriend {
 	new_friend := &CPPFriend{}
 	child_count := int(n.ChildCount())
 	for j := 0; j < child_count; j++ {
@@ -706,7 +781,7 @@ func parseClassFriend(n *sitter.Node, input []byte) *CPPFriend {
 						}
 					}
 					params := great_grandchild.ChildByFieldName("parameters")
-					friend_func.Args = parseCPPArg(input, params)
+					friend_func.Args = g.parseCPPArg(input, params)
 					new_friend.FuncDecl = friend_func
 				} /* end nested switch/case */
 			} /* end outer switch/case */

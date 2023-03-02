@@ -44,7 +44,10 @@ type Casers struct {
 
 // Responsible for generating the code for an input package
 type PackageGenerator struct {
+	GenHelpers    map[string]string
+	GenHelperKeys []string
 	casers        Casers
+	Parser        *sitter.Parser
 	conf          *PackageConfig
 	LocalIncludes []*string
 	NameSpace     *string
@@ -53,6 +56,16 @@ type PackageGenerator struct {
 	Path          *string
 	RootNode      *sitter.Node
 	Input         *[]byte
+}
+
+func (g *PackageGenerator) AddGenHelper(name string, val string) {
+	g.GenHelperKeys = append(g.GenHelperKeys, name)
+	g.GenHelpers[name] = val
+}
+
+func (g *PackageGenerator) GenHelperExists(name string) bool {
+	_, ok := g.GenHelpers[name]
+	return ok
 }
 
 type EnumField struct {
@@ -108,6 +121,8 @@ func (g *TSGo) Generate() error {
 		}
 		parsedData := ParsedData{}
 		napiGen := &PackageGenerator{
+			GenHelpers:    map[string]string{},
+			Parser:        parser,
 			casers:        casers,
 			conf:          napiConfig,
 			NameSpace:     &namespace,

@@ -1,5 +1,11 @@
-const { _add, _tensorFromFloat32Buffer, _mean, _toFloat32Scalar, _toUint8Array } =
-  import.meta.require('../../build/Release/shumai_bindings.node');
+const {
+  _add,
+  _tensorFromFloat32Buffer,
+  _mean,
+  _toFloat32Scalar,
+  _toUint8Array,
+  _tensorBackendTypeToString
+} = import.meta.require('../../build/Release/shumai_bindings.node');
 
 export class Tensor {
   #native_self: any;
@@ -20,6 +26,10 @@ export class Tensor {
 
   add(other: Tensor) {
     return new Tensor(_add(this._native_self, other._native_self));
+  }
+
+  tensorBackendTypeToString(): string {
+    return _tensorBackendTypeToString(this._native_self);
   }
 
   mean(axes: number[] = [], keepDims = false) {

@@ -29,7 +29,9 @@ func (g *PackageGenerator) writeBindingsFrontmatter(w *strings.Builder) {
 func (g *PackageGenerator) writeGlobalVars(w *strings.Builder) {
 	if g.conf.GlobalVars != "" {
 		w.WriteString("// globally scoped variables\n")
-		w.WriteString("static std::atomic<bool> g_row_major = true;\n")
+		if g.conf.TrackExternalMemory != nil {
+			w.WriteString(fmt.Sprintf("static std::atomic<size_t> %s = 0;", *g.conf.TrackExternalMemory))
+		}
 		w.WriteString(g.conf.GlobalVars)
 		w.WriteByte('\n')
 	}

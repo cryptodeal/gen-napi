@@ -249,6 +249,15 @@ func (g *PackageGenerator) WriteEnums() string {
 	return sb.String()
 }
 
+func (g *PackageGenerator) WriteDefaultArgVal(sb *strings.Builder, p *CPPArg) {
+	if p.DefaultValue != nil && p.DefaultValue.Val != nil {
+		val := *p.DefaultValue.Val
+		val = strings.ReplaceAll(val, "{", "[")
+		val = strings.ReplaceAll(val, "}", "]")
+		sb.WriteString(fmt.Sprintf(" = %s", val))
+	}
+}
+
 func (g *PackageGenerator) WriteEnvWrappedFns() string {
 	sb := new(strings.Builder)
 	for _, m := range g.ParsedData.Methods {
@@ -269,37 +278,36 @@ func (g *PackageGenerator) WriteEnvWrappedFns() string {
 					sb.WriteString(", ")
 				}
 				sb.WriteString(*p.Name)
-				tsType, isClass := g.CPPTypeToTS(p.Type.Name, p.Type.IsPointer)
+				usedName := p.Type.Name
+				if v, ok := g.conf.TypeMappings[p.Type.Name]; (!ok || v.TSType != "") && p.Type.MappedType != nil {
+					usedName = p.Type.MappedType.Name
+				}
+				tsType, isClass := g.CPPTypeToTS(usedName, p.Type.IsPointer)
 				if v, ok := g.conf.TypeMappings[tsType]; ok && v.TSType != "" {
 					if g.conf.IsEnvTS() {
 						sb.WriteString(fmt.Sprintf(": %s", stripNameSpace(v.TSType)))
 					}
-					if p.DefaultValue != nil && p.DefaultValue.Val != nil {
-						val := *p.DefaultValue.Val
-						val = strings.ReplaceAll(val, "{", "[")
-						val = strings.ReplaceAll(val, "}", "]")
-						sb.WriteString(fmt.Sprintf(" = %s", val))
+					g.WriteDefaultArgVal(sb, p)
+				} else if p.Type.MappedType != nil {
+					type_helpers := p.Type.MappedType.GetTypeHandlers(g, true)
+					if g.conf.IsEnvTS() {
+						sb.WriteString(fmt.Sprintf(": %s", type_helpers.JSType))
 					}
+					g.WriteDefaultArgVal(sb, p)
 				} else {
 					// TODO: write types for `pair` aka `[T1, T2]`
 					if IsArgTemplate(p) && *p.Type.Template.Name == "vector" {
 						tsType, _ = g.CPPTypeToTS(*p.Type.Template.Args[0].Name, p.Type.IsPointer)
-						if tsType == "pair" {
-							helpers_1 := g.GetTypeHelpers(*p.Type.Template.Args[0].Args[0].Name)
-							helpers_2 := g.GetTypeHelpers(*p.Type.Template.Args[0].Args[1].Name)
-							tsType = fmt.Sprintf("Array<[%s, %s]>", helpers_1.JSType, helpers_2.JSType)
-						} else {
-							tsType = tsType + "[]"
-						}
-						if p.DefaultValue != nil && p.DefaultValue.Val != nil {
-							val := *p.DefaultValue.Val
-							val = strings.ReplaceAll(val, "{", "[")
-							val = strings.ReplaceAll(val, "}", "]")
-							tsType += fmt.Sprintf(" = %s", val)
-						}
 						if g.conf.IsEnvTS() {
-							sb.WriteString(fmt.Sprintf(": %s", tsType))
+							if tsType == "pair" {
+								helpers_1 := g.GetTypeHelpers(*p.Type.Template.Args[0].Args[0].Name)
+								helpers_2 := g.GetTypeHelpers(*p.Type.Template.Args[0].Args[1].Name)
+								sb.WriteString(fmt.Sprintf(": Array<[%s, %s]>", helpers_1.JSType, helpers_2.JSType))
+							} else {
+								sb.WriteString(fmt.Sprintf(": %s[]", tsType))
+							}
 						}
+						g.WriteDefaultArgVal(sb, p)
 					} else {
 						sb.WriteString(fmt.Sprintf(": %s", stripNameSpace(tsType)))
 					}

@@ -30,10 +30,12 @@ type MethodTransforms struct {
 }
 
 type TypeMap struct {
-	TSType   string `yaml:"ts"`
-	NapiType string `yaml:"napi"`
-	CastsTo  string `yaml:"casts_to"`
-	CastNapi string `yaml:"cast_napi"`
+	TSType       string `yaml:"ts"`
+	NeedsWrapper bool   `yaml:"needs_wrapper"`
+	NapiType     string `yaml:"napi"`
+	NativeType   string `yaml:"native_type"`
+	CastsTo      string `yaml:"casts_to"`
+	CastNapi     string `yaml:"cast_napi"`
 }
 
 type FnArg struct {
@@ -53,8 +55,9 @@ type FnOpts struct {
 }
 
 type ClassOpts struct {
-	IgnoredFields     []FnOpts `yaml:"ignored_fields"`
+	IgnoredFields     []string `yaml:"ignored_fields"`
 	ExternalFinalizer string   `yaml:"ext_finalizer_transform"`
+	BytesUsed         *string  `yaml:"bytes_used"`
 	ForcedMethods     []FnOpts `yaml:"forced_methods"`
 }
 
@@ -81,6 +84,8 @@ type PackageConfig struct {
 	// The package path just like you would import it in Go
 	Path       string `yaml:"path"`
 	LibRootDir string `yaml:"lib_root_dir"`
+
+	TrackExternalMemory *string `yaml:"track_external_memory"`
 
 	// Where this output should be written to.
 	// If you specify a folder it will be written to a file `index.ts` within that folder. By default it is written into the Golang package folder.
@@ -109,8 +114,6 @@ type PackageConfig struct {
 	IgnoredMethods []string `yaml:"ignored_methods"`
 
 	GlobalForcedMethods []FnOpts `yaml:"global_methods"`
-
-	GlobalTypeOutTransforms map[string]string `yaml:"global_type_out_transforms"`
 
 	MethodTransforms map[string]MethodTransforms `yaml:"method_transforms"`
 
@@ -176,6 +179,14 @@ func (c Config) PackageConfig(packagePath string) *PackageConfig {
 	return nil
 }
 
+func (c PackageConfig) GetBytesAccessor(name string) *string {
+	var bytes_accessor *string = new(string)
+	if v, ok := c.ClassOpts[name]; ok {
+		bytes_accessor = v.BytesUsed
+	}
+	return bytes_accessor
+}
+
 func (c PackageConfig) IsReturnTransform(method *CPPMethod) (bool, bool, *string) {
 	for _, t := range c.GroupedMethodTransforms {
 		for _, a := range t.AppliesTo {
@@ -215,12 +226,12 @@ func (c PackageConfig) IsEnvTS() bool {
 func (c PackageConfig) IsFieldIgnored(className string, fnName string) bool {
 	if v, ok := c.ClassOpts[className]; ok {
 		for _, f := range v.IgnoredFields {
-			if strings.EqualFold(f.Name, fnName) {
-				return false
+			if strings.EqualFold(f, fnName) {
+				return true
 			}
 		}
 	}
-	return true
+	return false
 }
 
 func (c PackageConfig) TypeHasHandler(name string) *TypeHandler {

@@ -9,14 +9,14 @@ func (g *PackageGenerator) Generate() (string, string, error) {
 	env_wrapper := new(strings.Builder)
 
 	g.ParsedData.Methods = g.parseMethods(g.RootNode, *g.Input)
-	g.ParsedData.Classes = parseClasses(g.RootNode, *g.Input)
+	g.ParsedData.Classes = g.parseClasses(g.RootNode, *g.Input)
 	g.ParsedData.Lits = g.parseLiterals(g.RootNode, *g.Input)
 	g.ParsedData.Enums = g.parseEnumDecls(g.RootNode, *g.Input, true)
 	g.writeFileCodegenHeader(bindings)
 	g.writeFileCodegenHeader(env_wrapper)
 	g.writeESLintIgnore(env_wrapper)
 
-	g.writeBindings(bindings)
+	g.WriteBindings(bindings)
 	g.WriteEnvWrapper(env_wrapper)
 
 	return bindings.String(), env_wrapper.String(), nil

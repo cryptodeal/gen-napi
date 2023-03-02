@@ -34,6 +34,23 @@ func findChildNodeByType(n *sitter.Node, node_type string) *sitter.Node {
 	return nil
 }
 
+func ParseMappedType(mapped_type string, all_type_mappings map[string]TypeMap, parser *sitter.Parser, og_type string) *CPPType {
+	var parsed_type *CPPType = new(CPPType)
+	input := []byte(fmt.Sprintf("using FakeType = %s;", mapped_type))
+	root, _ := ParseByteToTree(input, parser)
+
+	alias_node := QueryAliasDecls(root, input)[0]
+	type_descriptor_node := alias_node.ChildByFieldName("type")
+	if type_descriptor_node != nil {
+		type_node := type_descriptor_node.ChildByFieldName("type")
+		if type_node != nil {
+			parsed_type = ParseType(type_node, input, all_type_mappings, parser)
+			parsed_type.OGType = &og_type
+		}
+	}
+	return parsed_type
+}
+
 // parse full namespace for declaration node
 func parseNameSpace(n *sitter.Node, input []byte) *string {
 	ns := []string{}
@@ -58,7 +75,7 @@ func parseNameSpace(n *sitter.Node, input []byte) *string {
 	return nameSpace
 }
 
-func parseReturnType(r *sitter.Node, content []byte) *CPPType {
+func ParseType(r *sitter.Node, content []byte, mapped_types map[string]TypeMap, parser *sitter.Parser) *CPPType {
 	out := &CPPType{}
 	nodeType := r.Type()
 	var type_name string
@@ -72,10 +89,15 @@ func parseReturnType(r *sitter.Node, content []byte) *CPPType {
 		}
 		type_name = r.ChildByFieldName("name").Content(content)
 	} else {
-		type_name = r.Content(content)
+		type_name = stripNameSpace(r.Content(content))
+		if nodeType == "type_identifier" {
+			type_namespace = parseNameSpace(r, content)
+		}
 	}
 	out.Name = type_name
 	out.NameSpace = type_namespace
+	out.UseMappedType(mapped_types, parser)
+
 	isString := type_name == "std::string" || type_name == "string"
 	// mark `primitive` if it's a string (simplifies stuff a bit)
 	out.IsPrimitive = nodeType == "primitive_type" || nodeType == "sized_type_specifier" || (nodeType == "qualified_identifier" && isString)
@@ -84,14 +106,32 @@ func parseReturnType(r *sitter.Node, content []byte) *CPPType {
 	return out
 }
 
-// parse template types
-type TemplateType struct {
-	Name      *string
-	NameSpace *string
-	Args      []*TemplateType
+func (g *PackageGenerator) parseReturnType(r *sitter.Node, content []byte) *CPPType {
+	return ParseType(r, content, g.conf.TypeMappings, g.Parser)
 }
 
-func ParseTemplateType(n *sitter.Node, input []byte) *TemplateType {
+// parse template types
+type TemplateType struct {
+	Name        *string
+	NameSpace   *string
+	Args        []*TemplateType
+	IsPointer   bool
+	IsPrimitive bool
+}
+
+func (t *TemplateType) GetFullType() string {
+	var full_type string
+	if t.NameSpace != nil {
+		full_type = fmt.Sprintf("%s::", *t.NameSpace)
+	}
+	return full_type + *t.Name
+}
+
+func ParseTemplateType(n *sitter.Node, input []byte, ptr_declarator ...*sitter.Node) *TemplateType {
+	var is_ptr_node *sitter.Node
+	if len(ptr_declarator) > 0 {
+		is_ptr_node = ptr_declarator[0]
+	}
 	template_type := &TemplateType{}
 	switch n.Type() {
 	case "qualified_identifier":
@@ -124,9 +164,19 @@ func ParseTemplateType(n *sitter.Node, input []byte) *TemplateType {
 		}
 	default:
 		{
-			name := n.Content(input)
+			name := stripNameSpace(n.Content(input))
+			if is_ptr_node != nil && is_ptr_node.Type() == "abstract_pointer_declarator" {
+				template_type.IsPointer = true
+			}
+			if n.Type() == "primitive_type" {
+				template_type.IsPrimitive = true
+			}
+			template_type.NameSpace = parseNameSpace(n, input)
 			template_type.Name = &name
 		}
+	}
+	if *template_type.Name == "string" {
+		template_type.IsPrimitive = true
 	}
 
 	return template_type
@@ -151,9 +201,14 @@ func ParseTemplateArg(n *sitter.Node, input []byte) *TemplateType {
 	case "type_descriptor":
 		{
 			type_node := n.ChildByFieldName("type")
+			declarator := n.ChildByFieldName("declarator")
 			if type_node != nil {
-				return ParseTemplateType(type_node, input)
+				return ParseTemplateType(type_node, input, declarator)
 			}
+		}
+	case "number_literal":
+		{
+			return ParseTemplateType(n, input)
 		}
 	}
 	return nil
@@ -194,7 +249,7 @@ func (g *PackageGenerator) parseEnumDecls(n *sitter.Node, input []byte, parseInc
 	if parseIncludes {
 		for _, local := range g.LocalIncludes {
 			usedPath := filepath.Join(g.conf.LibRootDir, *local)
-			rootNode, byteData := getRootNode(usedPath)
+			rootNode, byteData := getRootNode(usedPath, g.Parser)
 			if rootNode != nil {
 				tmp_enums := g.parseEnumDecls(rootNode, byteData, false)
 				enums = append(enums, tmp_enums...)

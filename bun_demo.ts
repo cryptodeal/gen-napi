@@ -17,6 +17,7 @@ for (let i = 0; i < 100000; ++i) {
   // console.log('bytes: ', Number(sm.bytesUsed()))
   const a = sm.rand([128]);
   const b = new Tensor(genRand());
+  b.tensorBackendTypeToString();
   m += a.add(b).mean([], false).toFloat32Scalar();
   // console.log('bytes: ', Number(sm.bytesUsed()))
 }

@@ -16,7 +16,7 @@
 #include "flashlight/fl/tensor/TensorAdapter.h"
 
 namespace global_vars {
-static std::atomic<size_t> g_bytes_used = 0;
+static std::atomic<bool> g_row_major = true;
 }  // namespace global_vars
 
 namespace exported_global_methods {
@@ -61,91 +61,27 @@ static Napi::Value isRowMajor(const Napi::CallbackInfo& info) {
 static Napi::Value isColMajor(const Napi::CallbackInfo& info) {
   return Napi::Boolean::New(info.Env(), !g_row_major);
 }
-
 /*
-  @gen-napi-`ts_return_type`: number
-*/
-static Napi::Value dtypeFloat32(const Napi::CallbackInfo& info) {
-  return Napi::Number::New(info.Env(), static_cast<double>(fl::dtype::f32));
-}
-
-/*
-  @gen-napi-`ts_return_type`: number
-*/
-static Napi::Value dtypeFloat64(const Napi::CallbackInfo& info) {
-  return Napi::Number::New(info.Env(), static_cast<double>(fl::dtype::f64));
-}
-
-/*
-  @gen-napi-`ts_return_type`: number
-*/
-static Napi::Value dtypeBoolInt8(const Napi::CallbackInfo& info) {
-  return Napi::Number::New(info.Env(), static_cast<double>(fl::dtype::b8));
-}
-
-/*
-  @gen-napi-`ts_return_type`: number
-*/
-static Napi::Value dtypeInt16(const Napi::CallbackInfo& info) {
-  return Napi::Number::New(info.Env(), static_cast<double>(fl::dtype::s16));
-}
-
-/*
-  @gen-napi-`ts_return_type`: number
-*/
-static Napi::Value dtypeInt32(const Napi::CallbackInfo& info) {
-  return Napi::Number::New(info.Env(), static_cast<double>(fl::dtype::s32));
-}
-
-/*
-  @gen-napi-`ts_return_type`: number
-*/
-static Napi::Value dtypeInt64(const Napi::CallbackInfo& info) {
-  return Napi::Number::New(info.Env(), static_cast<double>(fl::dtype::s64));
-}
-
-/*
-  @gen-napi-`ts_return_type`: number
-*/
-static Napi::Value dtypeUint8(const Napi::CallbackInfo& info) {
-  return Napi::Number::New(info.Env(), static_cast<double>(fl::dtype::u8));
-}
-
-/*
-  @gen-napi-`ts_return_type`: number
-*/
-static Napi::Value dtypeUint16(const Napi::CallbackInfo& info) {
-  return Napi::Number::New(info.Env(), static_cast<double>(fl::dtype::u16));
-}
-
-/*
-  @gen-napi-`ts_return_type`: number
-*/
-static Napi::Value dtypeUint32(const Napi::CallbackInfo& info) {
-  return Napi::Number::New(info.Env(), static_cast<double>(fl::dtype::u32));
-}
-
-/*
-  @gen-napi-`ts_return_type`: number
-*/
-static Napi::Value dtypeUint64(const Napi::CallbackInfo& info) {
-  return Napi::Number::New(info.Env(), static_cast<double>(fl::dtype::u64));
-}
-
-/*
-  @gen-napi-`ts_args`: (shape: number[])
+  @gen-napi-`ts_args`: (shape: BigInt64Array)
   @gen-napi-`ts_return_type`: Tensor
 */
 static Napi::Value rand(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
-  if (info.Length() != 1 || !info[0].IsArray()) {
+  if (info.Length() != 1 || !info[0].IsTypedArray()) {
     Napi::TypeError::New(env,
-                         "`rand` expects exactly 1 arg; (typeof `number[]`)")
+                         "`rand` expects exactly 1 arg; (instanceof `BigInt64Array`)")
         .ThrowAsJavaScriptException();
     return env.Undefined();
   }
-  std::vector<long long> shape =
-      jsArrayToVector<long long>(info[0].As<Napi::Array>(), g_row_major, false);
+  Napi::TypedArray tmp_shape_arr = info[0].As<Napi::TypedArray>();
+  if (tmp_shape_arr.TypedArrayType() != napi_bigint64_array) {
+    Napi::TypeError::New(env,
+                         "`rand` expects exactly 1 arg; (instanceof `BigInt64Array`)")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  long long* shape_ptr = static_cast<long long*>(tmp_shape_arr.ArrayBuffer().Data());
+  std::vector<long long> shape(shape_ptr, shape_ptr + tmp_shape_arr.ElementLength());
   fl::Tensor t;
   t = fl::rand(fl::Shape(shape));
   auto _out_bytes_used = t.bytes();
@@ -157,19 +93,26 @@ static Napi::Value rand(const Napi::CallbackInfo& info) {
 }
 
 /*
-  @gen-napi-`ts_args`: (shape: number[])
+  @gen-napi-`ts_args`: (shape: BigInt64Array)
   @gen-napi-`ts_return_type`: Tensor
 */
 static Napi::Value randn(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
-  if (info.Length() != 1 || !info[0].IsArray()) {
+  if (info.Length() != 1 || !info[0].IsTypedArray()) {
     Napi::TypeError::New(env,
-                         "`randn` expects exactly 1 arg; (typeof `number[]`)")
+                         "`rand` expects exactly 1 arg; (instanceof `BigInt64Array`)")
         .ThrowAsJavaScriptException();
     return env.Undefined();
   }
-  std::vector<long long> shape =
-      jsArrayToVector<long long>(info[0].As<Napi::Array>(), g_row_major, false);
+  Napi::TypedArray tmp_shape_arr = info[0].As<Napi::TypedArray>();
+  if (tmp_shape_arr.TypedArrayType() != napi_bigint64_array) {
+    Napi::TypeError::New(env,
+                         "`rand` expects exactly 1 arg; (instanceof `BigInt64Array`)")
+        .ThrowAsJavaScriptException();
+    return env.Undefined();
+  }
+  long long* shape_ptr = static_cast<long long*>(tmp_shape_arr.ArrayBuffer().Data());
+  std::vector<long long> shape(shape_ptr, shape_ptr + tmp_shape_arr.ElementLength());
   fl::Tensor t;
   t = fl::randn(fl::Shape(shape));
   auto _out_bytes_used = t.bytes();
@@ -179,6 +122,7 @@ static Napi::Value randn(const Napi::CallbackInfo& info) {
   Napi::External<fl::Tensor> wrapped = ExternalizeTensor(env, tensor);
   return wrapped;
 }
+
 }  // namespace exported_global_methods
 
 namespace private_helpers {
@@ -236,7 +180,7 @@ static Napi::Value toFloat32Array(const Napi::CallbackInfo& info) {
   }
   Napi::ArrayBuffer buff =
       Napi::ArrayBuffer::New(env, nativeArray->data(), byteLen,
-                             DeleteArrayBuffer<float>, nativeArray.get());
+                             DeleteArrayBufferFromVector<float>, nativeArray.get());
   nativeArray.release();
   Napi::MemoryManagement::AdjustExternalMemory(env, byteLen);
   return Napi::TypedArrayOf<float>::New(env, elemLen, buff, 0,
@@ -271,7 +215,7 @@ static Napi::Value toFloat64Array(const Napi::CallbackInfo& info) {
   }
   Napi::ArrayBuffer buff =
       Napi::ArrayBuffer::New(env, nativeArray->data(), byteLen,
-                             DeleteArrayBuffer<double>, nativeArray.get());
+                             DeleteArrayBufferFromVector<double>, nativeArray.get());
   nativeArray.release();
   Napi::MemoryManagement::AdjustExternalMemory(env, byteLen);
   return Napi::TypedArrayOf<double>::New(env, elemLen, buff, 0,
@@ -306,7 +250,7 @@ static Napi::Value toBoolInt8Array(const Napi::CallbackInfo& info) {
   }
   Napi::ArrayBuffer buff =
       Napi::ArrayBuffer::New(env, nativeArray->data(), byteLen,
-                             DeleteArrayBuffer<int8_t>, nativeArray.get());
+                             DeleteArrayBufferFromVector<int8_t>, nativeArray.get());
   nativeArray.release();
   Napi::MemoryManagement::AdjustExternalMemory(env, byteLen);
   return Napi::TypedArrayOf<int8_t>::New(env, elemLen, buff, 0,
@@ -341,7 +285,7 @@ static Napi::Value toInt16Array(const Napi::CallbackInfo& info) {
   }
   Napi::ArrayBuffer buff =
       Napi::ArrayBuffer::New(env, nativeArray->data(), byteLen,
-                             DeleteArrayBuffer<int16_t>, nativeArray.get());
+                             DeleteArrayBufferFromVector<int16_t>, nativeArray.get());
   nativeArray.release();
   Napi::MemoryManagement::AdjustExternalMemory(env, byteLen);
   return Napi::TypedArrayOf<int16_t>::New(env, elemLen, buff, 0,
@@ -376,7 +320,7 @@ static Napi::Value toInt32Array(const Napi::CallbackInfo& info) {
   }
   Napi::ArrayBuffer buff =
       Napi::ArrayBuffer::New(env, nativeArray->data(), byteLen,
-                             DeleteArrayBuffer<int32_t>, nativeArray.get());
+                             DeleteArrayBufferFromVector<int32_t>, nativeArray.get());
   nativeArray.release();
   Napi::MemoryManagement::AdjustExternalMemory(env, byteLen);
   return Napi::TypedArrayOf<int32_t>::New(env, elemLen, buff, 0,
@@ -411,7 +355,7 @@ static Napi::Value toInt64Array(const Napi::CallbackInfo& info) {
   }
   Napi::ArrayBuffer buff =
       Napi::ArrayBuffer::New(env, nativeArray->data(), byteLen,
-                             DeleteArrayBuffer<int64_t>, nativeArray.get());
+                             DeleteArrayBufferFromVector<int64_t>, nativeArray.get());
   nativeArray.release();
   Napi::MemoryManagement::AdjustExternalMemory(env, byteLen);
   return Napi::TypedArrayOf<int64_t>::New(env, elemLen, buff, 0,
@@ -446,7 +390,7 @@ static Napi::Value toUint8Array(const Napi::CallbackInfo& info) {
   }
   Napi::ArrayBuffer buff =
       Napi::ArrayBuffer::New(env, nativeArray->data(), byteLen,
-                             DeleteArrayBuffer<uint8_t>, nativeArray.get());
+                             DeleteArrayBufferFromVector<uint8_t>, nativeArray.get());
   nativeArray.release();
   Napi::MemoryManagement::AdjustExternalMemory(env, byteLen);
   return Napi::TypedArrayOf<uint8_t>::New(env, elemLen, buff, 0,
@@ -481,7 +425,7 @@ static Napi::Value toUint16Array(const Napi::CallbackInfo& info) {
   }
   Napi::ArrayBuffer buff =
       Napi::ArrayBuffer::New(env, nativeArray->data(), byteLen,
-                             DeleteArrayBuffer<uint16_t>, nativeArray.get());
+                             DeleteArrayBufferFromVector<uint16_t>, nativeArray.get());
   nativeArray.release();
   Napi::MemoryManagement::AdjustExternalMemory(env, byteLen);
   return Napi::TypedArrayOf<uint16_t>::New(env, elemLen, buff, 0,
@@ -516,7 +460,7 @@ static Napi::Value toUint32Array(const Napi::CallbackInfo& info) {
   }
   Napi::ArrayBuffer buff =
       Napi::ArrayBuffer::New(env, nativeArray->data(), byteLen,
-                             DeleteArrayBuffer<uint32_t>, nativeArray.get());
+                             DeleteArrayBufferFromVector<uint32_t>, nativeArray.get());
   nativeArray.release();
   Napi::MemoryManagement::AdjustExternalMemory(env, byteLen);
   return Napi::TypedArrayOf<uint32_t>::New(env, elemLen, buff, 0,
@@ -551,7 +495,7 @@ static Napi::Value toUint64Array(const Napi::CallbackInfo& info) {
   }
   Napi::ArrayBuffer buff =
       Napi::ArrayBuffer::New(env, nativeArray->data(), byteLen,
-                             DeleteArrayBuffer<uint64_t>, nativeArray.get());
+                             DeleteArrayBufferFromVector<uint64_t>, nativeArray.get());
   nativeArray.release();
   Napi::MemoryManagement::AdjustExternalMemory(env, byteLen);
   return Napi::TypedArrayOf<uint64_t>::New(env, elemLen, buff, 0,

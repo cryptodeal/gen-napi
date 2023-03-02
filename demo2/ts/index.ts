@@ -3,49 +3,54 @@
 
 const {
   _baz,
-  _test,
-  _test2,
+  _quux,
   _test3,
   _test4,
-  _foo,
+  _test5,
+  _bar,
   _qux,
-  _quux,
-  _bar
+  _test,
+  _test2,
+  _foo
 } = import.meta.require("../../../../build/Release/test.node")
 
-export const bar = (a: Float64Array, b: number): Float64Array => {
-  return _bar(a, b);
+export const test = (): string => {
+  return _test();
 }
 
-export const qux = (a: BigInt64Array, b: number): BigInt64Array => {
-  return _qux(a, b);
+export const test2 = (): array<int8_t, 20> => {
+  return _test2();
 }
 
-export const quux = (a: boolean, b: boolean): Uint8Array => {
-  return _quux(a, b);
+export const foo = (): void => {
+  return _foo();
 }
 
-export const test4 = (a: Array<[string, string]>): void => {
-  return _test4(a);
+export const qux = (): number => {
+  return _qux();
 }
 
-export const foo = (a: number): number => {
-  return _foo(a);
+export const quux = (): vector<bool> => {
+  return _quux();
 }
 
-export const baz = (a: Float32Array, b: number): Float32Array => {
-  return _baz(a, b);
+export const test3 = (): pair<int, int> => {
+  return _test3();
 }
 
-export const test = (a: string): string => {
-  return _test(a);
+export const test4 = (): string => {
+  return _test4();
 }
 
-export const test2 = (a: number[]): Float64Array => {
-  return _test2(a);
+export const test5 = (): vector<long long> => {
+  return _test5();
 }
 
-export const test3 = (a: void[]): void => {
-  return _test3(a);
+export const bar = (): vector<double> => {
+  return _bar();
+}
+
+export const baz = (): vector<float> => {
+  return _baz();
 }
 

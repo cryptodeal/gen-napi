@@ -3,21 +3,24 @@
 
 namespace demo2 {
 
-int8_t foo(int8_t a);
+void foo(int8_t a);
 
-double* bar(double* a, int32_t b);
+std::vector<double> bar(double* a, int32_t b);
 
-float* baz(float* a, int b);
+std::vector<float> baz(float* a, int b);
 
-long long* qux(long long* a, int b);
+double qux(long long* a, int b);
 
-bool* quux(bool a, bool b);
+std::vector<bool> quux(bool a, bool b);
 
 std::string test(std::string a);
 
-double* test2(std::vector<double> a);
+std::array<int8_t, 20> test2(std::vector<double> a);
 
-void* test3(std::vector<void*> a);
+std::pair<int, int> test3(double* a);
 
-void* test4(std::vector<std::pair<std::string, std::string>> a);
+char* test4(const char* a, const char16_t* b);
+
+std::vector<long long> test5(std::vector<double> a);
+
 }  // namespace demo2

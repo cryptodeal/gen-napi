@@ -7,19 +7,19 @@ packages:
   # - path: demo1/TensorBase.h
   - path: ../flashlight/flashlight/fl/tensor/TensorBase.h
     lib_root_dir: ../flashlight
+    path_to_forced_logic: demo1/ForcedLogic.cc
     bindings_out_path: demo1/out
+    track_external_memory: g_bytes_used
     indent: "\t"
-    vector_opts:
-      row_major_default: true
-      dim_accessor: ndim()
     type_mappings:
-      Shape:
-        ts: number[]
-      Dim:
-        ts: number
+      fl::Shape:
+        needs_wrapper: true
+        native_type: std::vector<long long>
+      fl::Dim:
+        needs_wrapper: true
+        native_type: long long
       T:
-        ts: number
-        napi: Number
+        native_type: float
     js_wrapper_opts:
       front_matter: import { Tensor } from './tensor'
       addon_path: ../../build/Release/shumai_bindings.node
@@ -28,22 +28,14 @@ packages:
     ignored_methods:
       - scalar
       - device
-      #- pad
       - host
       - fromScalar
       - releaseAdapter
-      - tensorBackendTypeToString
       - releaseAdapterUnsafe
       - detail::releaseAdapter
       - detail::releaseAdapterUnsafe
       - topk
       - print
-    path_to_forced_logic: demo1/ForcedLogic.cc
-    global_type_out_transforms:
-      Tensor: |
-        auto _out_byte_count = /return/.bytes();
-        g_bytes_used += _out_byte_count;
-        Napi::MemoryManagement::AdjustExternalMemory(env, _out_byte_count);
     # simplifies cases where multiple methods require transforming the generated logic (starting from after function call; useful when need to transform value before returning to JS)
     grouped_method_transforms:
       - arg_transforms:
@@ -99,24 +91,7 @@ packages:
     method_transforms:
       arange:
         arg_count: 3
-        arg_check_transforms: |
-          if (!info[0].IsNumber()) {
-             Napi::TypeError::New(env, "`arange` expects args[0] to be typeof `number`").ThrowAsJavaScriptException();
-             return env.Null();
-           }
-           if (!info[1].IsNumber()) {
-             Napi::TypeError::New(env, "`arange` expects args[1] to be typeof `number`").ThrowAsJavaScriptException();
-             return env.Null();
-           }
-           if (!info[2].IsNumber()) {
-             Napi::TypeError::New(env, "`arange` expects args[2] to be typeof `number`").ThrowAsJavaScriptException();
-             return env.Null();
-           }
         return_transforms: /return/ = fl::arange(/arg_0/, /arg_1/, /arg_2/);
-        arg_transforms:
-          start: float start = /arg/.As<Napi::Number>().FloatValue();
-          end: float end = /arg/.As<Napi::Number>().FloatValue();
-          step: float step = /arg/.As<Napi::Number>().FloatValue();
       var:
         return_transforms: |
           /return/ = fl::var(/arg_0/, /arg_1/, /arg_2/, /arg_3/);
@@ -161,9 +136,6 @@ packages:
         arg_transforms:
           dims: std::vector<long long> dims = jsArrayToVector<long long>(/arg/.As<Napi::Array>(), g_row_major, false);
           val: float val = /arg/.As<Napi::Number>().FloatValue();
-      identity:
-        arg_transforms:
-          dim: int64_t dim = /arg/.As<Napi::Number>().Int64Value();
       iota:
         arg_transforms:
           dims: auto dims = jsArrayToVector<long long>(/arg/.As<Napi::Array>(), g_row_major, false);
@@ -202,25 +174,22 @@ packages:
       reshape:
         arg_transforms:
           shape: auto shape = jsArrayToVector<long long>(/arg/.As<Napi::Array>(), g_row_major, false);
-    type_handlers:
-      dtype:
-        out_type: Napi::Number
-        out_var: _out
-        handler: Napi::Number _out = Napi::Number::New(env, static_cast<double>(/val/));
-      Shape:
-        out_type: Napi::TypedArrayOf<int64_t>
-        out_var: _out
-        handler: |
-          const size_t length = static_cast<const size_t>(UnExternalize<fl::Tensor>(info[0])->ndim());
-          Napi::TypedArrayOf<int64_t> _out =
-              Napi::TypedArrayOf<int64_t>::New(env, length, napi_bigint64_array);
-          const int out_len = static_cast<int>(length);
-          for (auto i = 0; i < out_len; ++i) {
-            const auto idx = g_row_major ? out_len - i - 1 : i;
-            _out[i] = static_cast<long long>(/val/[idx]);
-          }
     class_opts:
       Tensor:
+        ignored_fields:
+          - setContext
+          - stream
+          - getContext() const
+          - releaseAdapter
+          - releaseAdapterUnsafe
+          - shallowCopy
+          - location
+          - operator()
+          - operator<<
+          - operator=
+          - backend
+        bytes_used: bytes
+        # finalizer:
         ext_finalizer_transform: |
           if (/this/->hasAdapter()) {
             auto byte_count = static_cast<int64_t>(/this/->bytes());
