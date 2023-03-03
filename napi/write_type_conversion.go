@@ -273,8 +273,6 @@ func (t *CPPType) ParseReturnData(g *PackageGenerator) GenReturnData {
 		usedType = t.MappedType
 	}
 
-	fmt.Printf("Return Type Info: %s", usedType.Name)
-
 	isEnum, enumName := g.IsArgEnum(usedType)
 	if isEnum {
 		type_data.NapiType = NumberEnum
@@ -300,7 +298,7 @@ func (t *CPPType) ParseReturnData(g *PackageGenerator) GenReturnData {
 		type_data.NapiType = helpers.NapiType
 		type_data.TypedArrayInfo = helpers
 		type_data.NativeType = helpers.NativeType
-		type_data.JSType = helpers.NapiType.JSTypeString()
+		type_data.JSType = helpers.NapiType.TypedArrayType()
 		*type_data.NeedsCast = helpers.NapiType.GetArrayType().String()
 		return type_data
 	}
@@ -316,7 +314,7 @@ func (t *CPPType) ParseReturnData(g *PackageGenerator) GenReturnData {
 					type_data.NapiType = helpers.NapiType
 					type_data.NativeType = helpers.NativeType
 					type_data.TypedArrayInfo = helpers
-					type_data.JSType = helpers.NapiType.JSTypeString()
+					type_data.JSType = helpers.NapiType.TypedArrayType()
 					*type_data.NeedsCast = helpers.NapiType.GetArrayType().String()
 				} else {
 					type_data.NapiType = Array
@@ -339,7 +337,7 @@ func (t *CPPType) ParseReturnData(g *PackageGenerator) GenReturnData {
 					type_data.NapiType = helpers.NapiType
 					type_data.NativeType = helpers.NativeType
 					type_data.TypedArrayInfo = helpers
-					type_data.JSType = helpers.NapiType.JSTypeString()
+					type_data.JSType = helpers.NapiType.TypedArrayType()
 					*type_data.NeedsCast = helpers.NapiType.GetArrayType().String()
 				} else {
 					type_data.NapiType = Array
@@ -426,6 +424,13 @@ func (t *CPPType) ParseReturnData(g *PackageGenerator) GenReturnData {
 	return type_data
 }
 
+func (a *CPPArg) ParseDefaultValue() string {
+	val := *a.DefaultValue.Val
+	val = strings.ReplaceAll(val, "{", "[")
+	val = strings.ReplaceAll(val, "}", "]")
+	return val
+}
+
 func (a *CPPArg) ParseArgData(g *PackageGenerator, name string, idx int) GenArgData {
 	arg_data := GenArgData{
 		Name:      name,
@@ -434,6 +439,11 @@ func (a *CPPArg) ParseArgData(g *PackageGenerator, name string, idx int) GenArgD
 		RefDecl:   a.Type.RefDecl,
 		Idx:       idx,
 		RawType:   a.Type,
+	}
+
+	if a.DefaultValue != nil {
+		default_value := a.ParseDefaultValue()
+		arg_data.DefaultValue = &default_value
 	}
 
 	usedType := a.Type
@@ -454,8 +464,12 @@ func (a *CPPArg) ParseArgData(g *PackageGenerator, name string, idx int) GenArgD
 		arg_data.NativeType = *enumName
 		arg_data.JSType = usedType.Name
 		if a.DefaultValue != nil {
-			default_value := fmt.Sprintf("%s.%s", usedType.Name, *a.DefaultValue.Val)
-			arg_data.DefaultValue = &default_value
+			if g.IsEnumVal(usedType, *a.DefaultValue.Val) {
+				default_value := fmt.Sprintf("%s.%s", usedType.Name, *a.DefaultValue.Val)
+				arg_data.DefaultValue = &default_value
+			} else {
+				arg_data.DefaultValue = nil
+			}
 		}
 		return arg_data
 	}

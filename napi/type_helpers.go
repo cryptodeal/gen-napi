@@ -181,6 +181,20 @@ func (g *PackageGenerator) IsArgEnum(t *CPPType) (bool, *string) {
 	return false, nil
 }
 
+func (g *PackageGenerator) IsEnumVal(t *CPPType, v string) bool {
+	for _, e := range g.ParsedData.Enums {
+		fullName := fmt.Sprintf("%s::%s", *e.NameSpace, e.Name)
+		if strings.EqualFold(fullName, t.Name) || strings.EqualFold(e.Name, t.Name) {
+			for _, val := range e.Values {
+				if strings.EqualFold(*val.Name, v) {
+					return true
+				}
+			}
+		}
+	}
+	return false
+}
+
 func (g *PackageGenerator) IsTemplateEnum(t *TemplateType) (bool, *string) {
 	if t == nil {
 		return false, nil

@@ -74,24 +74,8 @@ func (t NapiType) String() *string {
 	return out
 }
 
-func (t NapiType) JSTypeString() string {
+func (t NapiType) TypedArrayType() string {
 	switch t {
-	case String:
-		return "string"
-	case Number:
-		return "number"
-	case Date:
-		return "Date"
-	case BigInt:
-		return "bigint"
-	case Boolean:
-		return "boolean"
-	case External:
-		return "never"
-	case Buffer:
-		return "Buffer"
-	case ArrayBuffer:
-		return "ArrayBuffer"
 	case Uint8Array:
 		return "Uint8Array"
 	case Int8Array:
@@ -112,6 +96,49 @@ func (t NapiType) JSTypeString() string {
 		return "BigInt64Array"
 	case BigUint64Array:
 		return "BigUint64Array"
+	default:
+		panic("Unknown NapiType")
+	}
+}
+
+func (t NapiType) JSTypeString() string {
+	switch t {
+	case String:
+		return "string"
+	case Number:
+		return "number"
+	case Date:
+		return "Date"
+	case BigInt:
+		return "bigint"
+	case Boolean:
+		return "boolean"
+	case External:
+		return "never"
+	case Buffer:
+		return "Buffer"
+	case ArrayBuffer:
+		return "ArrayBuffer"
+	case Uint8Array:
+		return "number[] | Uint8Array"
+	case Int8Array:
+		return "number[] | Int8Array"
+	case Uint16Array:
+		return "number[] | Uint16Array"
+	case Int16Array:
+		return "number[] | Int16Array"
+	case Uint32Array:
+		return "number[] | Uint32Array"
+	case Int32Array:
+		return "number[] | Int32Array"
+	case Float32Array:
+		return "number[] | Float32Array"
+	case Float64Array:
+		return "number[] | Float64Array"
+	case BigInt64Array:
+		return "Array<number | bigint> | BigInt64Array"
+	case BigUint64Array:
+		return "Array<number | bigint> | BigUint64Array"
 	case DataView:
 		return "DataView"
 	case Function:

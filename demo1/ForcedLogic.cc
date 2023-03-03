@@ -84,12 +84,9 @@ static Napi::Value rand(const Napi::CallbackInfo& info) {
   std::vector<long long> shape(shape_ptr, shape_ptr + tmp_shape_arr.ElementLength());
   fl::Tensor t;
   t = fl::rand(fl::Shape(shape));
-  auto _out_bytes_used = t.bytes();
-  g_bytes_used += _out_bytes_used;
-  Napi::MemoryManagement::AdjustExternalMemory(env, _out_bytes_used);
+  g_bytes_used = Napi::MemoryManagement::AdjustExternalMemory(env, t.bytes());
   auto* tensor = new fl::Tensor(t);
-  Napi::External<fl::Tensor> wrapped = ExternalizeTensor(env, tensor);
-  return wrapped;
+  return ExternalizeTensor(env, tensor);
 }
 
 /*
@@ -115,12 +112,9 @@ static Napi::Value randn(const Napi::CallbackInfo& info) {
   std::vector<long long> shape(shape_ptr, shape_ptr + tmp_shape_arr.ElementLength());
   fl::Tensor t;
   t = fl::randn(fl::Shape(shape));
-  auto _out_bytes_used = t.bytes();
-  g_bytes_used += _out_bytes_used;
-  Napi::MemoryManagement::AdjustExternalMemory(env, _out_bytes_used);
+  g_bytes_used = Napi::MemoryManagement::AdjustExternalMemory(env, t.bytes());
   auto* tensor = new fl::Tensor(t);
-  Napi::External<fl::Tensor> wrapped = ExternalizeTensor(env, tensor);
-  return wrapped;
+  return ExternalizeTensor(env, tensor);
 }
 
 }  // namespace exported_global_methods

@@ -135,12 +135,30 @@ func (g *PackageGenerator) WriteEnvImports() string {
 	sb.WriteString("\nconst {\n")
 	for name, c := range g.ParsedData.Classes {
 		if c.Decl != nil {
+			if c.FieldDecl != nil {
+				used_count := 0
+				for _, f := range *c.FieldDecl {
+					if f.Name != nil && !g.conf.IsFieldIgnored(name, *f.Name) {
+						if used_count > 0 {
+							sb.WriteString(",\n")
+						}
+						hasClassImports = true
+						name := *f.Name
+						if isInvalidName(name) {
+							name = "_" + name
+						}
+						g.writeIndent(sb, 1)
+						sb.WriteString(fmt.Sprintf("_%s", name))
+						used_count++
+					}
+				}
+			}
 			if v, ok := g.conf.ClassOpts[name]; ok && len(v.ForcedMethods) > 0 {
 				for i, m := range v.ForcedMethods {
-					hasClassImports = true
-					if i > 0 {
+					if (i == 0 && hasClassImports) || i > 0 {
 						sb.WriteString(",\n")
 					}
+					hasClassImports = true
 					g.writeIndent(sb, 1)
 					if isInvalidName(m.Name) {
 						sb.WriteString(fmt.Sprintf("_%s: __%s", m.Name, m.Name))
@@ -258,112 +276,80 @@ func (g *PackageGenerator) WriteDefaultArgVal(sb *strings.Builder, p *CPPArg) {
 	}
 }
 
+func IsBigIntTypedArray(ts_type string) bool {
+	return strings.Contains(ts_type, "BigInt64Array") || strings.Contains(ts_type, "BigUint64Array")
+}
+
+func (g *PackageGenerator) WriteWrappedFn(sb *strings.Builder, method_name string, args []GenArgData, returns GenReturnData, is_void bool) {
+	name := method_name
+	if isInvalidName(method_name) {
+		name = fmt.Sprintf("_%s", method_name)
+	}
+
+	if g.conf.IsEnvTS() {
+		sb.WriteString("export ")
+	}
+
+	sb.WriteString(fmt.Sprintf("const %s = (", name))
+
+	arg_count := len(args)
+	for i, arg := range args {
+		if i > 0 && i < arg_count {
+			sb.WriteString(", ")
+		}
+		sb.WriteString(fmt.Sprintf("%s: %s", arg.Name, arg.JSType))
+		if arg.DefaultValue != nil {
+			sb.WriteString(fmt.Sprintf(" = %s", *arg.DefaultValue))
+		}
+	}
+	sb.WriteString(")")
+	if g.conf.IsEnvTS() && !is_void {
+		sb.WriteString(fmt.Sprintf(": %s", stripNameSpace(returns.JSType)))
+	}
+	sb.WriteString(" => {\n")
+	g.writeIndent(sb, 1)
+	sb.WriteString(fmt.Sprintf("return _%s(", name))
+
+	for i, arg := range args {
+		if i > 0 && i < arg_count {
+			sb.WriteString(", ")
+		}
+		sb.WriteString(arg.Name)
+		if arg.TypedArrayInfo != nil {
+			instanceof_name := arg.NapiType.TypedArrayType()
+			sb.WriteString(fmt.Sprintf(" instanceof %s ? %s : new %s(%s", instanceof_name, arg.Name, instanceof_name, arg.Name))
+			// if bigint, need to convert to bigint
+			if IsBigIntTypedArray(arg.JSType) {
+				sb.WriteString(".map((v) => typeof v === 'number' ? BigInt(v) : v)")
+			}
+			sb.WriteString(")")
+		}
+	}
+
+	sb.WriteString(");\n")
+	sb.WriteString("}\n\n")
+}
+
 func (g *PackageGenerator) WriteEnvWrappedFns() string {
 	sb := new(strings.Builder)
 	for _, m := range g.ParsedData.Methods {
 		if !g.conf.IsMethodIgnored(*m.Name) {
-			if g.conf.IsEnvTS() {
-				sb.WriteString("export ")
-			}
-			if isInvalidName(*m.Name) {
-				sb.WriteString(fmt.Sprintf("const %s = (", "_"+*m.Name))
-			} else {
-				sb.WriteString(fmt.Sprintf("const %s = (", *m.Name))
-			}
-			for i, p := range *m.Overloads[0] {
-				if i >= m.ExpectedArgs && m.OptionalArgs == 0 {
-					break
-				}
-				if i > 0 && i < len(*m.Overloads[0]) {
-					sb.WriteString(", ")
-				}
-				sb.WriteString(*p.Name)
-				usedName := p.Type.Name
-				if v, ok := g.conf.TypeMappings[p.Type.Name]; (!ok || v.TSType != "") && p.Type.MappedType != nil {
-					usedName = p.Type.MappedType.Name
-				}
-				tsType, isClass := g.CPPTypeToTS(usedName, p.Type.IsPointer)
-				if v, ok := g.conf.TypeMappings[tsType]; ok && v.TSType != "" {
-					if g.conf.IsEnvTS() {
-						sb.WriteString(fmt.Sprintf(": %s", stripNameSpace(v.TSType)))
-					}
-					g.WriteDefaultArgVal(sb, p)
-				} else if p.Type.MappedType != nil {
-					type_helpers := p.Type.MappedType.GetTypeHandlers(g, true)
-					if g.conf.IsEnvTS() {
-						sb.WriteString(fmt.Sprintf(": %s", type_helpers.JSType))
-					}
-					g.WriteDefaultArgVal(sb, p)
-				} else {
-					// TODO: write types for `pair` aka `[T1, T2]`
-					if IsArgTemplate(p) && *p.Type.Template.Name == "vector" {
-						tsType, _ = g.CPPTypeToTS(*p.Type.Template.Args[0].Name, p.Type.IsPointer)
-						if g.conf.IsEnvTS() {
-							if tsType == "pair" {
-								helpers_1 := g.GetTypeHelpers(*p.Type.Template.Args[0].Args[0].Name)
-								helpers_2 := g.GetTypeHelpers(*p.Type.Template.Args[0].Args[1].Name)
-								sb.WriteString(fmt.Sprintf(": Array<[%s, %s]>", helpers_1.JSType, helpers_2.JSType))
-							} else {
-								sb.WriteString(fmt.Sprintf(": %s[]", tsType))
-							}
-						}
-						g.WriteDefaultArgVal(sb, p)
-					} else {
-						sb.WriteString(fmt.Sprintf(": %s", stripNameSpace(tsType)))
-					}
-					isEnum, _ := g.IsTypeEnum(p.Type.Name)
-					if isEnum && p.DefaultValue != nil && p.DefaultValue.Val != nil {
-						sb.WriteString(fmt.Sprintf(" = %s.%s", p.Type.Name, *p.DefaultValue.Val))
-					} else if !isClass && p.DefaultValue != nil && p.DefaultValue.Val != nil {
-						val := *p.DefaultValue.Val
-						val = strings.ReplaceAll(val, "{", "[")
-						val = strings.ReplaceAll(val, "}", "]")
-						sb.WriteString(fmt.Sprintf(" = %s", val))
-					}
-				}
-			}
-			tsType, _ := g.CPPTypeToTS(m.Returns.Name, m.Returns.IsPointer)
-			if g.conf.IsEnvTS() {
-				if v, ok := g.conf.TypeMappings[tsType]; ok {
-					sb.WriteString(fmt.Sprintf("): %s => {\n", v.TSType))
-				} else {
-					sb.WriteString(fmt.Sprintf("): %s => {\n", tsType))
-				}
-			} else {
-				sb.WriteString(") => {\n")
-			}
-			g.writeIndent(sb, 1)
-			sb.WriteString("return ")
-			if g.isClass(tsType) {
-				sb.WriteString(fmt.Sprintf("new %s(", stripNameSpace(tsType)))
-			}
-			if isInvalidName(*m.Name) {
-				sb.WriteString(fmt.Sprintf("__%s(", *m.Name))
-			} else {
-				sb.WriteString(fmt.Sprintf("_%s(", *m.Name))
-			}
-			for i, p := range *m.Overloads[0] {
-				if i >= m.ExpectedArgs && m.OptionalArgs == 0 {
-					break
-				}
-				if i > 0 && i < len(*m.Overloads[0]) {
-					sb.WriteString(", ")
-				}
-				sb.WriteString(*p.Name)
-				if g.isClass(p.Type.Name) {
-					sb.WriteString("._native_self")
-				}
-			}
-			if g.isClass(tsType) {
-				sb.WriteByte(')')
-			}
-			sb.WriteString(");\n")
-			sb.WriteString("}\n\n")
+			arg_helpers := g.GetArgData(m.Overloads[0])
+			g.WriteWrappedFn(sb, *m.Name, *arg_helpers, m.Returns.ParseReturnData(g), m.IsVoid())
 		}
 	}
 
 	for name, c := range g.ParsedData.Classes {
 		if c.Decl != nil {
+			if c.FieldDecl != nil {
+				for _, f := range *c.FieldDecl {
+					if f.Name != nil && !g.conf.IsFieldIgnored(name, *f.Name) {
+						arg_helpers := g.GetArgData(&f.Args)
+						g.WriteWrappedFn(sb, *f.Name, *arg_helpers, f.Returns.ParseReturnData(g), f.IsVoid())
+					}
+				}
+			}
+
 			if v, ok := g.conf.ClassOpts[name]; ok && len(v.ForcedMethods) > 0 {
 				for _, m := range v.ForcedMethods {
 					if g.conf.IsEnvTS() {
@@ -427,64 +413,8 @@ func (g *PackageGenerator) WriteEnvWrappedFns() string {
 
 	for _, m := range g.ParsedData.Lits {
 		if !g.conf.IsMethodIgnored(*m.Name) {
-			if !g.conf.IsMethodIgnored(*m.Name) {
-				if g.conf.IsEnvTS() {
-					sb.WriteString("export ")
-				}
-				if isInvalidName(*m.Name) {
-					sb.WriteString(fmt.Sprintf("const %s = (", "_"+*m.Name))
-				} else {
-					sb.WriteString(fmt.Sprintf("const %s = (", *m.Name))
-				}
-				for i, p := range *m.Overloads[0] {
-					if i > 0 && i < len(*m.Overloads[0]) {
-						sb.WriteString(", ")
-					}
-					sb.WriteString(*p.Name)
-					if g.conf.IsEnvTS() {
-						tsType, _ := g.CPPTypeToTS(p.Type.Name, p.Type.IsPointer)
-						if v, ok := g.conf.TypeMappings[tsType]; ok {
-							sb.WriteString(fmt.Sprintf(": %s", v.TSType))
-						} else {
-							sb.WriteString(fmt.Sprintf(": %s", tsType))
-						}
-					}
-				}
-				tsType, _ := g.CPPTypeToTS(m.Returns.Name, m.Returns.IsPointer)
-				if g.conf.IsEnvTS() {
-					if v, ok := g.conf.TypeMappings[tsType]; ok {
-						sb.WriteString(fmt.Sprintf("): %s {\n", v.TSType))
-					} else {
-						sb.WriteString(fmt.Sprintf("): %s => {\n", tsType))
-					}
-				} else {
-					sb.WriteString(") => {\n")
-				}
-				g.writeIndent(sb, 1)
-				sb.WriteString("return ")
-				if g.isClass(tsType) {
-					sb.WriteString(fmt.Sprintf("new %s(", stripNameSpace(tsType)))
-				}
-				if isInvalidName(*m.Name) {
-					sb.WriteString(fmt.Sprintf("__%s(", *m.Name))
-				} else {
-					sb.WriteString(fmt.Sprintf("_%s(", *m.Name))
-				}
-				for i, p := range *m.Overloads[0] {
-					if i > 0 && i < len(*m.Overloads[0]) {
-						sb.WriteString(", ")
-					}
-					sb.WriteString(*p.Name)
-					if g.isClass(p.Type.Name) {
-						sb.WriteString("._native_self")
-					}
-				}
-				if g.isClass(tsType) {
-					sb.WriteByte(')')
-				}
-				sb.WriteString(");\n")
-				sb.WriteString("}\n\n")
-			}
+			arg_helpers := g.GetArgData(m.Overloads[0])
+			g.WriteWrappedFn(sb, *m.Name, *arg_helpers, m.Returns.ParseReturnData(g), m.IsVoid())
 		}
 	}
 
