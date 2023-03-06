@@ -17,23 +17,28 @@ func isInvalidName(name string) bool {
 	return false
 }
 
-func (g *PackageGenerator) WriteEnumImports(sb *strings.Builder) {
+func (g *PackageGenerator) WriteEnumImports(sb *strings.Builder, imports map[string]bool) {
 	if len(g.ParsedData.Enums) == 0 {
 		return
 	}
 
-	sb.WriteByte('\n')
 	if g.conf.IsEnvTS() {
 		sb.WriteString("import ")
 	} else {
 		sb.WriteString("const ")
 	}
 	sb.WriteString("{ ")
-	for i, e := range g.ParsedData.Enums {
-		if i > 0 {
+	count := 0
+	import_count := len(imports)
+	for name := range imports {
+		if count > 0 {
 			sb.WriteString(", ")
 		}
-		sb.WriteString(e.Name)
+		sb.WriteString(name)
+		count++
+		if count == import_count {
+			sb.WriteByte(' ')
+		}
 	}
 	sb.WriteString("} ")
 	if g.conf.IsEnvTS() {
@@ -56,17 +61,19 @@ func (g *PackageGenerator) WriteEnumImports(sb *strings.Builder) {
 }
 
 func (g *PackageGenerator) WriteEnvWrapper(sb *strings.Builder) {
-	sb.WriteString(g.conf.JSWrapperOpts.FrontMatter)
-	g.WriteEnumImports(sb)
-	sb.WriteString(g.WriteEnvImports())
-	sb.WriteString(g.WriteEnvWrappedFns())
+	temp_sb := new(strings.Builder)
+	temp_sb.WriteString(g.conf.JSWrapperOpts.FrontMatter)
+	g.WriteEnvImports(temp_sb)
+	enum_imports := map[string]bool{}
+	g.WriteEnvWrappedFns(temp_sb, enum_imports)
 	if !g.conf.IsEnvTS() {
-		sb.WriteString(g.WriteEnvExports())
+		g.WriteEnvExports(temp_sb)
 	}
+	g.WriteEnumImports(sb, enum_imports)
+	sb.WriteString(temp_sb.String())
 }
 
-func (g *PackageGenerator) WriteEnvExports() string {
-	sb := new(strings.Builder)
+func (g *PackageGenerator) WriteEnvExports(sb *strings.Builder) {
 	sb.WriteString("module.exports = {\n")
 	used := []string{}
 	for name, m := range g.ParsedData.Methods {
@@ -156,11 +163,9 @@ func (g *PackageGenerator) WriteEnvExports() string {
 		}
 	}
 	sb.WriteString("\n}\n")
-	return sb.String()
 }
 
-func (g *PackageGenerator) WriteEnvImports() string {
-	sb := new(strings.Builder)
+func (g *PackageGenerator) WriteEnvImports(sb *strings.Builder) {
 	sb.WriteString("\nconst addon = ")
 	if g.conf.IsEnvTS() {
 		sb.WriteString("import.meta.require(")
@@ -168,14 +173,14 @@ func (g *PackageGenerator) WriteEnvImports() string {
 		sb.WriteString("require(")
 	}
 	sb.WriteString(fmt.Sprintf("'%s');\n\n", g.conf.ResolvedBindingsImportPath(g.conf.Path)))
-	return sb.String()
 }
 
 func (g *PackageGenerator) WriteEnums() error {
 	sb := new(strings.Builder)
 	g.writeFileCodegenHeader(sb)
 	g.writeFileSourceHeader(sb, *g.Path)
-	for _, e := range g.ParsedData.Enums {
+	enum_count := len(g.ParsedData.Enums)
+	for i, e := range g.ParsedData.Enums {
 		if g.conf.IsEnvTS() {
 			sb.WriteString(fmt.Sprintf("export enum %s {\n", e.Name))
 			count := len(e.Values)
@@ -187,7 +192,7 @@ func (g *PackageGenerator) WriteEnums() error {
 				}
 				sb.WriteByte('\n')
 			}
-			sb.WriteString("}\n\n")
+			sb.WriteString("}\n")
 		} else {
 			// write as if it's a compiled typescript enum if JS out type
 			sb.WriteString(fmt.Sprintf("var %s;\n", e.Name))
@@ -196,7 +201,10 @@ func (g *PackageGenerator) WriteEnums() error {
 				g.writeIndent(sb, 1)
 				sb.WriteString(fmt.Sprintf("%s[%s[%q] = %d] = %q;\n", e.Name, e.Name, *v.Name, v.Value, *v.Name))
 			}
-			sb.WriteString(fmt.Sprintf("})(%s || (%s = {}));\n\n", e.Name, e.Name))
+			sb.WriteString(fmt.Sprintf("})(%s || (%s = {}));\n", e.Name, e.Name))
+		}
+		if i < enum_count-1 {
+			sb.WriteByte('\n')
 		}
 	}
 	outPath := g.conf.ResolvedWrappedEnumOutPath(filepath.Dir(g.conf.Path))
@@ -348,11 +356,19 @@ func (g *PackageGenerator) WriteForcedMethod(sb *strings.Builder, method_name st
 	sb.WriteString("}\n\n")
 }
 
-func (g *PackageGenerator) WriteEnvWrappedFns() string {
-	sb := new(strings.Builder)
+func ParseEnumImports(arg_helpers []GenArgData, imports map[string]bool) {
+	for _, arg := range arg_helpers {
+		if arg.NapiType == NumberEnum {
+			imports[arg.JSType] = true
+		}
+	}
+}
+
+func (g *PackageGenerator) WriteEnvWrappedFns(sb *strings.Builder, imports map[string]bool) {
 	for _, m := range g.ParsedData.Methods {
 		if !g.conf.IsMethodIgnored(*m.Name) {
 			arg_helpers := g.GetArgData(m.Overloads[0])
+			ParseEnumImports(*arg_helpers, imports)
 			g.WriteWrappedFn(sb, *m.Name, *arg_helpers, m.Returns.ParseReturnData(g), m.IsVoid())
 		}
 	}
@@ -360,6 +376,7 @@ func (g *PackageGenerator) WriteEnvWrappedFns() string {
 	for _, m := range g.ParsedData.Lits {
 		if !g.conf.IsMethodIgnored(*m.Name) {
 			arg_helpers := g.GetArgData(m.Overloads[0])
+			ParseEnumImports(*arg_helpers, imports)
 			g.WriteWrappedFn(sb, *m.Name, *arg_helpers, m.Returns.ParseReturnData(g), m.IsVoid())
 		}
 	}
@@ -370,6 +387,7 @@ func (g *PackageGenerator) WriteEnvWrappedFns() string {
 				for _, f := range *c.FieldDecl {
 					if f.Name != nil && !g.conf.IsFieldIgnored(name, *f.Name) {
 						arg_helpers := g.GetArgData(&f.Args)
+						ParseEnumImports(*arg_helpers, imports)
 						g.WriteWrappedFn(sb, *f.Name, *arg_helpers, f.Returns.ParseReturnData(g), f.IsVoid())
 					}
 				}
@@ -384,10 +402,14 @@ func (g *PackageGenerator) WriteEnvWrappedFns() string {
 	}
 
 	for _, m := range g.conf.GlobalForcedMethods {
+		for _, arg := range m.Args {
+			isEnum, _ := g.IsTypeEnum(arg.TSType)
+			if isEnum {
+				imports[arg.TSType] = true
+			}
+		}
 		g.WriteForcedMethod(sb, m.Name, m.Args, m.TSReturnType, m.IsVoid)
 	}
-
-	return sb.String()
 }
 
 func (g *PackageGenerator) WriteShimWrappedFn(sb *strings.Builder, method_name string, class_name string, args []GenArgData, returns GenReturnData, is_void bool, imports map[string]bool) {
@@ -485,9 +507,8 @@ func (g *PackageGenerator) WriteObjectShims(name string) string {
 	imports := map[string]bool{}
 	if v, ok := g.ParsedData.Classes[name]; ok && v.FieldDecl != nil {
 		usedName := fmt.Sprintf("_%s", name)
-		g.writeFileCodegenHeader(sb)
 		sb.WriteString(g.conf.JSWrapperOpts.ShimFrontMatter)
-		sb.WriteString(g.WriteEnvImports())
+		g.WriteEnvImports(sb)
 		g.writeFileSourceHeader(sb, *g.Path)
 
 		g.WriteExternalTypeHelpers(sb, name)
@@ -545,38 +566,8 @@ func (g *PackageGenerator) WriteObjectShims(name string) string {
 	}
 
 	res_sb := new(strings.Builder)
-	if len(imports) > 0 {
-		if g.conf.IsEnvTS() {
-			res_sb.WriteString("import ")
-		} else {
-			res_sb.WriteString("const ")
-		}
-		res_sb.WriteString("{ ")
-		count := 0
-		for import_name := range imports {
-			if count > 0 {
-				res_sb.WriteString(", ")
-			}
-			res_sb.WriteString(import_name)
-			count++
-		}
-		res_sb.WriteString(" } ")
-		if g.conf.IsEnvTS() {
-			res_sb.WriteString("from ")
-		} else {
-			res_sb.WriteString("= require(")
-		}
-		base_import_path := strings.Split(g.conf.ResolvedWrappedEnumOutPath(filepath.Dir(g.conf.Path)), "/")
-		used_import_path := base_import_path[len(base_import_path)-1]
-		if g.conf.IsEnvTS() {
-			used_import_path = used_import_path[:strings.IndexByte(used_import_path, '.')]
-		}
-		res_sb.WriteString(fmt.Sprintf("'./%s'", used_import_path))
-		if !g.conf.IsEnvTS() {
-			res_sb.WriteByte(')')
-		}
-		res_sb.WriteString(";\n")
-	}
+	g.writeFileCodegenHeader(res_sb)
+	g.WriteEnumImports(res_sb, imports)
 	res_sb.WriteString(sb.String())
 
 	return res_sb.String()

@@ -4,51 +4,51 @@
 // source: TensorBase.h
 
 export enum TensorBackendType {
-	Stub = 0,
-	Tracer = 1,
-	ArrayFire = 2,
-	OneDnn = 3,
-	Jit = 4
+  Stub = 0,
+  Tracer = 1,
+  ArrayFire = 2,
+  OneDnn = 3,
+  Jit = 4
 }
 
 export enum Location {
-	Host = 0,
-	Device = 1
+  Host = 0,
+  Device = 1
 }
 
 export enum StorageType {
-	Dense = 0,
-	CSR = 1,
-	CSC = 2,
-	COO = 3
+  Dense = 0,
+  CSR = 1,
+  CSC = 2,
+  COO = 3
 }
 
 export enum PadType {
-	Constant = 0,
-	Edge = 1,
-	Symmetric = 2
+  Constant = 0,
+  Edge = 1,
+  Symmetric = 2
 }
 
 export enum SortMode {
-	Descending = 0,
-	Ascending = 1
+  Descending = 0,
+  Ascending = 1
 }
 
 export enum MatrixProperty {
-	None = 0,
-	Transpose = 1
+  None = 0,
+  Transpose = 1
 }
 
 export enum dtype {
-	f16 = 0,
-	f32 = 1,
-	f64 = 2,
-	b8 = 3,
-	s16 = 4,
-	s32 = 5,
-	s64 = 6,
-	u8 = 7,
-	u16 = 8,
-	u32 = 9,
-	u64 = 10
+  f16 = 0,
+  f32 = 1,
+  f64 = 2,
+  b8 = 3,
+  s16 = 4,
+  s32 = 5,
+  s64 = 6,
+  u8 = 7,
+  u16 = 8,
+  u32 = 9,
+  u64 = 10
 }

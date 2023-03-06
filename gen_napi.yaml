@@ -10,7 +10,7 @@ packages:
     path_to_forced_logic: demo1/ForcedLogic.cc
     bindings_out_path: demo1/out
     track_external_memory: g_bytes_used
-    indent: "\t"
+    indent: '  '
     type_mappings:
       fl::Shape:
         needs_wrapper: true

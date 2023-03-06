@@ -1,25 +1,25 @@
 {
-	"name": "gen-napi",
-	"version": "0.0.0",
-	"type": "module",
-	"scripts": {
-		"format": "eslint '**/*.{js,ts}' '*.{js,ts,cjs}' package.json --fix",
-		"install": "cmake-js compile --CD flashlight_DIR=$HOME/usr/share/flashlight/cmake/"
-	},
-	"devDependencies": {
-		"@types/node": "^18.14.6",
-		"@typescript-eslint/eslint-plugin": "^5.54.0",
-		"@typescript-eslint/parser": "^5.54.0",
-		"bun-types": "^0.5.7",
-		"eslint": "^8.35.0",
-		"eslint-config-prettier": "^8.6.0",
-		"eslint-plugin-prettier": "^4.2.1",
-		"eslint-plugin-simple-import-sort": "^10.0.0",
-		"prettier": "^2.8.4",
-		"typescript": "^4.9.5"
-	},
-	"dependencies": {
-		"cmake-js": "^7.2.1",
-		"node-addon-api": "^6.0.0"
-	}
+  "name": "gen-napi",
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "format": "eslint '**/*.{js,ts}' '*.{js,ts,cjs}' package.json --fix",
+    "install": "cmake-js compile --CD flashlight_DIR=$HOME/usr/share/flashlight/cmake/"
+  },
+  "devDependencies": {
+    "@types/node": "^18.14.6",
+    "@typescript-eslint/eslint-plugin": "^5.54.0",
+    "@typescript-eslint/parser": "^5.54.0",
+    "bun-types": "^0.5.7",
+    "eslint": "^8.35.0",
+    "eslint-config-prettier": "^8.6.0",
+    "eslint-plugin-prettier": "^4.2.1",
+    "eslint-plugin-simple-import-sort": "^10.0.0",
+    "prettier": "^2.8.4",
+    "typescript": "^4.9.5"
+  },
+  "dependencies": {
+    "cmake-js": "^7.2.1",
+    "node-addon-api": "^6.0.0"
+  }
 }
