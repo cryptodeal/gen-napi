@@ -21,7 +21,8 @@ packages:
       T:
         native_type: float
     js_wrapper_opts:
-      front_matter: import { Tensor } from './tensor'
+      front_matter: import { Tensor } from './tensor';
+      shim_front_matter: import type { Tensor } from './tensor';
       addon_path: ../../build/Release/shumai_bindings.node
       wrapper_out_path: demo1/ts/index.ts
     # TODO: need to debug (should not be necessary??)
@@ -176,6 +177,7 @@ packages:
           shape: auto shape = jsArrayToVector<long long>(/arg/.As<Napi::Array>(), g_row_major, false);
     class_opts:
       Tensor:
+        path_to_impl: demo1/ts/tensor.ts
         ignored_fields:
           - setContext
           - stream
@@ -188,11 +190,10 @@ packages:
           - operator<<
           - operator=
           - backend
+          - flat
         bytes_used: bytes
         # finalizer:
         ext_finalizer_transform: |
           if (/this/->hasAdapter()) {
-            auto byte_count = static_cast<int64_t>(/this/->bytes());
-            g_bytes_used -= byte_count;
-            Napi::MemoryManagement::AdjustExternalMemory(env, -byte_count);
+            g_bytes_used = Napi::MemoryManagement::AdjustExternalMemory(env, -(/this/->bytes()));
           }

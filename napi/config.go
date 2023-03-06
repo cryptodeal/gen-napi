@@ -14,7 +14,7 @@ import (
 
 const defaultOutBindingsFileName = "bindings.cc"
 const defaultOutHeaderFileName = "bindings.h"
-const defaultOutJsWrapperFileName = "index.js"
+const defaultOutJsWrapperFileName = "gen_method_shims.js"
 
 type TypeHandler struct {
 	OutType string `yaml:"out_type"`
@@ -59,19 +59,16 @@ type ClassOpts struct {
 	ExternalFinalizer string   `yaml:"ext_finalizer_transform"`
 	BytesUsed         *string  `yaml:"bytes_used"`
 	ForcedMethods     []FnOpts `yaml:"forced_methods"`
+	PathToImpl        string   `yaml:"path_to_impl"`
 }
 
 type JSWrapperOpts struct {
-	AddonPath      string `yaml:"addon_path"`
-	FrontMatter    string `yaml:"front_matter"`
-	WrapperOutPath string `yaml:"wrapper_out_path"`
+	AddonPath       string `yaml:"addon_path"`
+	FrontMatter     string `yaml:"front_matter"`
+	WrapperOutPath  string `yaml:"wrapper_out_path"`
+	ShimFrontMatter string `yaml:"shim_front_matter"`
 	// specifies whether gen JS/TS wrapper code
 	EnvType string `yaml:"env_type"`
-}
-
-type VectorOrientationOpts struct {
-	RowMajorDefault bool   `yaml:"row_major_default"`
-	DimAccessor     string `yaml:"dim_accessor"`
 }
 
 type GroupedMethodTransforms struct {
@@ -89,11 +86,10 @@ type PackageConfig struct {
 
 	// Where this output should be written to.
 	// If you specify a folder it will be written to a file `index.ts` within that folder. By default it is written into the Golang package folder.
-	BindingsOutPath   string                `yaml:"bindings_out_path"`
-	HeaderOutPath     string                `yaml:"header_out_path"`
-	JSWrapperOpts     JSWrapperOpts         `yaml:"js_wrapper_opts"`
-	PathToForcedLogic string                `yaml:"path_to_forced_logic"`
-	VectorOpts        VectorOrientationOpts `yaml:"vector_opts"`
+	BindingsOutPath   string        `yaml:"bindings_out_path"`
+	HeaderOutPath     string        `yaml:"header_out_path"`
+	JSWrapperOpts     JSWrapperOpts `yaml:"js_wrapper_opts"`
+	PathToForcedLogic string        `yaml:"path_to_forced_logic"`
 
 	// Customize the indentation (use \t if you want tabs)
 	Indent string `yaml:"indent"`
@@ -234,17 +230,6 @@ func (c PackageConfig) IsFieldIgnored(className string, fnName string) bool {
 	return false
 }
 
-func (c PackageConfig) TypeHasHandler(name string) *TypeHandler {
-	var handler *TypeHandler
-	for hName, h := range c.TypeHandlers {
-		if strings.EqualFold(hName, name) {
-			handler = &h
-			break
-		}
-	}
-	return handler
-}
-
 func (c PackageConfig) IsMethodIgnored(name string) bool {
 	for _, n := range c.IgnoredMethods {
 		if strings.EqualFold(n, name) {
@@ -280,6 +265,28 @@ func (c PackageConfig) ResolvedWrapperOutPath(packageDir string) string {
 		return filepath.Join(conf_path, defaultOutJsWrapperFileName)
 	}
 	return conf_path
+}
+
+func (c PackageConfig) ResolvedWrappedEnumOutPath(packageDir string) string {
+	conf_path := c.JSWrapperOpts.WrapperOutPath
+	if conf_path == "" {
+		return filepath.Join(packageDir, defaultOutJsWrapperFileName)
+	} else if !strings.HasSuffix(conf_path, ".js") && !strings.HasSuffix(conf_path, ".mjs") && !strings.HasSuffix(conf_path, ".cjs") && !strings.HasSuffix(conf_path, ".ts") {
+		return filepath.Join(conf_path, "gen_enums.js")
+	}
+	path_split := strings.Split(conf_path, "/")
+	return strings.Join(path_split[:len(path_split)-1], "/") + fmt.Sprintf("/gen_enums.%s", strings.Split(path_split[len(path_split)-1], ".")[1])
+}
+
+func (c PackageConfig) ResolvedShimPath(packageDir string, val_name string) string {
+	conf_path := c.JSWrapperOpts.WrapperOutPath
+	if conf_path == "" {
+		return filepath.Join(packageDir, defaultOutJsWrapperFileName)
+	} else if !strings.HasSuffix(conf_path, ".js") && !strings.HasSuffix(conf_path, ".mjs") && !strings.HasSuffix(conf_path, ".cjs") && !strings.HasSuffix(conf_path, ".ts") {
+		return filepath.Join(conf_path, fmt.Sprintf("gen_%s_methods_shim.js", val_name))
+	}
+	path_split := strings.Split(conf_path, "/")
+	return strings.Join(path_split[:len(path_split)-1], "/") + fmt.Sprintf("/gen_%s_methods_shim.%s", val_name, strings.Split(path_split[len(path_split)-1], ".")[1])
 }
 
 func (c PackageConfig) ResolvedBindingsImportPath(packageDir string) string {

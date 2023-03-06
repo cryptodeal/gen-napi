@@ -2,6 +2,8 @@ package napi
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -15,20 +17,48 @@ func isInvalidName(name string) bool {
 	return false
 }
 
-func isTypedArray(typeName string) bool {
-	ta := []string{"Int8Array", "Uint8Array", "Uint8ClampedArray", "Int16Array", "Uint16Array", "Int32Array", "Uint32Array", "Float32Array", "Float64Array", "BigInt64Array", "BigUint64Array"}
-	for _, t := range ta {
-		if strings.EqualFold(typeName, t) {
-			return true
-		}
+func (g *PackageGenerator) WriteEnumImports(sb *strings.Builder) {
+	if len(g.ParsedData.Enums) == 0 {
+		return
 	}
-	return false
+
+	sb.WriteByte('\n')
+	if g.conf.IsEnvTS() {
+		sb.WriteString("import ")
+	} else {
+		sb.WriteString("const ")
+	}
+	sb.WriteString("{ ")
+	for i, e := range g.ParsedData.Enums {
+		if i > 0 {
+			sb.WriteString(", ")
+		}
+		sb.WriteString(e.Name)
+	}
+	sb.WriteString("} ")
+	if g.conf.IsEnvTS() {
+		sb.WriteString("from ")
+	} else {
+		sb.WriteString("= require(")
+	}
+	base_import_path := strings.Split(g.conf.ResolvedWrappedEnumOutPath(filepath.Dir(g.conf.Path)), "/")
+	used_import_path := base_import_path[len(base_import_path)-1]
+	if g.conf.IsEnvTS() {
+		used_import_path = used_import_path[:strings.IndexByte(used_import_path, '.')]
+	}
+	sb.WriteString(fmt.Sprintf("'./%s'", used_import_path))
+
+	if !g.conf.IsEnvTS() {
+		sb.WriteString(")")
+	}
+	sb.WriteString(";\n")
+
 }
 
 func (g *PackageGenerator) WriteEnvWrapper(sb *strings.Builder) {
 	sb.WriteString(g.conf.JSWrapperOpts.FrontMatter)
+	g.WriteEnumImports(sb)
 	sb.WriteString(g.WriteEnvImports())
-	sb.WriteString(g.WriteEnums())
 	sb.WriteString(g.WriteEnvWrappedFns())
 	if !g.conf.IsEnvTS() {
 		sb.WriteString(g.WriteEnvExports())
@@ -130,116 +160,21 @@ func (g *PackageGenerator) WriteEnvExports() string {
 }
 
 func (g *PackageGenerator) WriteEnvImports() string {
-	hasClassImports := false
 	sb := new(strings.Builder)
-	sb.WriteString("\nconst {\n")
-	for name, c := range g.ParsedData.Classes {
-		if c.Decl != nil {
-			if c.FieldDecl != nil {
-				used_count := 0
-				for _, f := range *c.FieldDecl {
-					if f.Name != nil && !g.conf.IsFieldIgnored(name, *f.Name) {
-						if used_count > 0 {
-							sb.WriteString(",\n")
-						}
-						hasClassImports = true
-						name := *f.Name
-						if isInvalidName(name) {
-							name = "_" + name
-						}
-						g.writeIndent(sb, 1)
-						sb.WriteString(fmt.Sprintf("_%s", name))
-						used_count++
-					}
-				}
-			}
-			if v, ok := g.conf.ClassOpts[name]; ok && len(v.ForcedMethods) > 0 {
-				for i, m := range v.ForcedMethods {
-					if (i == 0 && hasClassImports) || i > 0 {
-						sb.WriteString(",\n")
-					}
-					hasClassImports = true
-					g.writeIndent(sb, 1)
-					if isInvalidName(m.Name) {
-						sb.WriteString(fmt.Sprintf("_%s: __%s", m.Name, m.Name))
-					} else {
-						sb.WriteString(fmt.Sprintf("_%s", m.Name))
-					}
-				}
-			}
-		}
-	}
-	used := []string{}
-	for name, m := range g.ParsedData.Methods {
-		if !g.conf.IsMethodIgnored(*m.Name) {
-			used = append(used, name)
-		}
-	}
-
-	used_len := len(used)
-	for i, name := range used {
-		if i == 0 && hasClassImports {
-			sb.WriteString(",\n")
-		}
-		g.writeIndent(sb, 1)
-		if isInvalidName(name) {
-			sb.WriteString(fmt.Sprintf("_%s: __%s", name, name))
-		} else {
-			sb.WriteString(fmt.Sprintf("_%s", name))
-		}
-		if i < used_len-1 {
-			sb.WriteString(",\n")
-		}
-	}
-
-	used = []string{}
-	for name, m := range g.ParsedData.Lits {
-		if !g.conf.IsMethodIgnored(*m.Name) {
-			used = append(used, name)
-		}
-	}
-	used_len = len(used)
-	for i, name := range used {
-		if i == 0 {
-			sb.WriteString(",\n")
-		}
-		g.writeIndent(sb, 1)
-		if isInvalidName(name) {
-			sb.WriteString(fmt.Sprintf("_%s: __%s", name, name))
-		} else {
-			sb.WriteString(fmt.Sprintf("_%s", name))
-		}
-		if i < used_len-1 {
-			sb.WriteString(",\n")
-		}
-	}
-	used_len = len(g.conf.GlobalForcedMethods)
-	for i, m := range g.conf.GlobalForcedMethods {
-		if i == 0 {
-			sb.WriteString(",\n")
-		}
-		g.writeIndent(sb, 1)
-		if isInvalidName(m.Name) {
-			sb.WriteString(fmt.Sprintf("_%s: __%s", m.Name, m.Name))
-		} else {
-			sb.WriteString(fmt.Sprintf("_%s", m.Name))
-		}
-		if i < used_len-1 {
-			sb.WriteString(",\n")
-		}
-	}
-	sb.WriteString("\n} = ")
+	sb.WriteString("\nconst addon = ")
 	if g.conf.IsEnvTS() {
 		sb.WriteString("import.meta.require(")
 	} else {
 		sb.WriteString("require(")
 	}
-	sb.WriteString(fmt.Sprintf("%q)\n\n", g.conf.ResolvedBindingsImportPath(g.conf.Path)))
+	sb.WriteString(fmt.Sprintf("'%s');\n\n", g.conf.ResolvedBindingsImportPath(g.conf.Path)))
 	return sb.String()
 }
 
-func (g *PackageGenerator) WriteEnums() string {
+func (g *PackageGenerator) WriteEnums() error {
 	sb := new(strings.Builder)
+	g.writeFileCodegenHeader(sb)
+	g.writeFileSourceHeader(sb, *g.Path)
 	for _, e := range g.ParsedData.Enums {
 		if g.conf.IsEnvTS() {
 			sb.WriteString(fmt.Sprintf("export enum %s {\n", e.Name))
@@ -264,7 +199,18 @@ func (g *PackageGenerator) WriteEnums() string {
 			sb.WriteString(fmt.Sprintf("})(%s || (%s = {}));\n\n", e.Name, e.Name))
 		}
 	}
-	return sb.String()
+	outPath := g.conf.ResolvedWrappedEnumOutPath(filepath.Dir(g.conf.Path))
+	err := os.MkdirAll(filepath.Dir(outPath), os.ModePerm)
+	if err != nil {
+		panic(err)
+	}
+
+	err = os.WriteFile(outPath, []byte(sb.String()), os.ModePerm)
+	if err != nil {
+		panic(err)
+	}
+
+	return nil
 }
 
 func (g *PackageGenerator) WriteDefaultArgVal(sb *strings.Builder, p *CPPArg) {
@@ -308,7 +254,11 @@ func (g *PackageGenerator) WriteWrappedFn(sb *strings.Builder, method_name strin
 	}
 	sb.WriteString(" => {\n")
 	g.writeIndent(sb, 1)
-	sb.WriteString(fmt.Sprintf("return _%s(", name))
+	sb.WriteString("return ")
+	if returns.NapiType == External {
+		sb.WriteString(fmt.Sprintf("new %s(", stripNameSpace(returns.JSType)))
+	}
+	sb.WriteString(fmt.Sprintf("addon._%s(", method_name))
 
 	for i, arg := range args {
 		if i > 0 && i < arg_count {
@@ -323,9 +273,77 @@ func (g *PackageGenerator) WriteWrappedFn(sb *strings.Builder, method_name strin
 				sb.WriteString(".map((v) => typeof v === 'number' ? BigInt(v) : v)")
 			}
 			sb.WriteString(")")
+		} else if arg.NapiType == External {
+			sb.WriteString("._native_ref")
 		}
 	}
+	if returns.NapiType == External {
+		sb.WriteByte(')')
+	}
+	sb.WriteString(");\n")
+	sb.WriteString("}\n\n")
+}
 
+func (g *PackageGenerator) WriteExternalTypeHelpers(sb *strings.Builder, type_name string) {
+	sb.WriteString(fmt.Sprintf("export type _Native_%s = unknown & Record<string, never>;\n\n", type_name))
+	sb.WriteString(fmt.Sprintf("export abstract class _Base_%s {\n", type_name))
+	g.writeIndent(sb, 1)
+	sb.WriteString(fmt.Sprintf("protected _native_%s: _Native_%s;\n\n", type_name, type_name))
+	g.writeIndent(sb, 1)
+	sb.WriteString(fmt.Sprintf("get _native_ref(): _Native_%s {\n", type_name))
+	g.writeIndent(sb, 2)
+	sb.WriteString(fmt.Sprintf("return this._native_%s;\n", type_name))
+	g.writeIndent(sb, 1)
+	sb.WriteString("}\n")
+	sb.WriteString("}\n\n")
+}
+
+func (g *PackageGenerator) WriteForcedMethod(sb *strings.Builder, method_name string, args []FnArg, returns string, is_void bool) {
+	name := method_name
+	if isInvalidName(method_name) {
+		name = fmt.Sprintf("_%s", method_name)
+	}
+
+	if g.conf.IsEnvTS() {
+		sb.WriteString("export ")
+	}
+
+	sb.WriteString(fmt.Sprintf("const %s = (", name))
+
+	arg_count := len(args)
+	for i, arg := range args {
+		if i > 0 && i < arg_count {
+			sb.WriteString(", ")
+		}
+		sb.WriteString(fmt.Sprintf("%s: %s", arg.Name, arg.TSType))
+		if arg.Default != "" {
+			sb.WriteString(fmt.Sprintf(" = %s", arg.Default))
+		}
+	}
+	sb.WriteString(")")
+	if g.conf.IsEnvTS() && !is_void && returns != "" {
+		sb.WriteString(fmt.Sprintf(": %s", returns))
+	}
+	sb.WriteString(" => {\n")
+	g.writeIndent(sb, 1)
+	sb.WriteString("return ")
+	if g.isClass(returns) {
+		sb.WriteString(fmt.Sprintf("new %s(", returns))
+	}
+	sb.WriteString(fmt.Sprintf("addon._%s(", method_name))
+
+	for i, arg := range args {
+		if i > 0 && i < arg_count {
+			sb.WriteString(", ")
+		}
+		sb.WriteString(arg.Name)
+		if g.isClass(arg.TSType) {
+			sb.WriteString("._native_ref")
+		}
+	}
+	if g.isClass(returns) {
+		sb.WriteByte(')')
+	}
 	sb.WriteString(");\n")
 	sb.WriteString("}\n\n")
 }
@@ -333,6 +351,13 @@ func (g *PackageGenerator) WriteWrappedFn(sb *strings.Builder, method_name strin
 func (g *PackageGenerator) WriteEnvWrappedFns() string {
 	sb := new(strings.Builder)
 	for _, m := range g.ParsedData.Methods {
+		if !g.conf.IsMethodIgnored(*m.Name) {
+			arg_helpers := g.GetArgData(m.Overloads[0])
+			g.WriteWrappedFn(sb, *m.Name, *arg_helpers, m.Returns.ParseReturnData(g), m.IsVoid())
+		}
+	}
+
+	for _, m := range g.ParsedData.Lits {
 		if !g.conf.IsMethodIgnored(*m.Name) {
 			arg_helpers := g.GetArgData(m.Overloads[0])
 			g.WriteWrappedFn(sb, *m.Name, *arg_helpers, m.Returns.ParseReturnData(g), m.IsVoid())
@@ -352,124 +377,207 @@ func (g *PackageGenerator) WriteEnvWrappedFns() string {
 
 			if v, ok := g.conf.ClassOpts[name]; ok && len(v.ForcedMethods) > 0 {
 				for _, m := range v.ForcedMethods {
-					if g.conf.IsEnvTS() {
-						sb.WriteString("export ")
-					}
-					if isInvalidName(m.Name) {
-						sb.WriteString(fmt.Sprintf("const %s = (", "_"+m.Name))
-					} else {
-						sb.WriteString(fmt.Sprintf("const %s = (", m.Name))
-					}
-					for i, p := range m.Args {
-						if i > 0 && i < len(m.Args) {
-							sb.WriteString(", ")
-						}
-						sb.WriteString(p.Name)
-						if g.conf.IsEnvTS() {
-							sb.WriteString(fmt.Sprintf(": %s", p.TSType))
-						}
-					}
-					if g.conf.IsEnvTS() {
-						if m.IsVoid {
-							sb.WriteString("): void => {\n")
-						} else if m.TSReturnType == "" {
-							sb.WriteString(") => {\n")
-						} else {
-							sb.WriteString(fmt.Sprintf("): %s => {\n", m.TSReturnType))
-						}
-					} else {
-						sb.WriteString(") => {\n")
-					}
-					g.writeIndent(sb, 1)
-					sb.WriteString("return ")
-					if g.isClass(m.TSReturnType) {
-						sb.WriteString(fmt.Sprintf("new %s(", stripNameSpace(m.TSReturnType)))
-					}
-					if isInvalidName(m.Name) {
-						sb.WriteString(fmt.Sprintf("__%s(", m.Name))
-					} else {
-						sb.WriteString(fmt.Sprintf("_%s(", m.Name))
-					}
-					for i, p := range m.Args {
-						if i > 0 && i < len(m.Args) {
-							sb.WriteString(", ")
-						}
-						sb.WriteString(p.Name)
-						if g.isClass(p.TSType) {
-							sb.WriteString("._native_self")
-						} else if isTypedArray(m.Args[i].TSType) {
-							sb.WriteString(".buffer")
-						}
-					}
-					if g.isClass(m.TSReturnType) {
-						sb.WriteByte(')')
-					}
-					sb.WriteString(");\n")
-					sb.WriteString("}\n\n")
+					g.WriteForcedMethod(sb, m.Name, m.Args, m.TSReturnType, m.IsVoid)
 				}
 			}
 		}
 	}
 
-	for _, m := range g.ParsedData.Lits {
-		if !g.conf.IsMethodIgnored(*m.Name) {
-			arg_helpers := g.GetArgData(m.Overloads[0])
-			g.WriteWrappedFn(sb, *m.Name, *arg_helpers, m.Returns.ParseReturnData(g), m.IsVoid())
-		}
-	}
-
 	for _, m := range g.conf.GlobalForcedMethods {
-		if g.conf.IsEnvTS() {
-			sb.WriteString("export ")
-		}
-		if isInvalidName(m.Name) {
-			sb.WriteString(fmt.Sprintf("const %s = (", "_"+m.Name))
-		} else {
-			sb.WriteString(fmt.Sprintf("const %s = (", m.Name))
-		}
-		for i, p := range m.Args {
-			if i > 0 && i < len(m.Args) {
-				sb.WriteString(", ")
-			}
-			sb.WriteString(p.Name)
-			if g.conf.IsEnvTS() {
-				sb.WriteString(fmt.Sprintf(": %s", p.TSType))
-			}
-		}
-		if g.conf.IsEnvTS() {
-			if m.IsVoid {
-				sb.WriteString(") => {\n")
-			} else {
-				sb.WriteString(fmt.Sprintf("): %s => {\n", m.TSReturnType))
-			}
-		} else {
-			sb.WriteString(") => {\n")
-		}
-		g.writeIndent(sb, 1)
-		sb.WriteString("return ")
-		if g.isClass(m.TSReturnType) {
-			sb.WriteString(fmt.Sprintf("new %s(", stripNameSpace(m.TSReturnType)))
-		}
-		if isInvalidName(m.Name) {
-			sb.WriteString(fmt.Sprintf("__%s(", m.Name))
-		} else {
-			sb.WriteString(fmt.Sprintf("_%s(", m.Name))
-		}
-		for i, p := range m.Args {
-			if i > 0 && i < len(m.Args) {
-				sb.WriteString(", ")
-			}
-			sb.WriteString(p.Name)
-			if isTypedArray(m.Args[i].TSType) {
-				sb.WriteString(".buffer")
-			}
-		}
-		if g.isClass(m.TSReturnType) {
-			sb.WriteByte(')')
-		}
-		sb.WriteString(");\n")
-		sb.WriteString("}\n\n")
+		g.WriteForcedMethod(sb, m.Name, m.Args, m.TSReturnType, m.IsVoid)
 	}
 
 	return sb.String()
+}
+
+func (g *PackageGenerator) WriteShimWrappedFn(sb *strings.Builder, method_name string, class_name string, args []GenArgData, returns GenReturnData, is_void bool, imports map[string]bool) {
+	g.writeIndent(sb, 2)
+	sb.WriteString(fmt.Sprintf("%s(", method_name))
+	for i, arg := range args {
+		if i == 0 {
+			continue
+		}
+		if i > 1 {
+			sb.WriteString(", ")
+		}
+		if arg.NapiType == NumberEnum {
+			imports[stripNameSpace(arg.JSType)] = true
+		}
+		sb.WriteString(fmt.Sprintf("%s: %s", arg.Name, arg.JSType))
+		if arg.DefaultValue != nil {
+			sb.WriteString(fmt.Sprintf(" = %s", *arg.DefaultValue))
+		}
+	}
+	sb.WriteString(")")
+	if g.conf.IsEnvTS() && !is_void {
+		sb.WriteString(fmt.Sprintf(": %s", stripNameSpace(returns.JSType)))
+	}
+	sb.WriteString(" {\n")
+	g.writeIndent(sb, 3)
+	sb.WriteString("return ")
+	if g.isClass(returns.RawType.Name) {
+		sb.WriteString(fmt.Sprintf("new %s(", class_name))
+	}
+	sb.WriteString(fmt.Sprintf("addon._%s(", method_name))
+
+	for i, arg := range args {
+		if i == 0 {
+			sb.WriteString("this._native_ref")
+			continue
+		}
+		if i > 0 {
+			sb.WriteString(", ")
+		}
+		sb.WriteString(arg.Name)
+		if arg.TypedArrayInfo != nil {
+			instanceof_name := arg.NapiType.TypedArrayType()
+			sb.WriteString(fmt.Sprintf(" instanceof %s ? %s : new %s(%s", instanceof_name, arg.Name, instanceof_name, arg.Name))
+			// if bigint, need to convert to bigint
+			if IsBigIntTypedArray(arg.JSType) {
+				sb.WriteString(".map((v) => typeof v === 'number' ? BigInt(v) : v)")
+			}
+			sb.WriteString(")")
+		} else if arg.NapiType == External {
+			sb.WriteString("._native_ref")
+		}
+	}
+	if g.isClass(returns.RawType.Name) {
+		sb.WriteByte(')')
+	}
+	sb.WriteString(");\n")
+	g.writeIndent(sb, 2)
+	sb.WriteString("},\n\n")
+}
+
+func (g *PackageGenerator) WriteClassInstructions(sb *strings.Builder, var_name string) {
+	sb.WriteString("/**\n")
+	sb.WriteString(" * USAGE INSTRUCTIONS:\n")
+	sb.WriteString(fmt.Sprintf(" * 1. Import `gen_%s_ops_shim` to file where corresponding js impl lives\n", var_name))
+	sb.WriteString(" * 2. copy the following logic following class declaration:\n")
+	if g.conf.IsEnvTS() {
+		sb.WriteString(fmt.Sprintf(" * export interface %s extends ReturnType<typeof gen_%s_ops_shim> {} // eslint-disable-line\n", var_name, var_name))
+	}
+	sb.WriteString(fmt.Sprintf(" * for (const [method, closure] of Object.entries(gen_%s_ops_shim(%s))) {\n", var_name, var_name))
+	sb.WriteString(fmt.Sprintf(" *   %s.prototype[method] = closure;\n", var_name))
+	sb.WriteString(" * }\n")
+	sb.WriteString(" */\n")
+}
+
+func (g *PackageGenerator) WriteClassShims(name string, c *CPPClass) error {
+	if c.Decl != nil && c.FieldDecl != nil {
+		shimmed_methods := g.WriteObjectShims(name)
+		outPath := g.conf.ResolvedShimPath(filepath.Dir(g.conf.Path), name)
+		err := os.MkdirAll(filepath.Dir(outPath), os.ModePerm)
+		if err != nil {
+			return nil
+		}
+
+		err = os.WriteFile(outPath, []byte(shimmed_methods), os.ModePerm)
+		if err != nil {
+			return nil
+		}
+	}
+	return nil
+}
+
+func (g *PackageGenerator) WriteObjectShims(name string) string {
+	sb := new(strings.Builder)
+	imports := map[string]bool{}
+	if v, ok := g.ParsedData.Classes[name]; ok && v.FieldDecl != nil {
+		usedName := fmt.Sprintf("_%s", name)
+		g.writeFileCodegenHeader(sb)
+		sb.WriteString(g.conf.JSWrapperOpts.ShimFrontMatter)
+		sb.WriteString(g.WriteEnvImports())
+		g.writeFileSourceHeader(sb, *g.Path)
+
+		g.WriteExternalTypeHelpers(sb, name)
+
+		g.WriteClassInstructions(sb, name)
+		// write fn to shim the class/struct methods
+		if g.conf.IsEnvTS() {
+			sb.WriteString("\nexport ")
+		}
+		sb.WriteString(fmt.Sprintf("const gen_%s_ops_shim = (%s", name, usedName))
+
+		if g.conf.IsEnvTS() {
+			sb.WriteString(fmt.Sprintf(": new (...args: unknown[]) => %s", name))
+		}
+		sb.WriteString(") => {\n")
+		g.writeIndent(sb, 1)
+		sb.WriteString("return {\n")
+		for _, m := range *v.FieldDecl {
+			if m.Name != nil && !g.conf.IsFieldIgnored(name, *m.Name) {
+				arg_helpers := g.GetArgData(&m.Args)
+				res_helpers := m.Returns.ParseReturnData(g)
+				if res_helpers.NapiType == NumberEnum {
+					imports[stripNameSpace(res_helpers.JSType)] = true
+				}
+				g.WriteShimWrappedFn(sb, *m.Name, usedName, *arg_helpers, res_helpers, m.IsVoid(), imports)
+			}
+		}
+
+		for _, m := range g.ParsedData.Lits {
+			if m.Name != nil && !g.conf.IsFieldIgnored(name, *m.Name) && stripNameSpace(m.Returns.Name) == name {
+				arg_helpers := g.GetArgData(m.Overloads[0])
+				res_helpers := m.Returns.ParseReturnData(g)
+				if res_helpers.NapiType == NumberEnum {
+					imports[stripNameSpace(res_helpers.JSType)] = true
+				}
+				g.WriteShimWrappedFn(sb, *m.Name, usedName, *arg_helpers, res_helpers, m.IsVoid(), imports)
+			}
+		}
+
+		for _, m := range g.ParsedData.Methods {
+			if m.Name != nil && !g.conf.IsFieldIgnored(name, *m.Name) && stripNameSpace(m.Returns.Name) == name {
+				arg_helpers := *g.GetArgData(m.Overloads[0])
+				if arg_helpers[0].RawType.Name == name {
+					res_helpers := m.Returns.ParseReturnData(g)
+					if res_helpers.NapiType == NumberEnum {
+						imports[stripNameSpace(res_helpers.JSType)] = true
+					}
+					g.WriteShimWrappedFn(sb, *m.Name, usedName, arg_helpers, res_helpers, m.IsVoid(), imports)
+				}
+			}
+		}
+		g.writeIndent(sb, 1)
+		sb.WriteString("}\n")
+		sb.WriteString("}\n\n")
+	}
+
+	res_sb := new(strings.Builder)
+	if len(imports) > 0 {
+		if g.conf.IsEnvTS() {
+			res_sb.WriteString("import ")
+		} else {
+			res_sb.WriteString("const ")
+		}
+		res_sb.WriteString("{ ")
+		count := 0
+		for import_name := range imports {
+			if count > 0 {
+				res_sb.WriteString(", ")
+			}
+			res_sb.WriteString(import_name)
+			count++
+		}
+		res_sb.WriteString(" } ")
+		if g.conf.IsEnvTS() {
+			res_sb.WriteString("from ")
+		} else {
+			res_sb.WriteString("= require(")
+		}
+		base_import_path := strings.Split(g.conf.ResolvedWrappedEnumOutPath(filepath.Dir(g.conf.Path)), "/")
+		used_import_path := base_import_path[len(base_import_path)-1]
+		if g.conf.IsEnvTS() {
+			used_import_path = used_import_path[:strings.IndexByte(used_import_path, '.')]
+		}
+		res_sb.WriteString(fmt.Sprintf("'./%s'", used_import_path))
+		if !g.conf.IsEnvTS() {
+			res_sb.WriteByte(')')
+		}
+		res_sb.WriteString(";\n")
+	}
+	res_sb.WriteString(sb.String())
+
+	return res_sb.String()
 }

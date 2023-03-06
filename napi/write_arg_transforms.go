@@ -156,6 +156,7 @@ func (g *PackageGenerator) WriteArrayGetter(sb *strings.Builder, arg_name string
 	sb.WriteString("}\n")
 }
 
+// TODO: improve default handling more complex types
 func (g *PackageGenerator) WriteArgGetters(sb *strings.Builder, args *[]GenArgData, is_void bool) {
 	for _, a := range *args {
 		needs_cast := new(string)

@@ -73,17 +73,10 @@ static Napi::Value rand(const Napi::CallbackInfo& info) {
         .ThrowAsJavaScriptException();
     return env.Undefined();
   }
-  Napi::TypedArray tmp_shape_arr = info[0].As<Napi::TypedArray>();
-  if (tmp_shape_arr.TypedArrayType() != napi_bigint64_array) {
-    Napi::TypeError::New(env,
-                         "`rand` expects exactly 1 arg; (instanceof `BigInt64Array`)")
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  long long* shape_ptr = static_cast<long long*>(tmp_shape_arr.ArrayBuffer().Data());
-  std::vector<long long> shape(shape_ptr, shape_ptr + tmp_shape_arr.ElementLength());
-  fl::Tensor t;
-  t = fl::rand(fl::Shape(shape));
+  Napi::TypedArrayOf<int64_t> tmp_shape = info[0].As<Napi::TypedArrayOf<int64_t>>();
+  long long* shape_ptr = static_cast<long long*>(tmp_shape.Data());
+  std::vector<long long> shape(shape_ptr, shape_ptr + tmp_shape.ElementLength());
+  fl::Tensor t = fl::rand(fl::Shape(shape));
   g_bytes_used = Napi::MemoryManagement::AdjustExternalMemory(env, t.bytes());
   auto* tensor = new fl::Tensor(t);
   return ExternalizeTensor(env, tensor);
@@ -95,23 +88,17 @@ static Napi::Value rand(const Napi::CallbackInfo& info) {
 */
 static Napi::Value randn(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
-  if (info.Length() != 1 || !info[0].IsTypedArray()) {
+  std::cout << info[0].Type() << std::endl;
+  if (info.Length() != 1) {
     Napi::TypeError::New(env,
-                         "`rand` expects exactly 1 arg; (instanceof `BigInt64Array`)")
+                         "`randn` expects exactly 1 arg; (typeof `BigInt64Array`)")
         .ThrowAsJavaScriptException();
     return env.Undefined();
   }
-  Napi::TypedArray tmp_shape_arr = info[0].As<Napi::TypedArray>();
-  if (tmp_shape_arr.TypedArrayType() != napi_bigint64_array) {
-    Napi::TypeError::New(env,
-                         "`rand` expects exactly 1 arg; (instanceof `BigInt64Array`)")
-        .ThrowAsJavaScriptException();
-    return env.Undefined();
-  }
-  long long* shape_ptr = static_cast<long long*>(tmp_shape_arr.ArrayBuffer().Data());
-  std::vector<long long> shape(shape_ptr, shape_ptr + tmp_shape_arr.ElementLength());
-  fl::Tensor t;
-  t = fl::randn(fl::Shape(shape));
+ Napi::TypedArrayOf<int64_t> tmp_shape = info[0].As<Napi::TypedArrayOf<int64_t>>();
+  long long* shape_ptr = static_cast<long long*>(tmp_shape.Data());
+  std::vector<long long> shape(shape_ptr, shape_ptr + tmp_shape.ElementLength());
+  fl::Tensor t = fl::randn(fl::Shape(shape));
   g_bytes_used = Napi::MemoryManagement::AdjustExternalMemory(env, t.bytes());
   auto* tensor = new fl::Tensor(t);
   return ExternalizeTensor(env, tensor);
@@ -176,7 +163,7 @@ static Napi::Value toFloat32Array(const Napi::CallbackInfo& info) {
       Napi::ArrayBuffer::New(env, nativeArray->data(), byteLen,
                              DeleteArrayBufferFromVector<float>, nativeArray.get());
   nativeArray.release();
-  Napi::MemoryManagement::AdjustExternalMemory(env, byteLen);
+  g_bytes_used = Napi::MemoryManagement::AdjustExternalMemory(env, byteLen);
   return Napi::TypedArrayOf<float>::New(env, elemLen, buff, 0,
                                         napi_float32_array);
 }
@@ -211,7 +198,7 @@ static Napi::Value toFloat64Array(const Napi::CallbackInfo& info) {
       Napi::ArrayBuffer::New(env, nativeArray->data(), byteLen,
                              DeleteArrayBufferFromVector<double>, nativeArray.get());
   nativeArray.release();
-  Napi::MemoryManagement::AdjustExternalMemory(env, byteLen);
+  g_bytes_used = Napi::MemoryManagement::AdjustExternalMemory(env, byteLen);
   return Napi::TypedArrayOf<double>::New(env, elemLen, buff, 0,
                                          napi_float64_array);
 }
@@ -246,7 +233,7 @@ static Napi::Value toBoolInt8Array(const Napi::CallbackInfo& info) {
       Napi::ArrayBuffer::New(env, nativeArray->data(), byteLen,
                              DeleteArrayBufferFromVector<int8_t>, nativeArray.get());
   nativeArray.release();
-  Napi::MemoryManagement::AdjustExternalMemory(env, byteLen);
+  g_bytes_used = Napi::MemoryManagement::AdjustExternalMemory(env, byteLen);
   return Napi::TypedArrayOf<int8_t>::New(env, elemLen, buff, 0,
                                          napi_int8_array);
 }
@@ -281,7 +268,7 @@ static Napi::Value toInt16Array(const Napi::CallbackInfo& info) {
       Napi::ArrayBuffer::New(env, nativeArray->data(), byteLen,
                              DeleteArrayBufferFromVector<int16_t>, nativeArray.get());
   nativeArray.release();
-  Napi::MemoryManagement::AdjustExternalMemory(env, byteLen);
+  g_bytes_used = Napi::MemoryManagement::AdjustExternalMemory(env, byteLen);
   return Napi::TypedArrayOf<int16_t>::New(env, elemLen, buff, 0,
                                           napi_int16_array);
 }
@@ -316,7 +303,7 @@ static Napi::Value toInt32Array(const Napi::CallbackInfo& info) {
       Napi::ArrayBuffer::New(env, nativeArray->data(), byteLen,
                              DeleteArrayBufferFromVector<int32_t>, nativeArray.get());
   nativeArray.release();
-  Napi::MemoryManagement::AdjustExternalMemory(env, byteLen);
+  g_bytes_used = Napi::MemoryManagement::AdjustExternalMemory(env, byteLen);
   return Napi::TypedArrayOf<int32_t>::New(env, elemLen, buff, 0,
                                           napi_int32_array);
 }
@@ -351,7 +338,7 @@ static Napi::Value toInt64Array(const Napi::CallbackInfo& info) {
       Napi::ArrayBuffer::New(env, nativeArray->data(), byteLen,
                              DeleteArrayBufferFromVector<int64_t>, nativeArray.get());
   nativeArray.release();
-  Napi::MemoryManagement::AdjustExternalMemory(env, byteLen);
+  g_bytes_used = Napi::MemoryManagement::AdjustExternalMemory(env, byteLen);
   return Napi::TypedArrayOf<int64_t>::New(env, elemLen, buff, 0,
                                           napi_bigint64_array);
 }
@@ -386,7 +373,7 @@ static Napi::Value toUint8Array(const Napi::CallbackInfo& info) {
       Napi::ArrayBuffer::New(env, nativeArray->data(), byteLen,
                              DeleteArrayBufferFromVector<uint8_t>, nativeArray.get());
   nativeArray.release();
-  Napi::MemoryManagement::AdjustExternalMemory(env, byteLen);
+  g_bytes_used = Napi::MemoryManagement::AdjustExternalMemory(env, byteLen);
   return Napi::TypedArrayOf<uint8_t>::New(env, elemLen, buff, 0,
                                           napi_uint8_array);
 }
@@ -421,7 +408,7 @@ static Napi::Value toUint16Array(const Napi::CallbackInfo& info) {
       Napi::ArrayBuffer::New(env, nativeArray->data(), byteLen,
                              DeleteArrayBufferFromVector<uint16_t>, nativeArray.get());
   nativeArray.release();
-  Napi::MemoryManagement::AdjustExternalMemory(env, byteLen);
+  g_bytes_used = Napi::MemoryManagement::AdjustExternalMemory(env, byteLen);
   return Napi::TypedArrayOf<uint16_t>::New(env, elemLen, buff, 0,
                                            napi_uint16_array);
 }
@@ -456,7 +443,7 @@ static Napi::Value toUint32Array(const Napi::CallbackInfo& info) {
       Napi::ArrayBuffer::New(env, nativeArray->data(), byteLen,
                              DeleteArrayBufferFromVector<uint32_t>, nativeArray.get());
   nativeArray.release();
-  Napi::MemoryManagement::AdjustExternalMemory(env, byteLen);
+  g_bytes_used = Napi::MemoryManagement::AdjustExternalMemory(env, byteLen);
   return Napi::TypedArrayOf<uint32_t>::New(env, elemLen, buff, 0,
                                            napi_uint32_array);
 }
@@ -491,7 +478,7 @@ static Napi::Value toUint64Array(const Napi::CallbackInfo& info) {
       Napi::ArrayBuffer::New(env, nativeArray->data(), byteLen,
                              DeleteArrayBufferFromVector<uint64_t>, nativeArray.get());
   nativeArray.release();
-  Napi::MemoryManagement::AdjustExternalMemory(env, byteLen);
+  g_bytes_used = Napi::MemoryManagement::AdjustExternalMemory(env, byteLen);
   return Napi::TypedArrayOf<uint64_t>::New(env, elemLen, buff, 0,
                                            napi_biguint64_array);
 }
@@ -620,8 +607,7 @@ static void dispose(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   fl::Tensor& t = *UnExternalize<fl::Tensor>(info[0]);
   auto byte_count = static_cast<int64_t>(t.bytes());
-  g_bytes_used -= byte_count;
-  Napi::MemoryManagement::AdjustExternalMemory(env, -byte_count);
+  g_bytes_used = Napi::MemoryManagement::AdjustExternalMemory(env, -byte_count);
   fl::detail::releaseAdapterUnsafe(t);
 }
 
@@ -635,9 +621,7 @@ static Napi::Value tensorFromFloat32Buffer(const Napi::CallbackInfo& info) {
   float* ptr = reinterpret_cast<float*>(buf.Data());
   auto* t = new fl::Tensor(
       fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
-  auto _out_bytes_used = t->bytes();
-  g_bytes_used += _out_bytes_used;
-  Napi::MemoryManagement::AdjustExternalMemory(env, _out_bytes_used);
+  g_bytes_used =  Napi::MemoryManagement::AdjustExternalMemory(env, t->bytes());
   return ExternalizeTensor(env, t);
 }
 
@@ -651,9 +635,7 @@ static Napi::Value tensorFromFloat64Buffer(const Napi::CallbackInfo& info) {
   double* ptr = reinterpret_cast<double*>(buf.Data());
   auto* t = new fl::Tensor(
       fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
-  auto _out_bytes_used = t->bytes();
-  g_bytes_used += _out_bytes_used;
-  Napi::MemoryManagement::AdjustExternalMemory(env, _out_bytes_used);
+  g_bytes_used =  Napi::MemoryManagement::AdjustExternalMemory(env, t->bytes());
   return ExternalizeTensor(env, t);
 }
 
@@ -667,9 +649,7 @@ static Napi::Value tensorFromBoolInt8Buffer(const Napi::CallbackInfo& info) {
   char* ptr = reinterpret_cast<char*>(buf.Data());
   auto* t = new fl::Tensor(
       fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
-  auto _out_bytes_used = t->bytes();
-  g_bytes_used += _out_bytes_used;
-  Napi::MemoryManagement::AdjustExternalMemory(env, _out_bytes_used);
+  g_bytes_used =  Napi::MemoryManagement::AdjustExternalMemory(env, t->bytes());
   return ExternalizeTensor(env, t);
 }
 
@@ -683,9 +663,7 @@ static Napi::Value tensorFromInt16Buffer(const Napi::CallbackInfo& info) {
   int16_t* ptr = reinterpret_cast<int16_t*>(buf.Data());
   auto* t = new fl::Tensor(
       fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
-  auto _out_bytes_used = t->bytes();
-  g_bytes_used += _out_bytes_used;
-  Napi::MemoryManagement::AdjustExternalMemory(env, _out_bytes_used);
+  g_bytes_used =  Napi::MemoryManagement::AdjustExternalMemory(env, t->bytes());
   return ExternalizeTensor(env, t);
 }
 
@@ -699,9 +677,7 @@ static Napi::Value tensorFromInt32Buffer(const Napi::CallbackInfo& info) {
   int32_t* ptr = reinterpret_cast<int32_t*>(buf.Data());
   auto* t = new fl::Tensor(
       fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
-  auto _out_bytes_used = t->bytes();
-  g_bytes_used += _out_bytes_used;
-  Napi::MemoryManagement::AdjustExternalMemory(env, _out_bytes_used);
+  g_bytes_used =  Napi::MemoryManagement::AdjustExternalMemory(env, t->bytes());
   return ExternalizeTensor(env, t);
 }
 
@@ -715,9 +691,7 @@ static Napi::Value tensorFromInt64Buffer(const Napi::CallbackInfo& info) {
   int64_t* ptr = reinterpret_cast<int64_t*>(buf.Data());
   auto* t = new fl::Tensor(
       fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
-  auto _out_bytes_used = t->bytes();
-  g_bytes_used += _out_bytes_used;
-  Napi::MemoryManagement::AdjustExternalMemory(env, _out_bytes_used);
+  g_bytes_used =  Napi::MemoryManagement::AdjustExternalMemory(env, t->bytes());
   return ExternalizeTensor(env, t);
 }
 
@@ -731,9 +705,7 @@ static Napi::Value tensorFromUint8Buffer(const Napi::CallbackInfo& info) {
   uint8_t* ptr = reinterpret_cast<uint8_t*>(buf.Data());
   auto* t = new fl::Tensor(
       fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
-  auto _out_bytes_used = t->bytes();
-  g_bytes_used += _out_bytes_used;
-  Napi::MemoryManagement::AdjustExternalMemory(env, _out_bytes_used);
+  g_bytes_used =  Napi::MemoryManagement::AdjustExternalMemory(env, t->bytes());
   return ExternalizeTensor(env, t);
 }
 
@@ -747,9 +719,7 @@ static Napi::Value tensorFromUint16Buffer(const Napi::CallbackInfo& info) {
   uint16_t* ptr = reinterpret_cast<uint16_t*>(buf.Data());
   auto* t = new fl::Tensor(
       fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
-  auto _out_bytes_used = t->bytes();
-  g_bytes_used += _out_bytes_used;
-  Napi::MemoryManagement::AdjustExternalMemory(env, _out_bytes_used);
+  g_bytes_used =  Napi::MemoryManagement::AdjustExternalMemory(env, t->bytes());
   return ExternalizeTensor(env, t);
 }
 
@@ -763,9 +733,7 @@ static Napi::Value tensorFromUint32Buffer(const Napi::CallbackInfo& info) {
   uint32_t* ptr = reinterpret_cast<uint32_t*>(buf.Data());
   auto* t = new fl::Tensor(
       fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
-  auto _out_bytes_used = t->bytes();
-  g_bytes_used += _out_bytes_used;
-  Napi::MemoryManagement::AdjustExternalMemory(env, _out_bytes_used);
+  g_bytes_used =  Napi::MemoryManagement::AdjustExternalMemory(env, t->bytes());
   return ExternalizeTensor(env, t);
 }
 
@@ -779,9 +747,7 @@ static Napi::Value tensorFromUint64Buffer(const Napi::CallbackInfo& info) {
   uint64_t* ptr = reinterpret_cast<uint64_t*>(buf.Data());
   auto* t = new fl::Tensor(
       fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
-  auto _out_bytes_used = t->bytes();
-  g_bytes_used += _out_bytes_used;
-  Napi::MemoryManagement::AdjustExternalMemory(env, _out_bytes_used);
+  g_bytes_used =  Napi::MemoryManagement::AdjustExternalMemory(env, t->bytes());
   return ExternalizeTensor(env, t);
 }
 

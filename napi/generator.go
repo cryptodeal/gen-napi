@@ -163,6 +163,15 @@ func (g *TSGo) Generate() error {
 			return nil
 		}
 
+		// generate method shims for JS class impl
+		for name, c := range napiGen.ParsedData.Classes {
+			napiGen.WriteClassShims(name, c)
+		}
+
+		if len(napiGen.ParsedData.Enums) > 0 {
+			napiGen.WriteEnums()
+		}
+
 		// programatically exec clang-format
 		cmd := exec.Command("clang-format", cmd_str...)
 		err = cmd.Run()

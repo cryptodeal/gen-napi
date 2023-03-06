@@ -80,7 +80,7 @@ func (g *PackageGenerator) WriteArgChecks(sb *strings.Builder, args *[]GenArgDat
 		// handle `Array<[T1, T2]>` -> `std::vector<std::pair<T1, T2>>`
 		// handle returning pointer to JS
 		case External:
-			g.WriteErrorHandler(sb, fmt.Sprintf("!info[%d].%s()", a.Idx, *a.NapiType.GetTypeChecker().String()), fmt.Sprintf("`%s` expects `%s` (args[%d]) to be native `%s` (typeof `Napi::External<%s>`", fn_name, a.Name, a.Idx, a.RawType.Name, a.RawType.GetFullType()), 1, is_void)
+			g.WriteErrorHandler(sb, fmt.Sprintf("!info[%d].%s()", a.Idx, *a.NapiType.GetTypeChecker().String()), fmt.Sprintf("`%s` expects `%s` (args[%d]) to be native `%s` (typeof `Napi::External<%s>)`", fn_name, a.Name, a.Idx, a.RawType.Name, a.RawType.GetFullType()), 1, is_void)
 		}
 	}
 }

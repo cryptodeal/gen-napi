@@ -5,39 +5,6 @@ import (
 	"strings"
 )
 
-func (g *PackageGenerator) WriteArgTypeCheck(sb *strings.Builder, name string, checker string, idx int, msg string, arrName *string, arg *CPPArg, is_void bool) {
-	if arg == nil {
-		return
-	}
-	isArrayItem := arrName != nil
-	indents := 1
-
-	if isArrayItem {
-		sb.WriteString(fmt.Sprintf("Napi::Array %s = info[%d].As<Napi::Array>();\n", *arrName, idx))
-		g.writeIndent(sb, indents)
-		sb.WriteString(fmt.Sprintf("size_t len_%s = %s.Length();\n", *arg.Name, *arrName))
-		g.writeIndent(sb, indents)
-		sb.WriteString(fmt.Sprintf("for (size_t i = 0; i < len_%s; ++i) {\n", *arg.Name))
-	}
-
-	if isArrayItem {
-		g.writeIndent(sb, indents)
-		sb.WriteString(fmt.Sprintf("Napi::Value arrayItem = %s[i];\n", *arrName))
-	}
-
-	var error_conditional, err_msg string
-	if isArrayItem {
-		indents = 2
-		error_conditional = fmt.Sprintf("arrayItem.%s()", checker)
-		err_msg = fmt.Sprintf("(%q + std::to_string(i) + %q)", fmt.Sprintf("`%s` expects args[%d][", name, idx), fmt.Sprintf("] to be %s", msg))
-	} else {
-		error_conditional = fmt.Sprintf("!info[%d].%s()", idx, checker)
-		err_msg = fmt.Sprintf("`%s` expects args[%d] to be %s", name, idx, msg)
-	}
-	g.WriteErrorHandler(sb, error_conditional, err_msg, indents, is_void)
-}
-
-// WIP: rewriting to clean up logic
 func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod) {
 	fmt.Printf("method: %s\n", *m.Name)
 	arg_helpers := g.GetArgData(m.Overloads[0])

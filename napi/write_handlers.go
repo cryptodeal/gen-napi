@@ -91,33 +91,6 @@ func (g *PackageGenerator) WritePairArrayHandler(sb *strings.Builder, t *CPPType
 	sb.WriteString("}\n")
 }
 
-func (g *PackageGenerator) WriteArrayToVectorHandler(napi_type NapiType) {
-	fn_name := fmt.Sprintf("js%sArrayToVector", *napi_type.String())
-	if !g.GenHelperExists(fn_name) {
-		sb := &strings.Builder{}
-		sb.WriteString("template <typename T>\n")
-		sb.WriteString(fmt.Sprintf("static inline std::vector<T> %s(Napi::Array arr) {\n", fn_name))
-		g.writeIndent(sb, 1)
-		sb.WriteString("std::vector<T> out;\n")
-		g.writeIndent(sb, 1)
-		sb.WriteString("const size_t len = arr.Length();\n")
-		g.writeIndent(sb, 1)
-		sb.WriteString("out.reserve(len);\n")
-		g.writeIndent(sb, 1)
-		sb.WriteString("for(size_t i = 0; i < len; ++i) {\n")
-		g.writeIndent(sb, 2)
-		sb.WriteString("Napi::Value val = arr[i];\n")
-		g.writeIndent(sb, 2)
-		sb.WriteString(fmt.Sprintf("out.push_back(static_cast<T>(val.As<Napi::%s>().%s()));\n", *napi_type.String(), *napi_type.FindFlexibleGetter().String()))
-		g.writeIndent(sb, 1)
-		sb.WriteString("}\n")
-		g.writeIndent(sb, 1)
-		sb.WriteString("return out;\n")
-		sb.WriteString("}\n")
-		g.AddGenHelper(fn_name, sb.String())
-	}
-}
-
 func (g *PackageGenerator) WriteVectorHandler() {
 	fn_name := "jsArrayToVector"
 	if !g.GenHelperExists(fn_name) {
@@ -199,8 +172,7 @@ func (g *PackageGenerator) WriteVectorArrayBufferDeleter() {
 		sb.WriteString("size_t bytes = hint->size() * sizeof(T);\n")
 		g.writeIndent(sb, 1)
 		sb.WriteString("std::unique_ptr<std::vector<T>> vectorPtrToDelete(hint);\n")
-		g.writeIndent(sb, 1)
-		sb.WriteString("Napi::MemoryManagement::AdjustExternalMemory(env, -bytes);\n")
+		write_mem_adjustment(sb, "-bytes", g.conf.TrackExternalMemory)
 		sb.WriteString("}\n\n")
 		g.AddGenHelper(name, sb.String())
 	}
@@ -216,8 +188,7 @@ func (g *PackageGenerator) WriteArrayDeleter(stl_type STLType) {
 		sb.WriteString("size_t bytes = hint->size() * sizeof(T);\n")
 		g.writeIndent(sb, 1)
 		sb.WriteString("std::unique_ptr<std::vector<T>> vectorPtrToDelete(hint);\n")
-		g.writeIndent(sb, 1)
-		sb.WriteString("Napi::MemoryManagement::AdjustExternalMemory(env, -bytes);\n")
+		write_mem_adjustment(sb, "-bytes", g.conf.TrackExternalMemory)
 		sb.WriteString("}\n\n")
 		g.AddGenHelper(name, sb.String())
 	}
