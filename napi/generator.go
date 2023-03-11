@@ -172,11 +172,25 @@ func (g *TSGo) Generate() error {
 			napiGen.WriteEnums()
 		}
 
-		// programatically exec clang-format
+		/*
+			for _, v := range cmd_str {
+				fmt.Println(v)
+			}
+		*/
 		cmd := exec.Command("clang-format", cmd_str...)
 		err = cmd.Run()
 		if err != nil {
 			return nil
+		}
+
+		// if lint command specified, run it
+		if g.conf.LintCmd != nil && *g.conf.LintCmd != "" {
+			used_cmd := strings.Split(*g.conf.LintCmd, " ")
+			cmd = exec.Command(used_cmd[0], used_cmd[1:]...)
+			err = cmd.Run()
+			if err != nil {
+				return nil
+			}
 		}
 	}
 	return nil

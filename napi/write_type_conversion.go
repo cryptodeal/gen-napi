@@ -164,7 +164,6 @@ func (t *TemplateType) GetNapiHandlers(g *PackageGenerator) TemplateNapiHandlers
 	if isEnum {
 		type_data.NapiType = NumberEnum
 		type_data.JSType = *enumName
-
 		*needs_cast = "double"
 		type_data.NeedsCast = needs_cast
 		return type_data
@@ -657,60 +656,75 @@ func (a *CPPArg) ParseArgData(g *PackageGenerator, name string, idx int) GenArgD
 	return arg_data
 }
 
-func (g *PackageGenerator) WriteFnCall(sb *strings.Builder, fn_name string, return_type *CPPType, args *[]GenArgData, is_void bool, is_class_method ...bool) *string {
+func (g *PackageGenerator) WriteFnCall(sb *strings.Builder, fn_prefix string, method_name string, return_type *CPPType, args *[]GenArgData, is_void bool, is_class_method ...bool) *string {
 	is_class_field := false
 	if len(is_class_method) > 0 {
 		is_class_field = is_class_method[0]
 	}
-	g.writeIndent(sb, 1)
 	var gen_result_name *string = new(string)
 	if !is_void {
 		*gen_result_name = GetPrefixedVarName("res", "value")
-		sb.WriteString("auto")
-		if return_type.IsPointer {
-			sb.WriteByte('*')
-		}
-		sb.WriteString(fmt.Sprintf(" %s = ", *gen_result_name))
 	}
+	isTransform, isGrouped, transform := g.conf.IsReturnTransform(method_name)
 
-	sb.WriteString(fmt.Sprintf("%s(", fn_name))
-	arg_count := len(*args)
-	for i, a := range *args {
-		if is_class_field && i == 0 {
-			continue
-		}
-		if ((i > 0 && !is_class_field) || i > 1) && i < arg_count {
-			sb.WriteString(", ")
-		}
-		switch a.NapiType {
-		case String:
-			sb.WriteString(a.Name)
-		case Boolean, Number, NumberEnum, BigInt, Date, Array, PairArray, Pair:
-			if a.IsPointer {
-				sb.WriteByte('&')
-			}
-			if a.NeedsConstructor != nil {
-				sb.WriteString(fmt.Sprintf("%s(", *a.NeedsConstructor))
-			}
-			sb.WriteString(a.Name)
-			if a.NeedsConstructor != nil {
-				sb.WriteByte(')')
-			}
-		case TypedArray, Int8Array, Uint8Array, Int16Array, Uint16Array, Int32Array, Uint32Array, Float32Array, Float64Array, BigInt64Array, BigUint64Array:
-			if a.NeedsConstructor != nil {
-				sb.WriteString(fmt.Sprintf("%s(", *a.NeedsConstructor))
-			}
-			sb.WriteString(a.Name)
-			if a.NeedsConstructor != nil {
-				sb.WriteByte(')')
-			}
-		case External:
-			if !a.IsPointer {
+	if (isTransform && !isGrouped && !strings.Contains(*transform, method_name)) || !isTransform || (isTransform && isGrouped) {
+		g.writeIndent(sb, 1)
+		if !is_void {
+			sb.WriteString("auto")
+			if return_type.IsPointer {
 				sb.WriteByte('*')
 			}
-			sb.WriteString(a.Name)
+			sb.WriteString(fmt.Sprintf(" %s = ", *gen_result_name))
 		}
+
+		sb.WriteString(fmt.Sprintf("%s%s(", fn_prefix, method_name))
+		arg_count := len(*args)
+		for i, a := range *args {
+			if is_class_field && i == 0 {
+				continue
+			}
+			if ((i > 0 && !is_class_field) || i > 1) && i < arg_count {
+				sb.WriteString(", ")
+			}
+			switch a.NapiType {
+			case String:
+				sb.WriteString(a.Name)
+			case Boolean, Number, NumberEnum, BigInt, Date, Array, PairArray, Pair:
+				if a.IsPointer {
+					sb.WriteByte('&')
+				}
+				if a.NeedsConstructor != nil {
+					sb.WriteString(fmt.Sprintf("%s(", *a.NeedsConstructor))
+				}
+				sb.WriteString(a.Name)
+				if a.NeedsConstructor != nil {
+					sb.WriteByte(')')
+				}
+			case TypedArray, Int8Array, Uint8Array, Int16Array, Uint16Array, Int32Array, Uint32Array, Float32Array, Float64Array, BigInt64Array, BigUint64Array:
+				if a.NeedsConstructor != nil {
+					sb.WriteString(fmt.Sprintf("%s(", *a.NeedsConstructor))
+				}
+				sb.WriteString(a.Name)
+				if a.NeedsConstructor != nil {
+					sb.WriteByte(')')
+				}
+			case External:
+				if !a.IsPointer {
+					sb.WriteByte('*')
+				}
+				sb.WriteString(a.Name)
+			}
+		}
+		sb.WriteString(");\n")
 	}
-	sb.WriteString(");\n")
+
+	if isTransform {
+		*transform = strings.ReplaceAll(*transform, "/return/", *gen_result_name)
+		for i, arg := range *args {
+			*transform = strings.ReplaceAll(*transform, fmt.Sprintf("/arg_%d/", i), arg.Name)
+		}
+		sb.WriteString(*transform)
+	}
+
 	return gen_result_name
 }

@@ -1,8 +1,9 @@
+lint_cmd: bun format
 packages:
   - path: demo2/BasicLogic.h
     bindings_out_path: demo2/out
     js_wrapper_opts:
-      addon_path: ../../build/Release/test.node
+      addon_path: build/Release/test.node
       wrapper_out_path: demo2/ts/index.ts
   # - path: demo1/TensorBase.h
   - path: ../flashlight/flashlight/fl/tensor/TensorBase.h
@@ -21,11 +22,8 @@ packages:
       T:
         native_type: float
     js_wrapper_opts:
-      front_matter: import { Tensor } from './tensor';
-      shim_front_matter: import type { Tensor } from './tensor';
-      addon_path: ../../build/Release/shumai_bindings.node
+      addon_path: build/Release/shumai_bindings.node
       wrapper_out_path: demo1/ts/index.ts
-    # TODO: need to debug (should not be necessary??)
     ignored_methods:
       - scalar
       - device
@@ -37,16 +35,55 @@ packages:
       - detail::releaseAdapterUnsafe
       - topk
       - print
-    # simplifies cases where multiple methods require transforming the generated logic (starting from after function call; useful when need to transform value before returning to JS)
     grouped_method_transforms:
-      - arg_transforms:
-          axis: auto axis = /arg/.As<Napi::Number>().Uint32Value();
-        applies_to:
-          - sort
-          - argsort
-      - return_transforms: |
+      - applies_to:
+          - roll
+          - cumsum
+        arg_transforms:
+          axis: |
+            auto axis = axisArg(/arg/.As<Napi::Number>().Uint32Value(), g_row_major, /arg_0/->ndim());
+      - applies_to:
+          - full
+          - iota
+        arg_transforms:
+          dims: |
+            auto tmp_dims = /arg/.As<Napi::TypedArrayOf<int64_t>>();
+            std::vector<long long> dims = arrayArg<long long>(tmp_dims.Data(), tmp_dims.ElementLength(), g_row_major, false);
+      - applies_to:
+          - reshape
+          - tile
+        arg_transforms:
+          shape: |
+            auto tmp_shape = /arg/.As<Napi::TypedArrayOf<int64_t>>();
+            std::vector<long long> shape = arrayArg<long long>(tmp_shape.Data(), tmp_shape.ElementLength(), g_row_major, false);
+      - applies_to:
+          - transpose
+        arg_transforms:
+          axes: |
+            auto tmp_axes = /arg/.As<Napi::TypedArrayOf<int64_t>>();
+            auto axes = arrayArg<long long>(tmp_axes.Data(), tmp_axes.ElementLength(), g_row_major, /arg_0/->ndim());
+      - applies_to:
+          - amin
+          - amax
+          - sum
+          - mean
+          - median
+          - var
+          - std
+          - norm
+          - countNonzero
+          - any
+          - all
+        arg_transforms:
+          axes: |
+            auto tmp_axes = /arg/.As<Napi::TypedArrayOf<int32_t>>();
+            auto axes = arrayArg<int>(tmp_axes.Data(), tmp_axes.ElementLength(), g_row_major, /arg_0/->ndim());
+      - applies_to:
+          - argmin
+          - argmax
+        return_transforms: |
           auto axes_set = std::unordered_set<int>{static_cast<int>(/arg_1/)};
-          auto base_shape = (/arg_0/).shape().get();
+          auto base_shape = (/arg_0/)->shape().get();
           std::vector<fl::Dim> new_shape;
           for (size_t idx = 0; idx < base_shape.size(); ++idx) {
             if (axes_set.count(idx) || (axes_set.size() == 0)) {
@@ -61,12 +98,19 @@ packages:
           /return/ = fl::reshape(/return/, shape);
         arg_transforms:
           axis: auto axis = axisArg(/arg/.As<Napi::Number>().Uint32Value(), g_row_major, /arg_0/->ndim());
-        applies_to:
-          - argmin
-          - argmax
-      - return_transforms: |
+      - applies_to:
+          - any
+          - all
+          - amin
+          - amax
+          - countNonzero
+          - sum
+          - mean
+          - std
+          - median
+        return_transforms: |
           auto axes_set = std::unordered_set<int>(/arg_1/.begin(), /arg_1/.end());
-          auto base_shape = (/arg_0/).shape().get();
+          auto base_shape = (/arg_0/)->shape().get();
           std::vector<fl::Dim> new_shape;
           for (size_t idx = 0; idx < base_shape.size(); ++idx) {
             if (axes_set.count(idx) || (axes_set.size() == 0)) {
@@ -79,25 +123,11 @@ packages:
           }
           const auto& shape = fl::Shape(new_shape);
           /return/ = fl::reshape(/return/, shape);
-        applies_to:
-          - any
-          - all
-          - amin
-          - amax
-          - countNonzero
-          - sum
-          - mean
-          - std
-          - median
     method_transforms:
-      arange:
-        arg_count: 3
-        return_transforms: /return/ = fl::arange(/arg_0/, /arg_1/, /arg_2/);
       var:
         return_transforms: |
-          /return/ = fl::var(/arg_0/, /arg_1/, /arg_2/, /arg_3/);
           auto axes_set = std::unordered_set<int>(/arg_1/.begin(), /arg_1/.end());
-          auto base_shape = (/arg_0/).shape().get();
+          auto base_shape = /arg_0/->shape().get();
           std::vector<fl::Dim> new_shape;
           for (size_t idx = 0; idx < base_shape.size(); ++idx) {
             if (axes_set.count(idx) || (axes_set.size() == 0)) {
@@ -112,13 +142,12 @@ packages:
           /return/ = fl::reshape(/return/, shape);
       norm:
         return_transforms: |
-          /return/ = fl::norm(/arg_0/, /arg_1/, /arg_2/, /arg_3/);
           if (p == std::numeric_limits<double>::infinity()) {
-            /return/ = fl::abs(/arg_0/);
-            /return/ = fl::amax(/arg_0/, /arg_1/, /arg_3/);
+            /return/ = fl::abs(*/arg_0/);
+            /return/ = fl::amax(*/arg_0/, /arg_1/, /arg_3/);
           }
           auto axes_set = std::unordered_set<int>(/arg_1/.begin(), /arg_1/.end());
-          auto base_shape = (/arg_0/).shape().get();
+          auto base_shape = /arg_0/->shape().get();
           std::vector<fl::Dim> new_shape;
           for (size_t idx = 0; idx < base_shape.size(); ++idx) {
             if (axes_set.count(idx) || (axes_set.size() == 0)) {
@@ -131,50 +160,38 @@ packages:
           }
           const auto& shape = fl::Shape(new_shape);
           /return/ = fl::reshape(/return/, shape);
-      full:
-        arg_count: 2
-        return_transforms: /return/ = fl::full(fl::Shape(/arg_0/), /arg_1/);
-        arg_transforms:
-          dims: std::vector<long long> dims = jsArrayToVector<long long>(/arg/.As<Napi::Array>(), g_row_major, false);
-          val: float val = /arg/.As<Napi::Number>().FloatValue();
-      iota:
-        arg_transforms:
-          dims: auto dims = jsArrayToVector<long long>(/arg/.As<Napi::Array>(), g_row_major, false);
-          tileDims: auto tileDims = jsArrayToVector<long long>(/arg/.As<Napi::Array>(), g_row_major, false);
       concatenate:
         arg_transforms:
-          axis: auto axis = axisArg(/arg/.As<Napi::Number>().Int32Value(), g_row_major, (&/arg_0/[0])->ndim());
-          tensors: auto tensors = jsTensorArrayArg<fl::Tensor>(/arg/.As<Napi::Array>());
+          axis: auto axis = axisArg(/arg/.As<Napi::Number>().Int32Value(), g_row_major, /arg_0/[0].ndim());
+      iota:
+        arg_transforms:
+          tileDims: |
+            auto tmp_tileDims = /arg/.As<Napi::TypedArrayOf<int64_t>>();
+            auto tileDims = arrayArg<long long>(tmp_tileDims.Data(), tmp_tileDims.ElementLength(), g_row_major, false);
       tril:
         return_transforms: |
+          fl::Tensor /return/;
           if (g_row_major) {
-            /return/ = fl::triu(/arg_0/);
+            /return/ = fl::triu(*/arg_0/);
           } else {
-            /return/ = fl::tril(/arg_0/);
+            /return/ = fl::tril(*/arg_0/);
           }
       triu:
         return_transforms: |
+          fl::Tensor /return/;
           if (g_row_major) {
-            /return/ = fl::tril(/arg_0/);
+            /return/ = fl::tril(*/arg_0/);
           } else {
-            /return/ = fl::triu(/arg_0/);
+            /return/ = fl::triu(*/arg_0/);
           }
       matmul:
         return_transforms: |
+          fl::Tensor /return/;
           if (g_row_major) {
-            /return/ = fl::matmul(/arg_1/, /arg_0/, /arg_3/, /arg_2/);
+            /return/ = fl::matmul(*/arg_1/, */arg_0/, /arg_3/, /arg_2/);
           } else {
-            /return/ = fl::matmul(/arg_0/, /arg_1/, /arg_2/, /arg_3/);
+            /return/ = fl::matmul(*/arg_0/, */arg_1/, /arg_2/, /arg_3/);
           }
-      tile:
-        arg_transforms:
-          shape: auto shape = jsArrayToVector<long long>(/arg/.As<Napi::Array>(), g_row_major, false);
-      transpose:
-        arg_transforms:
-          axes: auto axes = jsArrayToVector<long long>(/arg/.As<Napi::Array>(), g_row_major, /arg_0/->ndim());
-      reshape:
-        arg_transforms:
-          shape: auto shape = jsArrayToVector<long long>(/arg/.As<Napi::Array>(), g_row_major, false);
     class_opts:
       Tensor:
         path_to_impl: demo1/ts/tensor.ts
@@ -192,8 +209,9 @@ packages:
           - backend
           - flat
         bytes_used: bytes
-        # finalizer:
         ext_finalizer_transform: |
           if (/this/->hasAdapter()) {
-            g_bytes_used = Napi::MemoryManagement::AdjustExternalMemory(env, -(/this/->bytes()));
+            auto bytes = -1 * /this/->bytes();
+            g_bytes_used += bytes;
+            Napi::MemoryManagement::AdjustExternalMemory(env, bytes);
           }

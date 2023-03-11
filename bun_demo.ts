@@ -1,8 +1,6 @@
 import * as sm from './demo1/ts/index';
 import { Tensor } from './demo1/ts/tensor';
 
-sm.init();
-
 function genRand() {
   const out = new Float32Array(128);
   for (let i = 0; i < 128; ++i) {
@@ -19,8 +17,8 @@ for (let i = 0; i < 100000; ++i) {
   const a = sm.rand(array);
   const b = new Tensor(genRand());
   m += a.add(b).mean([], false).toFloat32Scalar();
-  // console.log('bytes: ', Number(sm.bytesUsed()))
 }
+Bun.gc(true);
 const t1 = performance.now() / 1e3;
 const time = t1 - t0;
 console.log(time, 'seconds to calculate', m);

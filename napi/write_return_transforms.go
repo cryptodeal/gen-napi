@@ -72,7 +72,7 @@ func WriteArrayReturn(sb *strings.Builder, res_name string, template_args []Temp
 		case String:
 			init_napi_string(sb, fmt.Sprintf("%s[i]", res_name))
 		default:
-			fmt.Println(*t.NapiType.String())
+			panic(fmt.Sprintf("unsupported array return type: `%s`; please file issue w info to add support", *t.NapiType.String()))
 		}
 	}
 	sb.WriteString("}\n")
@@ -162,7 +162,7 @@ func (g *PackageGenerator) WriteReturnVal(sb *strings.Builder, r GenReturnData, 
 	if gen_result_name == nil || is_void {
 		return
 	}
-	fmt.Printf("NapiType: %q; STLType: %q\n", *r.NapiType.String(), r.STLType)
+	// fmt.Printf("NapiType: %q; STLType: %q\n", *r.NapiType.String(), r.STLType)
 	switch r.NapiType {
 	// handle boolean
 	case Boolean:

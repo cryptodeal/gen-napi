@@ -157,51 +157,60 @@ func (g *PackageGenerator) WriteArrayGetter(sb *strings.Builder, arg_name string
 }
 
 // TODO: improve default handling more complex types
-func (g *PackageGenerator) WriteArgGetters(sb *strings.Builder, args *[]GenArgData, is_void bool) {
-	for _, a := range *args {
-		needs_cast := new(string)
-		if a.NeedsCast {
-			*needs_cast = a.NativeType
-		}
-		// TODO: handle string types
-		switch a.NapiType {
-		// handle boolean
-		case Boolean:
-			WriteBooleanGetter(sb, a.Name, a.Idx)
-		// handle string
-		case String:
-			WriteStringGetter(sb, a.Name, a.Idx, a.NapiGetter, a.STLType)
-		// handle number
-		case Number:
-			WriteNumberGetter(sb, a.Name, a.NapiGetter, a.Idx, needs_cast)
-		// handle `Array<T>` -> `std::vector<T>` or `std::array<T>` (where `T` is not primitive)
-		case Array:
-			g.WriteArrayGetter(sb, a.Name, a.Idx, a.STLType, a.RawType)
-		// handle bigint
-		case BigInt:
-			g.WriteBigIntGetter(sb, a.Name, a.NapiGetter, a.Idx, needs_cast, is_void)
-		// handle native enum (passed as number)
-		case NumberEnum:
-			WriteEnumGetter(sb, a.Name, *needs_cast, a.Idx)
-		// handle date
-		case Date:
-			WriteDateGetter(sb, a.Name, a.Idx)
-		// handle typed arrays
-		case TypedArray, Int8Array, Uint8Array, Int16Array, Uint16Array, Int32Array, Uint32Array, Float32Array, Float64Array, BigInt64Array, BigUint64Array:
-			if a.STLType == "" {
-				g.WriteTypedArrayGetter(sb, a.Name, a.Idx, a.TypedArrayInfo)
-			} else {
-				g.WriteOptimizedTypedArray(sb, a.Name, a.Idx, a.TypedArrayInfo, a.STLType)
+func (g *PackageGenerator) WriteArgGetters(sb *strings.Builder, args *[]GenArgData, method_name string, is_void bool) {
+	for i, a := range *args {
+		// TODO: handle argument transforms
+		isTransformed, transform := g.conf.IsArgTransform(method_name, a.Name)
+		if !isTransformed {
+			needs_cast := new(string)
+			if a.NeedsCast {
+				*needs_cast = a.NativeType
 			}
-		// handle `Array<[T1, T2]>` -> `std::vector<std::pair<T1, T2>>`
-		case PairArray:
-			g.WritePairArrayHandler(sb, a.RawType, a.Name, a.Idx)
-			// handle `[T1, T2]` -> `std::pair<T1, T2>`
-		case Pair:
-			g.WritePairHandler(sb, a.RawType, a.Name, a.Idx, is_void)
-		// handle returning pointer to JS
-		case External:
-			WriteExternalGetter(sb, a.Name, a.NativeType, a.Idx)
+			// TODO: handle string types
+			switch a.NapiType {
+			// handle boolean
+			case Boolean:
+				WriteBooleanGetter(sb, a.Name, a.Idx)
+			// handle string
+			case String:
+				WriteStringGetter(sb, a.Name, a.Idx, a.NapiGetter, a.STLType)
+			// handle number
+			case Number:
+				WriteNumberGetter(sb, a.Name, a.NapiGetter, a.Idx, needs_cast)
+			// handle `Array<T>` -> `std::vector<T>` or `std::array<T>` (where `T` is not primitive)
+			case Array:
+				g.WriteArrayGetter(sb, a.Name, a.Idx, a.STLType, a.RawType)
+			// handle bigint
+			case BigInt:
+				g.WriteBigIntGetter(sb, a.Name, a.NapiGetter, a.Idx, needs_cast, is_void)
+			// handle native enum (passed as number)
+			case NumberEnum:
+				WriteEnumGetter(sb, a.Name, *needs_cast, a.Idx)
+			// handle date
+			case Date:
+				WriteDateGetter(sb, a.Name, a.Idx)
+			// handle typed arrays
+			case TypedArray, Int8Array, Uint8Array, Int16Array, Uint16Array, Int32Array, Uint32Array, Float32Array, Float64Array, BigInt64Array, BigUint64Array:
+				if a.STLType == "" {
+					g.WriteTypedArrayGetter(sb, a.Name, a.Idx, a.TypedArrayInfo)
+				} else {
+					g.WriteOptimizedTypedArray(sb, a.Name, a.Idx, a.TypedArrayInfo, a.STLType)
+				}
+			// handle `Array<[T1, T2]>` -> `std::vector<std::pair<T1, T2>>`
+			case PairArray:
+				g.WritePairArrayHandler(sb, a.RawType, a.Name, a.Idx)
+				// handle `[T1, T2]` -> `std::pair<T1, T2>`
+			case Pair:
+				g.WritePairHandler(sb, a.RawType, a.Name, a.Idx, is_void)
+			// handle returning pointer to JS
+			case External:
+				WriteExternalGetter(sb, a.Name, a.NativeType, a.Idx)
+			}
+		} else {
+			for j, val := range *args {
+				*transform = strings.ReplaceAll(*transform, fmt.Sprintf("/arg_%d/", j), val.Name)
+			}
+			sb.WriteString(strings.ReplaceAll(*transform, "/arg/", fmt.Sprintf("info[%d]", i)))
 		}
 	}
 }

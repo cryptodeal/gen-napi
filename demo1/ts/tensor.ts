@@ -20,7 +20,8 @@ const {
   _toFloat64Array,
   _toFloat32Scalar,
   _toFloat64Scalar,
-  _init
+  _init,
+  _dispose
 } = import.meta.require('../../build/Release/shumai_bindings.node');
 import { _Base_Tensor, gen_Tensor_ops_shim } from './gen_Tensor_methods_shim';
 
@@ -37,6 +38,10 @@ export class Tensor extends _Base_Tensor {
     } else {
       this._native_Tensor = t;
     }
+  }
+
+  dispose() {
+    return _dispose(this._native_ref);
   }
 
   toInt8Scalar() {

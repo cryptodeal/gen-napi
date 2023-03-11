@@ -6,7 +6,7 @@ import (
 )
 
 func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod) {
-	fmt.Printf("method: %s\n", *m.Name)
+	// fmt.Printf("method: %s\n", *m.Name)
 	arg_helpers := g.GetArgData(m.Overloads[0])
 	parsedName := "_" + *m.Name
 	return_type := "Napi::Value"
@@ -19,8 +19,8 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod) {
 	sb.WriteString("Napi::Env env = info.Env();\n")
 	// TODO: handle transforms (and overloads)
 	g.WriteArgChecks(sb, arg_helpers, is_void, *m.Name)
-	g.WriteArgGetters(sb, arg_helpers, is_void)
-	gen_return_name := g.WriteFnCall(sb, fmt.Sprintf("%s::%s", *m.NameSpace, *m.Name), m.Returns, arg_helpers, is_void)
+	g.WriteArgGetters(sb, arg_helpers, *m.Name, is_void)
+	gen_return_name := g.WriteFnCall(sb, fmt.Sprintf("%s::", *m.NameSpace), *m.Name, m.Returns, arg_helpers, is_void)
 	g.WriteReturnVal(sb, m.Returns.ParseReturnData(g), is_void, gen_return_name)
 
 	sb.WriteString("}\n\n")
@@ -28,7 +28,7 @@ func (g *PackageGenerator) writeMethod(sb *strings.Builder, m *CPPMethod) {
 
 func (g *PackageGenerator) WriteClassMethod(sb *strings.Builder, f *CPPFieldDecl, class_name string) {
 	if f.Name != nil && !g.conf.IsFieldIgnored(class_name, *f.Name) {
-		fmt.Printf("class method: %s\n", *f.Name)
+		// fmt.Printf("class method: %s\n", *f.Name)
 		arg_helpers := g.GetArgData(&f.Args)
 		parsedName := "_" + *f.Name
 		return_type := "Napi::Value"
@@ -41,8 +41,8 @@ func (g *PackageGenerator) WriteClassMethod(sb *strings.Builder, f *CPPFieldDecl
 		sb.WriteString("Napi::Env env = info.Env();\n")
 		// TODO: handle transforms (and overloads)
 		g.WriteArgChecks(sb, arg_helpers, is_void, *f.Name)
-		g.WriteArgGetters(sb, arg_helpers, is_void)
-		gen_return_name := g.WriteFnCall(sb, fmt.Sprintf("%s->%s", *f.Args[0].Name, *f.Name), f.Returns, arg_helpers, is_void, true)
+		g.WriteArgGetters(sb, arg_helpers, *f.Name, is_void)
+		gen_return_name := g.WriteFnCall(sb, fmt.Sprintf("%s->", *f.Args[0].Name), *f.Name, f.Returns, arg_helpers, is_void, true)
 		g.WriteReturnVal(sb, f.Returns.ParseReturnData(g), is_void, gen_return_name)
 
 		sb.WriteString("}\n\n")
@@ -104,7 +104,7 @@ func (g *PackageGenerator) WriteBindingsLogic() string {
 	// writes NAPI `Init` function (init NAPI exports)
 	sb.WriteString("// NAPI exports\n\n")
 	sb.WriteString("Napi::Object Init(Napi::Env env, Napi::Object exports) {\n")
-	fmt.Println("class count: ", len(g.ParsedData.Classes))
+	// fmt.Println("class count: ", len(g.ParsedData.Classes))
 
 	for name, c := range g.ParsedData.Classes {
 		// check if header contained class constructor declaration(s)

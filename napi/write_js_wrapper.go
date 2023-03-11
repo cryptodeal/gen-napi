@@ -17,6 +17,27 @@ func isInvalidName(name string) bool {
 	return false
 }
 
+func (g *PackageGenerator) WriteClassImports(sb *strings.Builder) {
+	for name, c := range g.conf.ClassOpts {
+		if g.conf.IsEnvTS() {
+			sb.WriteString("import ")
+		} else {
+			sb.WriteString("const ")
+		}
+		sb.WriteString(fmt.Sprintf(" { %s } ", name))
+		if g.conf.IsEnvTS() {
+			sb.WriteString("from ")
+		} else {
+			sb.WriteString("= require(")
+		}
+		sb.WriteString(fmt.Sprintf("'%s'", g.conf.ResolvedImportPath(c.PathToImpl)))
+		if !g.conf.IsEnvTS() {
+			sb.WriteString(")")
+		}
+		sb.WriteString(";\n")
+	}
+}
+
 func (g *PackageGenerator) WriteEnumImports(sb *strings.Builder, imports map[string]bool) {
 	if len(g.ParsedData.Enums) == 0 {
 		return
@@ -63,6 +84,7 @@ func (g *PackageGenerator) WriteEnumImports(sb *strings.Builder, imports map[str
 func (g *PackageGenerator) WriteEnvWrapper(sb *strings.Builder) {
 	temp_sb := new(strings.Builder)
 	temp_sb.WriteString(g.conf.JSWrapperOpts.FrontMatter)
+	g.WriteClassImports(temp_sb)
 	g.WriteEnvImports(temp_sb)
 	enum_imports := map[string]bool{}
 	g.WriteEnvWrappedFns(temp_sb, enum_imports)
@@ -166,13 +188,13 @@ func (g *PackageGenerator) WriteEnvExports(sb *strings.Builder) {
 }
 
 func (g *PackageGenerator) WriteEnvImports(sb *strings.Builder) {
-	sb.WriteString("\nconst addon = ")
+	sb.WriteString("const addon = ")
 	if g.conf.IsEnvTS() {
 		sb.WriteString("import.meta.require(")
 	} else {
 		sb.WriteString("require(")
 	}
-	sb.WriteString(fmt.Sprintf("'%s');\n\n", g.conf.ResolvedBindingsImportPath(g.conf.Path)))
+	sb.WriteString(fmt.Sprintf("'%s');\n\n", g.conf.ResolvedImportPath(g.conf.JSWrapperOpts.AddonPath)))
 }
 
 func (g *PackageGenerator) WriteEnums() error {
@@ -475,14 +497,20 @@ func (g *PackageGenerator) WriteClassInstructions(sb *strings.Builder, var_name 
 	sb.WriteString("/**\n")
 	sb.WriteString(" * USAGE INSTRUCTIONS:\n")
 	sb.WriteString(fmt.Sprintf(" * 1. Import `gen_%s_ops_shim` to file where corresponding js impl lives\n", var_name))
-	sb.WriteString(" * 2. copy the following logic following class declaration:\n")
-	if g.conf.IsEnvTS() {
-		sb.WriteString(fmt.Sprintf(" * export interface %s extends ReturnType<typeof gen_%s_ops_shim> {} // eslint-disable-line\n", var_name, var_name))
-	}
-	sb.WriteString(fmt.Sprintf(" * for (const [method, closure] of Object.entries(gen_%s_ops_shim(%s))) {\n", var_name, var_name))
-	sb.WriteString(fmt.Sprintf(" *   %s.prototype[method] = closure;\n", var_name))
-	sb.WriteString(" * }\n")
+	sb.WriteString(fmt.Sprintf(" * 2. copy the following logic following class declaration into `%s`:\n", g.conf.ClassOpts[var_name].PathToImpl))
 	sb.WriteString(" */\n")
+	sb.WriteString("/*\n")
+	if g.conf.IsEnvTS() {
+		g.writeIndent(sb, 1)
+		sb.WriteString(fmt.Sprintf("export interface %s extends ReturnType<typeof gen_%s_ops_shim> {} // eslint-disable-line\n", var_name, var_name))
+	}
+	g.writeIndent(sb, 1)
+	sb.WriteString(fmt.Sprintf("for (const [method, closure] of Object.entries(gen_%s_ops_shim(%s))) {\n", var_name, var_name))
+	g.writeIndent(sb, 2)
+	sb.WriteString(fmt.Sprintf("%s.prototype[method] = closure;\n", var_name))
+	g.writeIndent(sb, 1)
+	sb.WriteString("}\n")
+	sb.WriteString("*/\n")
 }
 
 func (g *PackageGenerator) WriteClassShims(name string, c *CPPClass) error {
@@ -507,7 +535,7 @@ func (g *PackageGenerator) WriteObjectShims(name string) string {
 	imports := map[string]bool{}
 	if v, ok := g.ParsedData.Classes[name]; ok && v.FieldDecl != nil {
 		usedName := fmt.Sprintf("_%s", name)
-		sb.WriteString(g.conf.JSWrapperOpts.ShimFrontMatter)
+		sb.WriteString(fmt.Sprintf("import type { %s } from '%s';\n", name, g.conf.ResolvedImportPath(g.conf.ClassOpts[name].PathToImpl)))
 		g.WriteEnvImports(sb)
 		g.writeFileSourceHeader(sb, *g.Path)
 

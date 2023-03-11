@@ -119,6 +119,7 @@ type PackageConfig struct {
 
 type Config struct {
 	Packages []*PackageConfig `yaml:"packages"`
+	LintCmd  *string          `yaml:"lint_cmd"`
 }
 
 func (c Config) LoadForcedLogic() {
@@ -183,15 +184,15 @@ func (c PackageConfig) GetBytesAccessor(name string) *string {
 	return bytes_accessor
 }
 
-func (c PackageConfig) IsReturnTransform(method *CPPMethod) (bool, bool, *string) {
+func (c PackageConfig) IsReturnTransform(name string) (bool, bool, *string) {
 	for _, t := range c.GroupedMethodTransforms {
 		for _, a := range t.AppliesTo {
-			if strings.EqualFold(a, *method.Name) {
+			if strings.EqualFold(a, name) {
 				return true, true, &t.ReturnTransforms
 			}
 		}
 	}
-	if v, ok := c.MethodTransforms[*method.Name]; ok && v.ReturnTransforms != "" {
+	if v, ok := c.MethodTransforms[name]; ok && v.ReturnTransforms != "" {
 		return true, false, &v.ReturnTransforms
 	}
 	return false, false, nil
@@ -276,6 +277,20 @@ func (c PackageConfig) ResolvedWrappedEnumOutPath(packageDir string) string {
 	}
 	path_split := strings.Split(conf_path, "/")
 	return strings.Join(path_split[:len(path_split)-1], "/") + fmt.Sprintf("/gen_enums.%s", strings.Split(path_split[len(path_split)-1], ".")[1])
+}
+
+func (c PackageConfig) ResolvedImportPath(target_path string) string {
+	val, err := filepath.Rel(filepath.Dir(c.JSWrapperOpts.WrapperOutPath), target_path)
+	if err != nil {
+		panic(err)
+	}
+	if c.IsEnvTS() && strings.HasSuffix(val, ".ts") {
+		val = val[:len(val)-3]
+	}
+	if !strings.Contains(val, "/") {
+		val = fmt.Sprintf("./%s", val)
+	}
+	return val
 }
 
 func (c PackageConfig) ResolvedShimPath(packageDir string, val_name string) string {

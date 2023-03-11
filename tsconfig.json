@@ -19,5 +19,5 @@
       "@tensor/js": ["./demo1/js/tensor.js"],
     }
   },
-  "include": ["demo1/**/*.ts", "bun_demo.ts", "bun_bench.ts"]
+  "include": ["demo1/**/*.ts", "demo2/**/*.ts", "bun_demo.ts", "bun_bench.ts"]
 }
