@@ -5,7 +5,6 @@ packages:
     js_wrapper_opts:
       addon_path: build/Release/test.node
       wrapper_out_path: demo2/ts/index.ts
-  # - path: demo1/TensorBase.h
   - path: ../flashlight/flashlight/fl/tensor/TensorBase.h
     lib_root_dir: ../flashlight
     path_to_forced_logic: demo1/ForcedLogic.cc

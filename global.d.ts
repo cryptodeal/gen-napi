@@ -1,3 +1,3 @@
 interface ImportMeta {
-  require: (id: string) => any
+  require: (id: string) => any;
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'bun:test';
-import { dtype as jsDtype } from '../demo1/js/index.cjs';
-import { dtype } from '../demo1/ts/index';
+import { dtype as jsDtype } from '../demo1/js/gen_enums.cjs';
+import { dtype } from '../demo1/ts/gen_enums';
 
 describe('C++ Enums -> Generated Enum', () => {
   const dtype_keys = ['f16', 'f32', 'f64', 'b8', 's16', 's32', 's64', 'u8', 'u16', 'u32', 'u64'];

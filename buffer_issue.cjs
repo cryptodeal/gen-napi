@@ -15,6 +15,7 @@ const test = () => {
   for (let i = 0; i < 10000; i++) {
     const backingArray = fillArray(new Uint8Array(1000));
     const a = new Tensor(backingArray).toUint8Array();
+    // eslint-disable-next-line no-undef
     Bun.gc(true);
   }
   const t1 = performance.now() / 1e3;

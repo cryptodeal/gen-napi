@@ -518,7 +518,7 @@ static Napi::Value toUint64Array(const Napi::CallbackInfo& info) {
 static Napi::Value toFloat32Scalar(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   fl::Tensor* t = UnExternalize<fl::Tensor>(info[0]);
-  return Napi::Number::New(env, t->asScalar<float>());
+  return Napi::Number::New(env, static_cast<double>(t->asScalar<float>()));
 }
 
 /*
@@ -528,7 +528,7 @@ static Napi::Value toFloat32Scalar(const Napi::CallbackInfo& info) {
 static Napi::Value toFloat64Scalar(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   fl::Tensor* t = UnExternalize<fl::Tensor>(info[0]);
-  return Napi::Number::New(env, t->asScalar<float>());
+  return Napi::Number::New(env, t->asScalar<double>());
 }
 
 /*
@@ -538,7 +538,7 @@ static Napi::Value toFloat64Scalar(const Napi::CallbackInfo& info) {
 static Napi::Value toBoolInt8Scalar(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   fl::Tensor* t = UnExternalize<fl::Tensor>(info[0]);
-  return Napi::Number::New(env, t->asScalar<char>());
+  return Napi::Number::New(env, static_cast<double>(t->asScalar<char>()));
 }
 
 /*
@@ -555,7 +555,7 @@ static Napi::Value toInt16Scalar(const Napi::CallbackInfo& info) {
     return env.Undefined();
   }
   fl::Tensor* t = UnExternalize<fl::Tensor>(info[0]);
-  return Napi::Number::New(env, t->asScalar<int16_t>());
+  return Napi::Number::New(env, static_cast<double>(t->asScalar<short>()));
 }
 
 /*
@@ -565,7 +565,7 @@ static Napi::Value toInt16Scalar(const Napi::CallbackInfo& info) {
 static Napi::Value toInt32Scalar(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   fl::Tensor* t = UnExternalize<fl::Tensor>(info[0]);
-  return Napi::Number::New(env, t->asScalar<int32_t>());
+  return Napi::Number::New(env, static_cast<double>(t->asScalar<int>()));
 }
 
 /*
@@ -575,7 +575,7 @@ static Napi::Value toInt32Scalar(const Napi::CallbackInfo& info) {
 static Napi::Value toInt64Scalar(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   fl::Tensor* t = UnExternalize<fl::Tensor>(info[0]);
-  return Napi::BigInt::New(env, t->asScalar<int64_t>());
+  return Napi::BigInt::New(env, static_cast<int64_t>(t->asScalar<long long>()));
 }
 
 /*
@@ -585,7 +585,7 @@ static Napi::Value toInt64Scalar(const Napi::CallbackInfo& info) {
 static Napi::Value toUint8Scalar(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   fl::Tensor* t = UnExternalize<fl::Tensor>(info[0]);
-  return Napi::Number::New(env, t->asScalar<uint8_t>());
+  return Napi::Number::New(env, static_cast<double>(t->asScalar<unsigned char>()));
 }
 
 /*
@@ -595,7 +595,7 @@ static Napi::Value toUint8Scalar(const Napi::CallbackInfo& info) {
 static Napi::Value toUint16Scalar(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   fl::Tensor* t = UnExternalize<fl::Tensor>(info[0]);
-  return Napi::Number::New(env, t->asScalar<uint16_t>());
+  return Napi::Number::New(env, static_cast<double>(t->asScalar<unsigned short>()));
 }
 
 /*
@@ -605,7 +605,7 @@ static Napi::Value toUint16Scalar(const Napi::CallbackInfo& info) {
 static Napi::Value toUint32Scalar(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   fl::Tensor* t = UnExternalize<fl::Tensor>(info[0]);
-  return Napi::Number::New(env, t->asScalar<uint32_t>());
+  return Napi::Number::New(env, static_cast<double>(t->asScalar<unsigned int>()));
 }
 
 /*
@@ -615,7 +615,7 @@ static Napi::Value toUint32Scalar(const Napi::CallbackInfo& info) {
 static Napi::Value toUint64Scalar(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
   fl::Tensor* t = UnExternalize<fl::Tensor>(info[0]);
-  return Napi::BigInt::New(env, t->asScalar<uint64_t>());
+  return Napi::BigInt::New(env, static_cast<uint64_t>(t->asScalar<unsigned long long>()));
 }
 
 /*
@@ -623,8 +623,8 @@ static Napi::Value toUint64Scalar(const Napi::CallbackInfo& info) {
   @gen-napi-`ts_return_type`: void
 */
 static void eval(const Napi::CallbackInfo& info) {
-  fl::Tensor* t = UnExternalize<fl::Tensor>(info[0]);
-  fl::eval(*(t));
+  auto& t = *UnExternalize<fl::Tensor>(info[0]);
+  fl::eval(t);
 }
 
 /*
@@ -642,13 +642,14 @@ static void dispose(const Napi::CallbackInfo& info) {
 }
 
 /*
-  @gen-napi-`ts_args`: (buffer: ArrayBuffer)
+  @gen-napi-`ts_args`: (v: Float32Array)
+  @gen-napi-`ts_return_type`: _Native_Tensor
 */
-static Napi::Value tensorFromFloat32Buffer(const Napi::CallbackInfo& info) {
+static Napi::Value tensorFromFloat32Array(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
-  Napi::ArrayBuffer buf = info[0].As<Napi::ArrayBuffer>();
-  int64_t length = static_cast<int64_t>(buf.ByteLength() / sizeof(float));
-  float* ptr = reinterpret_cast<float*>(buf.Data());
+  Napi::TypedArrayOf<float> buf = info[0].As<Napi::TypedArrayOf<float>>();
+  int64_t length = buf.ElementLength();
+  float* ptr = buf.Data();
   auto* t = new fl::Tensor(
       fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
   auto bytes = t->bytes();
@@ -658,13 +659,14 @@ static Napi::Value tensorFromFloat32Buffer(const Napi::CallbackInfo& info) {
 }
 
 /*
-  @gen-napi-`ts_args`: (buffer: ArrayBuffer)
+  @gen-napi-`ts_args`: (v: Float64Array)
+  @gen-napi-`ts_return_type`: _Native_Tensor
 */
-static Napi::Value tensorFromFloat64Buffer(const Napi::CallbackInfo& info) {
+static Napi::Value tensorFromFloat64Array(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
-  Napi::ArrayBuffer buf = info[0].As<Napi::ArrayBuffer>();
-  int64_t length = static_cast<int64_t>(buf.ByteLength() / sizeof(double));
-  double* ptr = reinterpret_cast<double*>(buf.Data());
+  Napi::TypedArrayOf<double> buf = info[0].As<Napi::TypedArrayOf<double>>();
+  int64_t length = buf.ElementLength();
+  double* ptr = buf.Data();
   auto* t = new fl::Tensor(
       fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
   auto bytes = t->bytes();
@@ -674,13 +676,31 @@ static Napi::Value tensorFromFloat64Buffer(const Napi::CallbackInfo& info) {
 }
 
 /*
-  @gen-napi-`ts_args`: (buffer: ArrayBuffer)
+  @gen-napi-`ts_args`: (v: Int8Array)
+  @gen-napi-`ts_return_type`: _Native_Tensor
 */
-static Napi::Value tensorFromBoolInt8Buffer(const Napi::CallbackInfo& info) {
+static Napi::Value tensorFromInt8Array(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
-  Napi::ArrayBuffer buf = info[0].As<Napi::ArrayBuffer>();
-  int64_t length = static_cast<int64_t>(buf.ByteLength() / sizeof(int8_t));
-  char* ptr = reinterpret_cast<char*>(buf.Data());
+  Napi::TypedArrayOf<int8_t> buf = info[0].As<Napi::TypedArrayOf<int8_t>>();
+  int64_t length = buf.ElementLength();
+  void* ptr = buf.Data();
+  auto* t = new fl::Tensor(
+      fl::Tensor::fromBuffer({length}, (char*)ptr, fl::MemoryLocation::Host));
+  auto bytes = t->bytes();
+  g_bytes_used += bytes;
+  Napi::MemoryManagement::AdjustExternalMemory(env, bytes);
+  return ExternalizeTensor(env, t);
+}
+
+/*
+  @gen-napi-`ts_args`: (v: Int16Array)
+  @gen-napi-`ts_return_type`: _Native_Tensor
+*/
+static Napi::Value tensorFromInt16Array(const Napi::CallbackInfo& info) {
+  Napi::Env env = info.Env();
+  Napi::TypedArrayOf<int16_t> buf = info[0].As<Napi::TypedArrayOf<int16_t>>();
+  int64_t length = buf.ElementLength();
+  int16_t* ptr = buf.Data();
   auto* t = new fl::Tensor(
       fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
   auto bytes = t->bytes();
@@ -690,13 +710,14 @@ static Napi::Value tensorFromBoolInt8Buffer(const Napi::CallbackInfo& info) {
 }
 
 /*
-  @gen-napi-`ts_args`: (buffer: ArrayBuffer)
+  @gen-napi-`ts_args`: (v: Int32Array)
+  @gen-napi-`ts_return_type`: _Native_Tensor
 */
-static Napi::Value tensorFromInt16Buffer(const Napi::CallbackInfo& info) {
+static Napi::Value tensorFromInt32Array(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
-  Napi::ArrayBuffer buf = info[0].As<Napi::ArrayBuffer>();
-  int64_t length = static_cast<int64_t>(buf.ByteLength() / sizeof(int16_t));
-  int16_t* ptr = reinterpret_cast<int16_t*>(buf.Data());
+  Napi::TypedArrayOf<int32_t> buf = info[0].As<Napi::TypedArrayOf<int32_t>>();
+  int64_t length = buf.ElementLength();
+  int32_t* ptr = buf.Data();
   auto* t = new fl::Tensor(
       fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
   auto bytes = t->bytes();
@@ -706,13 +727,14 @@ static Napi::Value tensorFromInt16Buffer(const Napi::CallbackInfo& info) {
 }
 
 /*
-  @gen-napi-`ts_args`: (buffer: ArrayBuffer)
+  @gen-napi-`ts_args`: (v: BigInt64Array)
+  @gen-napi-`ts_return_type`: _Native_Tensor
 */
-static Napi::Value tensorFromInt32Buffer(const Napi::CallbackInfo& info) {
+static Napi::Value tensorFromBigInt64Array(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
-  Napi::ArrayBuffer buf = info[0].As<Napi::ArrayBuffer>();
-  int64_t length = static_cast<int64_t>(buf.ByteLength() / sizeof(int32_t));
-  int32_t* ptr = reinterpret_cast<int32_t*>(buf.Data());
+  Napi::TypedArrayOf<int64_t> buf = info[0].As<Napi::TypedArrayOf<int64_t>>();
+  int64_t length = buf.ElementLength();
+  int64_t* ptr = buf.Data();
   auto* t = new fl::Tensor(
       fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
   auto bytes = t->bytes();
@@ -722,13 +744,14 @@ static Napi::Value tensorFromInt32Buffer(const Napi::CallbackInfo& info) {
 }
 
 /*
-  @gen-napi-`ts_args`: (buffer: ArrayBuffer)
+  @gen-napi-`ts_args`: (v: Uint8Array)
+  @gen-napi-`ts_return_type`: _Native_Tensor
 */
-static Napi::Value tensorFromInt64Buffer(const Napi::CallbackInfo& info) {
+static Napi::Value tensorFromUint8Array(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
-  Napi::ArrayBuffer buf = info[0].As<Napi::ArrayBuffer>();
-  int64_t length = static_cast<int64_t>(buf.ByteLength() / sizeof(int64_t));
-  int64_t* ptr = reinterpret_cast<int64_t*>(buf.Data());
+  Napi::TypedArrayOf<uint8_t> buf = info[0].As<Napi::TypedArrayOf<uint8_t>>();
+  int64_t length = buf.ElementLength();
+  uint8_t* ptr = buf.Data();
   auto* t = new fl::Tensor(
       fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
   auto bytes = t->bytes();
@@ -738,13 +761,14 @@ static Napi::Value tensorFromInt64Buffer(const Napi::CallbackInfo& info) {
 }
 
 /*
-  @gen-napi-`ts_args`: (buffer: ArrayBuffer)
+  @gen-napi-`ts_args`: (v: Uint16Array)
+  @gen-napi-`ts_return_type`: _Native_Tensor
 */
-static Napi::Value tensorFromUint8Buffer(const Napi::CallbackInfo& info) {
+static Napi::Value tensorFromUint16Array(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
-  Napi::ArrayBuffer buf = info[0].As<Napi::ArrayBuffer>();
-  int64_t length = static_cast<int64_t>(buf.ByteLength() / sizeof(uint8_t));
-  uint8_t* ptr = reinterpret_cast<uint8_t*>(buf.Data());
+  Napi::TypedArrayOf<uint16_t> buf = info[0].As<Napi::TypedArrayOf<uint16_t>>();
+  int64_t length = buf.ElementLength();
+  uint16_t* ptr = buf.Data();
   auto* t = new fl::Tensor(
       fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
   auto bytes = t->bytes();
@@ -754,13 +778,14 @@ static Napi::Value tensorFromUint8Buffer(const Napi::CallbackInfo& info) {
 }
 
 /*
-  @gen-napi-`ts_args`: (buffer: ArrayBuffer)
+  @gen-napi-`ts_args`: (v: Uint32Array)
+  @gen-napi-`ts_return_type`: _Native_Tensor
 */
-static Napi::Value tensorFromUint16Buffer(const Napi::CallbackInfo& info) {
+static Napi::Value tensorFromUint32Array(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
-  Napi::ArrayBuffer buf = info[0].As<Napi::ArrayBuffer>();
-  int64_t length = static_cast<int64_t>(buf.ByteLength() / sizeof(uint16_t));
-  uint16_t* ptr = reinterpret_cast<uint16_t*>(buf.Data());
+  Napi::TypedArrayOf<uint32_t> buf = info[0].As<Napi::TypedArrayOf<uint32_t>>();
+  int64_t length = buf.ElementLength();
+  uint32_t* ptr = buf.Data();
   auto* t = new fl::Tensor(
       fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
   auto bytes = t->bytes();
@@ -770,29 +795,14 @@ static Napi::Value tensorFromUint16Buffer(const Napi::CallbackInfo& info) {
 }
 
 /*
-  @gen-napi-`ts_args`: (buffer: ArrayBuffer)
+  @gen-napi-`ts_args`: (v: BigUint64Array)
+  @gen-napi-`ts_return_type`: _Native_Tensor
 */
-static Napi::Value tensorFromUint32Buffer(const Napi::CallbackInfo& info) {
+static Napi::Value tensorFromBigUint64Array(const Napi::CallbackInfo& info) {
   Napi::Env env = info.Env();
-  Napi::ArrayBuffer buf = info[0].As<Napi::ArrayBuffer>();
-  int64_t length = static_cast<int64_t>(buf.ByteLength() / sizeof(uint32_t));
-  uint32_t* ptr = reinterpret_cast<uint32_t*>(buf.Data());
-  auto* t = new fl::Tensor(
-      fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
-  auto bytes = t->bytes();
-  g_bytes_used += bytes;
-  Napi::MemoryManagement::AdjustExternalMemory(env, bytes);
-  return ExternalizeTensor(env, t);
-}
-
-/*
-  @gen-napi-`ts_args`: (buffer: ArrayBuffer)
-*/
-static Napi::Value tensorFromUint64Buffer(const Napi::CallbackInfo& info) {
-  Napi::Env env = info.Env();
-  Napi::ArrayBuffer buf = info[0].As<Napi::ArrayBuffer>();
-  int64_t length = static_cast<int64_t>(buf.ByteLength() / sizeof(uint64_t));
-  uint64_t* ptr = reinterpret_cast<uint64_t*>(buf.Data());
+  Napi::TypedArrayOf<uint64_t> buf = info[0].As<Napi::TypedArrayOf<uint64_t>>();
+  int64_t length = buf.ElementLength();
+  uint64_t* ptr = buf.Data();
   auto* t = new fl::Tensor(
       fl::Tensor::fromBuffer({length}, ptr, fl::MemoryLocation::Host));
   auto bytes = t->bytes();
@@ -819,7 +829,7 @@ static void save(const Napi::CallbackInfo& info) {
         .ThrowAsJavaScriptException();
     return;
   }
-  fl::Tensor* t = UnExternalize<fl::Tensor>(info[0]);
+  auto& t = *UnExternalize<fl::Tensor>(info[0]);
   if (!info[1].IsString()) {
     Napi::TypeError::New(env, "`save` expects args[1] to be typeof `string`")
         .ThrowAsJavaScriptException();
@@ -827,6 +837,6 @@ static void save(const Napi::CallbackInfo& info) {
   }
   Napi::String str = info[1].As<Napi::String>();
   std::string filename = str.Utf8Value();
-  fl::save(filename, *(t));
+  fl::save(filename, t);
 }
 }  // namespace Tensor_forced_methods

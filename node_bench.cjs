@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
 const { Tensor } = require('./demo1/js/tensor.cjs');
 const sm = require('./demo1/js/index.cjs');
 

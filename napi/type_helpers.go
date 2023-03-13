@@ -217,3 +217,17 @@ func (g *PackageGenerator) IsTypeEnum(t string) (bool, *string) {
 	}
 	return false, nil
 }
+
+func TypeIsTypedArray(t string) (*string, bool) {
+	numArray := fmt.Sprintf("number[] | %s", t)
+	bigIntArray := fmt.Sprintf("Array<number | bigint> | %s", t)
+
+	switch t {
+	case "Float32Array", "Float64Array", "Int8Array", "Int16Array", "Int32Array", "Uint8Array", "Uint16Array", "Uint32Array":
+		return &numArray, false
+	case "BigInt64Array", "BigUint64Array":
+		return &bigIntArray, true
+	default:
+		return nil, false
+	}
+}

@@ -106,91 +106,100 @@ export const gen_Tensor_ops_shim = (_Tensor: new (...args: unknown[]) => Tensor)
       return addon._toString(this._native_ref);
     },
 
-    div(rhs: Tensor): Tensor {
-      return new _Tensor(addon._div(this._native_ref, rhs._native_ref));
-    },
-
-    logicalOr(rhs: Tensor): Tensor {
-      return new _Tensor(addon._logicalOr(this._native_ref, rhs._native_ref));
-    },
-
-    eq(rhs: Tensor): Tensor {
-      return new _Tensor(addon._eq(this._native_ref, rhs._native_ref));
-    },
-
-    greaterThanEqual(rhs: Tensor): Tensor {
-      return new _Tensor(addon._greaterThanEqual(this._native_ref, rhs._native_ref));
+    lShift(rhs: Tensor): Tensor {
+      return new _Tensor(addon._lShift(this._native_ref, rhs._native_ref));
     },
 
     sub(rhs: Tensor): Tensor {
       return new _Tensor(addon._sub(this._native_ref, rhs._native_ref));
     },
 
-    lessThan(rhs: Tensor): Tensor {
-      return new _Tensor(addon._lessThan(this._native_ref, rhs._native_ref));
-    },
-
-    lessThanEqual(rhs: Tensor): Tensor {
-      return new _Tensor(addon._lessThanEqual(this._native_ref, rhs._native_ref));
-    },
-
-    rShift(rhs: Tensor): Tensor {
-      return new _Tensor(addon._rShift(this._native_ref, rhs._native_ref));
-    },
-
-    bitwiseXor(rhs: Tensor): Tensor {
-      return new _Tensor(addon._bitwiseXor(this._native_ref, rhs._native_ref));
-    },
-
     neq(rhs: Tensor): Tensor {
       return new _Tensor(addon._neq(this._native_ref, rhs._native_ref));
+    },
+
+    lessThan(rhs: Tensor): Tensor {
+      return new _Tensor(addon._lessThan(this._native_ref, rhs._native_ref));
     },
 
     greaterThan(rhs: Tensor): Tensor {
       return new _Tensor(addon._greaterThan(this._native_ref, rhs._native_ref));
     },
 
-    lShift(rhs: Tensor): Tensor {
-      return new _Tensor(addon._lShift(this._native_ref, rhs._native_ref));
-    },
-
     bitwiseAnd(rhs: Tensor): Tensor {
       return new _Tensor(addon._bitwiseAnd(this._native_ref, rhs._native_ref));
+    },
+
+    eq(rhs: Tensor): Tensor {
+      return new _Tensor(addon._eq(this._native_ref, rhs._native_ref));
+    },
+
+    div(rhs: Tensor): Tensor {
+      return new _Tensor(addon._div(this._native_ref, rhs._native_ref));
     },
 
     bitwiseOr(rhs: Tensor): Tensor {
       return new _Tensor(addon._bitwiseOr(this._native_ref, rhs._native_ref));
     },
 
-    logicalAnd(rhs: Tensor): Tensor {
-      return new _Tensor(addon._logicalAnd(this._native_ref, rhs._native_ref));
-    },
-
-    mod(rhs: Tensor): Tensor {
-      return new _Tensor(addon._mod(this._native_ref, rhs._native_ref));
+    mul(rhs: Tensor): Tensor {
+      return new _Tensor(addon._mul(this._native_ref, rhs._native_ref));
     },
 
     add(rhs: Tensor): Tensor {
       return new _Tensor(addon._add(this._native_ref, rhs._native_ref));
     },
 
-    mul(rhs: Tensor): Tensor {
-      return new _Tensor(addon._mul(this._native_ref, rhs._native_ref));
+    greaterThanEqual(rhs: Tensor): Tensor {
+      return new _Tensor(addon._greaterThanEqual(this._native_ref, rhs._native_ref));
     },
 
-    transpose(axes: Array<number | bigint> | BigInt64Array = []): Tensor {
-      return new _Tensor(
-        addon._transpose(
-          this._native_ref,
-          axes instanceof BigInt64Array
-            ? axes
-            : new BigInt64Array(axes.map((v) => (typeof v === 'number' ? BigInt(v) : v)))
-        )
-      );
+    rShift(rhs: Tensor): Tensor {
+      return new _Tensor(addon._rShift(this._native_ref, rhs._native_ref));
     },
 
-    erf(): Tensor {
-      return new _Tensor(addon._erf(this._native_ref));
+    logicalAnd(rhs: Tensor): Tensor {
+      return new _Tensor(addon._logicalAnd(this._native_ref, rhs._native_ref));
+    },
+
+    logicalOr(rhs: Tensor): Tensor {
+      return new _Tensor(addon._logicalOr(this._native_ref, rhs._native_ref));
+    },
+
+    bitwiseXor(rhs: Tensor): Tensor {
+      return new _Tensor(addon._bitwiseXor(this._native_ref, rhs._native_ref));
+    },
+
+    lessThanEqual(rhs: Tensor): Tensor {
+      return new _Tensor(addon._lessThanEqual(this._native_ref, rhs._native_ref));
+    },
+
+    mod(rhs: Tensor): Tensor {
+      return new _Tensor(addon._mod(this._native_ref, rhs._native_ref));
+    },
+
+    exp(): Tensor {
+      return new _Tensor(addon._exp(this._native_ref));
+    },
+
+    cos(): Tensor {
+      return new _Tensor(addon._cos(this._native_ref));
+    },
+
+    sigmoid(): Tensor {
+      return new _Tensor(addon._sigmoid(this._native_ref));
+    },
+
+    isnan(): Tensor {
+      return new _Tensor(addon._isnan(this._native_ref));
+    },
+
+    nonzero(): Tensor {
+      return new _Tensor(addon._nonzero(this._native_ref));
+    },
+
+    roll(shift: number, axis: number): Tensor {
+      return new _Tensor(addon._roll(this._native_ref, shift, axis));
     },
 
     sqrt(): Tensor {
@@ -201,125 +210,28 @@ export const gen_Tensor_ops_shim = (_Tensor: new (...args: unknown[]) => Tensor)
       return new _Tensor(addon._tanh(this._native_ref));
     },
 
-    var(axes: number[] | Int32Array = [], bias = false, keepDims = false): Tensor {
-      return new _Tensor(
-        addon._var(
-          this._native_ref,
-          axes instanceof Int32Array ? axes : new Int32Array(axes),
-          bias,
-          keepDims
-        )
-      );
-    },
-
-    norm(axes: number[] | Int32Array = [], p = 2, keepDims = false): Tensor {
-      return new _Tensor(
-        addon._norm(
-          this._native_ref,
-          axes instanceof Int32Array ? axes : new Int32Array(axes),
-          p,
-          keepDims
-        )
-      );
-    },
-
-    log1p(): Tensor {
-      return new _Tensor(addon._log1p(this._native_ref));
-    },
-
-    isinf(): Tensor {
-      return new _Tensor(addon._isinf(this._native_ref));
-    },
-
-    sign(): Tensor {
-      return new _Tensor(addon._sign(this._native_ref));
-    },
-
-    any(axes: number[] | Int32Array = [], keepDims = false): Tensor {
-      return new _Tensor(
-        addon._any(
-          this._native_ref,
-          axes instanceof Int32Array ? axes : new Int32Array(axes),
-          keepDims
-        )
-      );
-    },
-
-    tril(): Tensor {
-      return new _Tensor(addon._tril(this._native_ref));
-    },
-
-    mean(axes: number[] | Int32Array = [], keepDims = false): Tensor {
-      return new _Tensor(
-        addon._mean(
-          this._native_ref,
-          axes instanceof Int32Array ? axes : new Int32Array(axes),
-          keepDims
-        )
-      );
-    },
-
-    median(axes: number[] | Int32Array = [], keepDims = false): Tensor {
-      return new _Tensor(
-        addon._median(
-          this._native_ref,
-          axes instanceof Int32Array ? axes : new Int32Array(axes),
-          keepDims
-        )
-      );
-    },
-
-    reshape(shape: Array<number | bigint> | BigInt64Array): Tensor {
-      return new _Tensor(
-        addon._reshape(
-          this._native_ref,
-          shape instanceof BigInt64Array
-            ? shape
-            : new BigInt64Array(shape.map((v) => (typeof v === 'number' ? BigInt(v) : v)))
-        )
-      );
-    },
-
-    negative(): Tensor {
-      return new _Tensor(addon._negative(this._native_ref));
-    },
-
-    exp(): Tensor {
-      return new _Tensor(addon._exp(this._native_ref));
-    },
-
-    absolute(): Tensor {
-      return new _Tensor(addon._absolute(this._native_ref));
-    },
-
-    triu(): Tensor {
-      return new _Tensor(addon._triu(this._native_ref));
-    },
-
-    argmax(axis: number, keepDims = false): Tensor {
-      return new _Tensor(addon._argmax(this._native_ref, axis, keepDims));
-    },
-
-    nonzero(): Tensor {
-      return new _Tensor(addon._nonzero(this._native_ref));
+    argsort(axis: bigint, sortMode: SortMode = SortMode.Ascending): Tensor {
+      return new _Tensor(addon._argsort(this._native_ref, axis, sortMode));
     },
 
     sin(): Tensor {
       return new _Tensor(addon._sin(this._native_ref));
     },
 
-    maximum(rhs: Tensor): Tensor {
-      return new _Tensor(addon._maximum(this._native_ref, rhs._native_ref));
+    clip(low: Tensor, high: Tensor): Tensor {
+      return new _Tensor(addon._clip(this._native_ref, low._native_ref, high._native_ref));
     },
 
-    amin(axes: number[] | Int32Array = [], keepDims = false): Tensor {
-      return new _Tensor(
-        addon._amin(
-          this._native_ref,
-          axes instanceof Int32Array ? axes : new Int32Array(axes),
-          keepDims
-        )
-      );
+    sign(): Tensor {
+      return new _Tensor(addon._sign(this._native_ref));
+    },
+
+    sort(axis: bigint, sortMode: SortMode = SortMode.Ascending): Tensor {
+      return new _Tensor(addon._sort(this._native_ref, axis, sortMode));
+    },
+
+    argmin(axis: number, keepDims = false): Tensor {
+      return new _Tensor(addon._argmin(this._native_ref, axis, keepDims));
     },
 
     sum(axes: number[] | Int32Array = [], keepDims = false): Tensor {
@@ -332,55 +244,22 @@ export const gen_Tensor_ops_shim = (_Tensor: new (...args: unknown[]) => Tensor)
       );
     },
 
-    clip(low: Tensor, high: Tensor): Tensor {
-      return new _Tensor(addon._clip(this._native_ref, low._native_ref, high._native_ref));
-    },
-
-    tile(shape: Array<number | bigint> | BigInt64Array): Tensor {
-      return new _Tensor(
-        addon._tile(
-          this._native_ref,
-          shape instanceof BigInt64Array
-            ? shape
-            : new BigInt64Array(shape.map((v) => (typeof v === 'number' ? BigInt(v) : v)))
-        )
-      );
-    },
-
-    pad(padWidths: Array<[number, number]>, type: PadType = PadType.Constant): Tensor {
-      return new _Tensor(addon._pad(this._native_ref, padWidths, type));
-    },
-
-    log(): Tensor {
-      return new _Tensor(addon._log(this._native_ref));
-    },
-
     ceil(): Tensor {
       return new _Tensor(addon._ceil(this._native_ref));
     },
 
-    rint(): Tensor {
-      return new _Tensor(addon._rint(this._native_ref));
+    amax(axes: number[] | Int32Array = [], keepDims = false): Tensor {
+      return new _Tensor(
+        addon._amax(
+          this._native_ref,
+          axes instanceof Int32Array ? axes : new Int32Array(axes),
+          keepDims
+        )
+      );
     },
 
-    cos(): Tensor {
-      return new _Tensor(addon._cos(this._native_ref));
-    },
-
-    flip(dim: number): Tensor {
-      return new _Tensor(addon._flip(this._native_ref, dim));
-    },
-
-    isnan(): Tensor {
-      return new _Tensor(addon._isnan(this._native_ref));
-    },
-
-    argmin(axis: number, keepDims = false): Tensor {
-      return new _Tensor(addon._argmin(this._native_ref, axis, keepDims));
-    },
-
-    cumsum(axis: number): Tensor {
-      return new _Tensor(addon._cumsum(this._native_ref, axis));
+    power(rhs: Tensor): Tensor {
+      return new _Tensor(addon._power(this._native_ref, rhs._native_ref));
     },
 
     matmul(
@@ -391,17 +270,9 @@ export const gen_Tensor_ops_shim = (_Tensor: new (...args: unknown[]) => Tensor)
       return new _Tensor(addon._matmul(this._native_ref, rhs._native_ref, lhsProp, rhsProp));
     },
 
-    floor(): Tensor {
-      return new _Tensor(addon._floor(this._native_ref));
-    },
-
-    power(rhs: Tensor): Tensor {
-      return new _Tensor(addon._power(this._native_ref, rhs._native_ref));
-    },
-
-    amax(axes: number[] | Int32Array = [], keepDims = false): Tensor {
+    amin(axes: number[] | Int32Array = [], keepDims = false): Tensor {
       return new _Tensor(
-        addon._amax(
+        addon._amin(
           this._native_ref,
           axes instanceof Int32Array ? axes : new Int32Array(axes),
           keepDims
@@ -419,16 +290,79 @@ export const gen_Tensor_ops_shim = (_Tensor: new (...args: unknown[]) => Tensor)
       );
     },
 
-    sigmoid(): Tensor {
-      return new _Tensor(addon._sigmoid(this._native_ref));
+    all(axes: number[] | Int32Array = [], keepDims = false): Tensor {
+      return new _Tensor(
+        addon._all(
+          this._native_ref,
+          axes instanceof Int32Array ? axes : new Int32Array(axes),
+          keepDims
+        )
+      );
+    },
+
+    maximum(rhs: Tensor): Tensor {
+      return new _Tensor(addon._maximum(this._native_ref, rhs._native_ref));
+    },
+
+    triu(): Tensor {
+      return new _Tensor(addon._triu(this._native_ref));
+    },
+
+    isinf(): Tensor {
+      return new _Tensor(addon._isinf(this._native_ref));
+    },
+
+    erf(): Tensor {
+      return new _Tensor(addon._erf(this._native_ref));
     },
 
     where(x: Tensor, y: Tensor): Tensor {
       return new _Tensor(addon._where(this._native_ref, x._native_ref, y._native_ref));
     },
 
-    roll(shift: number, axis: number): Tensor {
-      return new _Tensor(addon._roll(this._native_ref, shift, axis));
+    argmax(axis: number, keepDims = false): Tensor {
+      return new _Tensor(addon._argmax(this._native_ref, axis, keepDims));
+    },
+
+    log1p(): Tensor {
+      return new _Tensor(addon._log1p(this._native_ref));
+    },
+
+    median(axes: number[] | Int32Array = [], keepDims = false): Tensor {
+      return new _Tensor(
+        addon._median(
+          this._native_ref,
+          axes instanceof Int32Array ? axes : new Int32Array(axes),
+          keepDims
+        )
+      );
+    },
+
+    norm(axes: number[] | Int32Array = [], p = 2, keepDims = false): Tensor {
+      return new _Tensor(
+        addon._norm(
+          this._native_ref,
+          axes instanceof Int32Array ? axes : new Int32Array(axes),
+          p,
+          keepDims
+        )
+      );
+    },
+
+    tril(): Tensor {
+      return new _Tensor(addon._tril(this._native_ref));
+    },
+
+    logicalNot(): Tensor {
+      return new _Tensor(addon._logicalNot(this._native_ref));
+    },
+
+    flip(dim: number): Tensor {
+      return new _Tensor(addon._flip(this._native_ref, dim));
+    },
+
+    minimum(rhs: Tensor): Tensor {
+      return new _Tensor(addon._minimum(this._native_ref, rhs._native_ref));
     },
 
     countNonzero(axes: number[] | Int32Array = [], keepDims = false): Tensor {
@@ -441,30 +375,236 @@ export const gen_Tensor_ops_shim = (_Tensor: new (...args: unknown[]) => Tensor)
       );
     },
 
-    logicalNot(): Tensor {
-      return new _Tensor(addon._logicalNot(this._native_ref));
-    },
-
-    sort(axis: bigint, sortMode: SortMode = SortMode.Ascending): Tensor {
-      return new _Tensor(addon._sort(this._native_ref, axis, sortMode));
-    },
-
-    argsort(axis: bigint, sortMode: SortMode = SortMode.Ascending): Tensor {
-      return new _Tensor(addon._argsort(this._native_ref, axis, sortMode));
-    },
-
-    minimum(rhs: Tensor): Tensor {
-      return new _Tensor(addon._minimum(this._native_ref, rhs._native_ref));
-    },
-
-    all(axes: number[] | Int32Array = [], keepDims = false): Tensor {
+    transpose(axes: Array<number | bigint> | BigInt64Array = []): Tensor {
       return new _Tensor(
-        addon._all(
+        addon._transpose(
+          this._native_ref,
+          axes instanceof BigInt64Array
+            ? axes
+            : new BigInt64Array(axes.map((v) => (typeof v === 'number' ? BigInt(v) : v)))
+        )
+      );
+    },
+
+    tile(shape: Array<number | bigint> | BigInt64Array): Tensor {
+      return new _Tensor(
+        addon._tile(
+          this._native_ref,
+          shape instanceof BigInt64Array
+            ? shape
+            : new BigInt64Array(shape.map((v) => (typeof v === 'number' ? BigInt(v) : v)))
+        )
+      );
+    },
+
+    cumsum(axis: number): Tensor {
+      return new _Tensor(addon._cumsum(this._native_ref, axis));
+    },
+
+    var(axes: number[] | Int32Array = [], bias = false, keepDims = false): Tensor {
+      return new _Tensor(
+        addon._var(
+          this._native_ref,
+          axes instanceof Int32Array ? axes : new Int32Array(axes),
+          bias,
+          keepDims
+        )
+      );
+    },
+
+    reshape(shape: Array<number | bigint> | BigInt64Array): Tensor {
+      return new _Tensor(
+        addon._reshape(
+          this._native_ref,
+          shape instanceof BigInt64Array
+            ? shape
+            : new BigInt64Array(shape.map((v) => (typeof v === 'number' ? BigInt(v) : v)))
+        )
+      );
+    },
+
+    pad(padWidths: Array<[number, number]>, type: PadType = PadType.Constant): Tensor {
+      return new _Tensor(addon._pad(this._native_ref, padWidths, type));
+    },
+
+    negative(): Tensor {
+      return new _Tensor(addon._negative(this._native_ref));
+    },
+
+    log(): Tensor {
+      return new _Tensor(addon._log(this._native_ref));
+    },
+
+    mean(axes: number[] | Int32Array = [], keepDims = false): Tensor {
+      return new _Tensor(
+        addon._mean(
           this._native_ref,
           axes instanceof Int32Array ? axes : new Int32Array(axes),
           keepDims
         )
       );
+    },
+
+    absolute(): Tensor {
+      return new _Tensor(addon._absolute(this._native_ref));
+    },
+
+    any(axes: number[] | Int32Array = [], keepDims = false): Tensor {
+      return new _Tensor(
+        addon._any(
+          this._native_ref,
+          axes instanceof Int32Array ? axes : new Int32Array(axes),
+          keepDims
+        )
+      );
+    },
+
+    rint(): Tensor {
+      return new _Tensor(addon._rint(this._native_ref));
+    },
+
+    floor(): Tensor {
+      return new _Tensor(addon._floor(this._native_ref));
+    },
+
+    toFloat32Array(): Float32Array {
+      return addon._toFloat32Array(this._native_ref);
+    },
+
+    toFloat64Array(): Float64Array {
+      return addon._toFloat64Array(this._native_ref);
+    },
+
+    toBoolInt8Array(): Int8Array {
+      return addon._toBoolInt8Array(this._native_ref);
+    },
+
+    toInt16Array(): Int16Array {
+      return addon._toInt16Array(this._native_ref);
+    },
+
+    toInt32Array(): Int32Array {
+      return addon._toInt32Array(this._native_ref);
+    },
+
+    toInt64Array(): BigInt64Array {
+      return addon._toInt64Array(this._native_ref);
+    },
+
+    toUint8Array(): Uint8Array {
+      return addon._toUint8Array(this._native_ref);
+    },
+
+    toUint16Array(): Uint16Array {
+      return addon._toUint16Array(this._native_ref);
+    },
+
+    toUint32Array(): Uint32Array {
+      return addon._toUint32Array(this._native_ref);
+    },
+
+    toUint64Array(): BigUint64Array {
+      return addon._toUint64Array(this._native_ref);
+    },
+
+    toFloat32Scalar(): number {
+      return addon._toFloat32Scalar(this._native_ref);
+    },
+
+    toFloat64Scalar(): number {
+      return addon._toFloat64Scalar(this._native_ref);
+    },
+
+    toBoolInt8Scalar(): number {
+      return addon._toBoolInt8Scalar(this._native_ref);
+    },
+
+    toInt16Scalar(): number {
+      return addon._toInt16Scalar(this._native_ref);
+    },
+
+    toInt32Scalar(): number {
+      return addon._toInt32Scalar(this._native_ref);
+    },
+
+    toInt64Scalar(): bigint {
+      return addon._toInt64Scalar(this._native_ref);
+    },
+
+    toUint8Scalar(): number {
+      return addon._toUint8Scalar(this._native_ref);
+    },
+
+    toUint16Scalar(): number {
+      return addon._toUint16Scalar(this._native_ref);
+    },
+
+    toUint32Scalar(): number {
+      return addon._toUint32Scalar(this._native_ref);
+    },
+
+    toUint64Scalar(): bigint {
+      return addon._toUint64Scalar(this._native_ref);
+    },
+
+    eval(): void {
+      return addon._eval(this._native_ref);
+    },
+
+    dispose(): void {
+      return addon._dispose(this._native_ref);
+    },
+
+    tensorFromFloat32Array(v: number[] | Float32Array): _Native_Tensor {
+      return addon._tensorFromFloat32Array(v instanceof Float32Array ? v : new Float32Array(v));
+    },
+
+    tensorFromFloat64Array(v: number[] | Float64Array): _Native_Tensor {
+      return addon._tensorFromFloat64Array(v instanceof Float64Array ? v : new Float64Array(v));
+    },
+
+    tensorFromInt8Array(v: number[] | Int8Array): _Native_Tensor {
+      return addon._tensorFromInt8Array(v instanceof Int8Array ? v : new Int8Array(v));
+    },
+
+    tensorFromInt16Array(v: number[] | Int16Array): _Native_Tensor {
+      return addon._tensorFromInt16Array(v instanceof Int16Array ? v : new Int16Array(v));
+    },
+
+    tensorFromInt32Array(v: number[] | Int32Array): _Native_Tensor {
+      return addon._tensorFromInt32Array(v instanceof Int32Array ? v : new Int32Array(v));
+    },
+
+    tensorFromBigInt64Array(v: Array<number | bigint> | BigInt64Array): _Native_Tensor {
+      return addon._tensorFromBigInt64Array(
+        v instanceof BigInt64Array
+          ? v
+          : new BigInt64Array(v.map((v) => (typeof v === 'number' ? BigInt(v) : v)))
+      );
+    },
+
+    tensorFromUint8Array(v: number[] | Uint8Array): _Native_Tensor {
+      return addon._tensorFromUint8Array(v instanceof Uint8Array ? v : new Uint8Array(v));
+    },
+
+    tensorFromUint16Array(v: number[] | Uint16Array): _Native_Tensor {
+      return addon._tensorFromUint16Array(v instanceof Uint16Array ? v : new Uint16Array(v));
+    },
+
+    tensorFromUint32Array(v: number[] | Uint32Array): _Native_Tensor {
+      return addon._tensorFromUint32Array(v instanceof Uint32Array ? v : new Uint32Array(v));
+    },
+
+    tensorFromBigUint64Array(v: Array<number | bigint> | BigUint64Array): _Native_Tensor {
+      return addon._tensorFromBigUint64Array(
+        v instanceof BigUint64Array
+          ? v
+          : new BigUint64Array(v.map((v) => (typeof v === 'number' ? BigInt(v) : v)))
+      );
+    },
+
+    save(path: string): void {
+      return addon._save(this._native_ref, path);
     }
   };
 };

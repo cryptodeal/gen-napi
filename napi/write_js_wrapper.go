@@ -35,6 +35,9 @@ func (g *PackageGenerator) WriteClassImports(sb *strings.Builder) {
 			sb.WriteString(")")
 		}
 		sb.WriteString(";\n")
+		if g.conf.IsEnvTS() {
+			sb.WriteString(fmt.Sprintf("import type { _Native_%s } from '%s';\n", name, g.conf.ResolvedImportPath(g.conf.ResolvedShimPath(filepath.Dir(g.conf.Path), name))))
+		}
 	}
 }
 
@@ -88,103 +91,8 @@ func (g *PackageGenerator) WriteEnvWrapper(sb *strings.Builder) {
 	g.WriteEnvImports(temp_sb)
 	enum_imports := map[string]bool{}
 	g.WriteEnvWrappedFns(temp_sb, enum_imports)
-	if !g.conf.IsEnvTS() {
-		g.WriteEnvExports(temp_sb)
-	}
 	g.WriteEnumImports(sb, enum_imports)
 	sb.WriteString(temp_sb.String())
-}
-
-func (g *PackageGenerator) WriteEnvExports(sb *strings.Builder) {
-	sb.WriteString("module.exports = {\n")
-	used := []string{}
-	for name, m := range g.ParsedData.Methods {
-		if !g.conf.IsMethodIgnored(*m.Name) {
-			if isInvalidName(name) {
-				used = append(used, "_"+name)
-			} else {
-				used = append(used, name)
-			}
-		}
-	}
-	used_len := len(used)
-	for i, name := range used {
-		g.writeIndent(sb, 1)
-		sb.WriteString(name)
-		if i < used_len-1 {
-			sb.WriteString(",\n")
-		}
-	}
-	used = []string{}
-	for name, m := range g.ParsedData.Lits {
-		if !g.conf.IsMethodIgnored(*m.Name) {
-			if isInvalidName(name) {
-				used = append(used, "_"+name)
-			} else {
-				used = append(used, name)
-			}
-		}
-	}
-	used_len = len(used)
-	for i, name := range used {
-		if i == 0 {
-			sb.WriteString(",\n")
-		}
-		g.writeIndent(sb, 1)
-		sb.WriteString(name)
-		if i < used_len-1 {
-			sb.WriteString(",\n")
-		}
-	}
-	used_len = len(g.conf.GlobalForcedMethods)
-	for i, m := range g.conf.GlobalForcedMethods {
-		if i == 0 {
-			sb.WriteString(",\n")
-		}
-		g.writeIndent(sb, 1)
-		if isInvalidName(m.Name) {
-			sb.WriteString(fmt.Sprintf("_%s", m.Name))
-		} else {
-			sb.WriteString(m.Name)
-		}
-		if i < used_len-1 {
-			sb.WriteString(",\n")
-		}
-	}
-
-	for name, c := range g.ParsedData.Classes {
-		if c.Decl != nil {
-			if v, ok := g.conf.ClassOpts[name]; ok && len(v.ForcedMethods) > 0 {
-				used_len = len(v.ForcedMethods)
-				for i, m := range v.ForcedMethods {
-					if i == 0 {
-						sb.WriteString(",\n")
-					}
-					g.writeIndent(sb, 1)
-					if isInvalidName(m.Name) {
-						sb.WriteString(fmt.Sprintf("_%s", m.Name))
-					} else {
-						sb.WriteString(m.Name)
-					}
-					if i < used_len-1 {
-						sb.WriteString(",\n")
-					}
-				}
-			}
-		}
-	}
-
-	for i, e := range g.ParsedData.Enums {
-		if i == 0 {
-			sb.WriteString(",\n")
-		}
-		g.writeIndent(sb, 1)
-		sb.WriteString(e.Name)
-		if i < used_len-1 {
-			sb.WriteString(",\n")
-		}
-	}
-	sb.WriteString("\n}\n")
 }
 
 func (g *PackageGenerator) WriteEnvImports(sb *strings.Builder) {
@@ -225,6 +133,9 @@ func (g *PackageGenerator) WriteEnums() error {
 			}
 			sb.WriteString(fmt.Sprintf("})(%s || (%s = {}));\n", e.Name, e.Name))
 		}
+		if !g.conf.IsEnvTS() {
+			sb.WriteString(fmt.Sprintf("exports.%s = %s;\n", e.Name, e.Name))
+		}
 		if i < enum_count-1 {
 			sb.WriteByte('\n')
 		}
@@ -263,17 +174,21 @@ func (g *PackageGenerator) WriteWrappedFn(sb *strings.Builder, method_name strin
 	}
 
 	if g.conf.IsEnvTS() {
-		sb.WriteString("export ")
+		sb.WriteString("export const ")
+	} else {
+		sb.WriteString("exports.")
 	}
-
-	sb.WriteString(fmt.Sprintf("const %s = (", name))
+	sb.WriteString(fmt.Sprintf("%s = (", name))
 
 	arg_count := len(args)
 	for i, arg := range args {
 		if i > 0 && i < arg_count {
 			sb.WriteString(", ")
 		}
-		sb.WriteString(fmt.Sprintf("%s: %s", arg.Name, arg.JSType))
+		sb.WriteString(arg.Name)
+		if g.conf.IsEnvTS() {
+			sb.WriteString(fmt.Sprintf(": %s", arg.JSType))
+		}
 		if arg.DefaultValue != nil {
 			sb.WriteString(fmt.Sprintf(" = %s", *arg.DefaultValue))
 		}
@@ -315,12 +230,31 @@ func (g *PackageGenerator) WriteWrappedFn(sb *strings.Builder, method_name strin
 }
 
 func (g *PackageGenerator) WriteExternalTypeHelpers(sb *strings.Builder, type_name string) {
-	sb.WriteString(fmt.Sprintf("export type _Native_%s = unknown & Record<string, never>;\n\n", type_name))
-	sb.WriteString(fmt.Sprintf("export abstract class _Base_%s {\n", type_name))
+	if g.conf.IsEnvTS() {
+		sb.WriteString(fmt.Sprintf("export type _Native_%s = unknown & Record<string, never>;\n\n", type_name))
+	}
+
+	if g.conf.IsEnvTS() {
+		sb.WriteString("export abstract ")
+	} else {
+		sb.WriteString(fmt.Sprintf("exports._Base_%s = ", type_name))
+	}
+	sb.WriteString(fmt.Sprintf("class _Base_%s {\n", type_name))
 	g.writeIndent(sb, 1)
-	sb.WriteString(fmt.Sprintf("protected _native_%s: _Native_%s;\n\n", type_name, type_name))
+	if g.conf.IsEnvTS() {
+		sb.WriteString("protected ")
+	}
+	sb.WriteString(fmt.Sprintf("_native_%s", type_name))
+	if g.conf.IsEnvTS() {
+		sb.WriteString(fmt.Sprintf(": _Native_%s;", type_name))
+	}
+	sb.WriteString("\n\n")
 	g.writeIndent(sb, 1)
-	sb.WriteString(fmt.Sprintf("get _native_ref(): _Native_%s {\n", type_name))
+	sb.WriteString("get _native_ref() ")
+	if g.conf.IsEnvTS() {
+		sb.WriteString(fmt.Sprintf(": _Native_%s ", type_name))
+	}
+	sb.WriteString("{\n")
 	g.writeIndent(sb, 2)
 	sb.WriteString(fmt.Sprintf("return this._native_%s;\n", type_name))
 	g.writeIndent(sb, 1)
@@ -335,17 +269,22 @@ func (g *PackageGenerator) WriteForcedMethod(sb *strings.Builder, method_name st
 	}
 
 	if g.conf.IsEnvTS() {
-		sb.WriteString("export ")
+		sb.WriteString("export const ")
+	} else {
+		sb.WriteString("exports.")
 	}
 
-	sb.WriteString(fmt.Sprintf("const %s = (", name))
+	sb.WriteString(fmt.Sprintf("%s = (", name))
 
 	arg_count := len(args)
 	for i, arg := range args {
 		if i > 0 && i < arg_count {
 			sb.WriteString(", ")
 		}
-		sb.WriteString(fmt.Sprintf("%s: %s", arg.Name, arg.TSType))
+		sb.WriteString(arg.Name)
+		if g.conf.IsEnvTS() {
+			sb.WriteString(fmt.Sprintf(": %s", arg.TSType))
+		}
 		if arg.Default != "" {
 			sb.WriteString(fmt.Sprintf(" = %s", arg.Default))
 		}
@@ -438,7 +377,7 @@ func (g *PackageGenerator) WriteShimWrappedFn(sb *strings.Builder, method_name s
 	g.writeIndent(sb, 2)
 	sb.WriteString(fmt.Sprintf("%s(", method_name))
 	for i, arg := range args {
-		if i == 0 {
+		if i == 0 && g.isClass(arg.JSType) && strings.Contains(class_name, arg.JSType) {
 			continue
 		}
 		if i > 1 {
@@ -447,7 +386,10 @@ func (g *PackageGenerator) WriteShimWrappedFn(sb *strings.Builder, method_name s
 		if arg.NapiType == NumberEnum {
 			imports[stripNameSpace(arg.JSType)] = true
 		}
-		sb.WriteString(fmt.Sprintf("%s: %s", arg.Name, arg.JSType))
+		sb.WriteString(arg.Name)
+		if g.conf.IsEnvTS() {
+			sb.WriteString(fmt.Sprintf(": %s", arg.JSType))
+		}
 		if arg.DefaultValue != nil {
 			sb.WriteString(fmt.Sprintf(" = %s", *arg.DefaultValue))
 		}
@@ -465,7 +407,7 @@ func (g *PackageGenerator) WriteShimWrappedFn(sb *strings.Builder, method_name s
 	sb.WriteString(fmt.Sprintf("addon._%s(", method_name))
 
 	for i, arg := range args {
-		if i == 0 {
+		if i == 0 && g.isClass(arg.JSType) && strings.Contains(class_name, arg.JSType) {
 			sb.WriteString("this._native_ref")
 			continue
 		}
@@ -486,6 +428,73 @@ func (g *PackageGenerator) WriteShimWrappedFn(sb *strings.Builder, method_name s
 		}
 	}
 	if g.isClass(returns.RawType.Name) {
+		sb.WriteByte(')')
+	}
+	sb.WriteString(");\n")
+	g.writeIndent(sb, 2)
+	sb.WriteString("},\n\n")
+}
+
+func (g *PackageGenerator) WriteShimForcedMethod(sb *strings.Builder, method FnOpts, class_name string, imports map[string]bool) {
+	g.writeIndent(sb, 2)
+	sb.WriteString(fmt.Sprintf("%s(", method.Name))
+	for i, arg := range method.Args {
+		if i == 0 && g.isClass(arg.TSType) && strings.Contains(class_name, arg.TSType) {
+			continue
+		}
+		if i > 1 {
+			sb.WriteString(", ")
+		}
+		arrHandler, _ := TypeIsTypedArray(arg.TSType)
+		isEnum, _ := g.IsTypeEnum(arg.TSType)
+		if isEnum {
+			imports[stripNameSpace(arg.TSType)] = true
+		}
+		usedType := arg.TSType
+		if arrHandler != nil {
+			usedType = *arrHandler
+		}
+		sb.WriteString(arg.Name)
+		if g.conf.IsEnvTS() {
+			sb.WriteString(fmt.Sprintf(": %s", usedType))
+		}
+		if arg.Default != "" {
+			sb.WriteString(fmt.Sprintf(" = %s", arg.Default))
+		}
+	}
+
+	sb.WriteString(")")
+	if g.conf.IsEnvTS() && !method.IsVoid {
+		sb.WriteString(fmt.Sprintf(": %s", stripNameSpace(method.TSReturnType)))
+	}
+
+	sb.WriteString(" {\n")
+	g.writeIndent(sb, 3)
+	sb.WriteString("return ")
+	if g.isClass(method.TSReturnType) {
+		sb.WriteString(fmt.Sprintf("new %s(", class_name))
+	}
+	sb.WriteString(fmt.Sprintf("addon._%s(", method.Name))
+	for i, arg := range method.Args {
+		if i == 0 && g.isClass(arg.TSType) && strings.Contains(class_name, arg.TSType) {
+			sb.WriteString("this._native_ref")
+			continue
+		}
+		if i > 0 {
+			sb.WriteString(", ")
+		}
+		sb.WriteString(arg.Name)
+		arrHandler, isBigInt := TypeIsTypedArray(arg.TSType)
+		if arrHandler != nil {
+			sb.WriteString(fmt.Sprintf(" instanceof %s ? %s : new %s(%s", arg.TSType, arg.Name, arg.TSType, arg.Name))
+			// if bigint, need to convert to bigint
+			if isBigInt {
+				sb.WriteString(".map((v) => typeof v === 'number' ? BigInt(v) : v)")
+			}
+			sb.WriteString(")")
+		}
+	}
+	if g.isClass(method.TSReturnType) {
 		sb.WriteByte(')')
 	}
 	sb.WriteString(");\n")
@@ -535,7 +544,9 @@ func (g *PackageGenerator) WriteObjectShims(name string) string {
 	imports := map[string]bool{}
 	if v, ok := g.ParsedData.Classes[name]; ok && v.FieldDecl != nil {
 		usedName := fmt.Sprintf("_%s", name)
-		sb.WriteString(fmt.Sprintf("import type { %s } from '%s';\n", name, g.conf.ResolvedImportPath(g.conf.ClassOpts[name].PathToImpl)))
+		if g.conf.IsEnvTS() {
+			sb.WriteString(fmt.Sprintf("import type { %s } from '%s';\n", name, g.conf.ResolvedImportPath(g.conf.ClassOpts[name].PathToImpl)))
+		}
 		g.WriteEnvImports(sb)
 		g.writeFileSourceHeader(sb, *g.Path)
 
@@ -544,10 +555,11 @@ func (g *PackageGenerator) WriteObjectShims(name string) string {
 		g.WriteClassInstructions(sb, name)
 		// write fn to shim the class/struct methods
 		if g.conf.IsEnvTS() {
-			sb.WriteString("\nexport ")
+			sb.WriteString("\nexport const ")
+		} else {
+			sb.WriteString("exports.")
 		}
-		sb.WriteString(fmt.Sprintf("const gen_%s_ops_shim = (%s", name, usedName))
-
+		sb.WriteString(fmt.Sprintf("gen_%s_ops_shim = (%s", name, usedName))
 		if g.conf.IsEnvTS() {
 			sb.WriteString(fmt.Sprintf(": new (...args: unknown[]) => %s", name))
 		}
@@ -588,6 +600,11 @@ func (g *PackageGenerator) WriteObjectShims(name string) string {
 				}
 			}
 		}
+
+		for _, m := range g.conf.ClassOpts[name].ForcedMethods {
+			g.WriteShimForcedMethod(sb, m, usedName, imports)
+		}
+
 		g.writeIndent(sb, 1)
 		sb.WriteString("}\n")
 		sb.WriteString("}\n\n")
